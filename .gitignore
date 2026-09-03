@@ -1,0 +1,37 @@
+# Environment and secrets - never committed (NFR-007, RSK-11)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+appsettings.Development.json
+secrets.json
+
+# Build output
+bin/
+obj/
+dist/
+build/
+out/
+node_modules/
+*.dll
+*.exe
+
+# Test and coverage output
+coverage/
+TestResults/
+*.trx
+
+# Editor and OS
+.vs/
+.vscode/
+.idea/
+*.user
+.DS_Store
+Thumbs.db
+
+# Office lock files - these appear while a document is open and must not be committed
+~$*.docx
+~$*.xlsx
+~$*.pptx
