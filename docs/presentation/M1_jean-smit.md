@@ -195,18 +195,24 @@ stronger than being walked into them, and an assessor can see all three in under
 
 1. **Repository history is thin and I am not going to pretend otherwise.** Two commits on
    3 September from one author, the controls established on 4 September, and controlled work
-   through Pull Requests from 8 September. Work before 4 September predates the controls.
-2. **The two-approval control has not yet operated.** One member's repository invitation is
-   still unaccepted, so no Pull Request has two approvals yet. Cell C12 of the governance
-   sheet is marked NOT YET EVIDENCED for exactly that reason, rather than pointed at the
-   checklist text to look complete.
-3. **We predicted this.** RSK-04 records that controlled change stalls when the two-approval
-   rule cannot be satisfied, and FEC-07 records review capacity as a throughput constraint on
-   every controlled change from M2 onward. Its contingency says to record the blockage and its
-   schedule effect rather than bypass the control. That is what we are doing.
+   through Pull Requests from 8 September. Work before 4 September predates the controls, and
+   the version history in s1 says so rather than implying otherwise.
+2. **The two-approval control cost us throughput before it produced anything.** For most of
+   the milestone one member's repository invitation sat unaccepted, so nothing could reach two
+   approvals and every controlled change queued behind it. That is RSK-04 materialising, and
+   FEC-07 records review capacity as a constraint on every controlled change from M2 onward.
+   The contingency we wrote says to record the blockage rather than bypass the control, and
+   that is what we did.
+3. **It then earned its keep.** Review has found real defects, not rubber stamps: the
+   registers-updated checklist on one Pull Request was inverted against the actual change; a
+   figure defect was recorded inside a register row without being tracked as work, and is now
+   issue #27; the two controlled copies of the AI Usage Register disagreed on one member's
+   entry; and a governance cell claimed an issue count that had gone stale. Each was corrected
+   before merge. Cell C12 cites those reviews as the evidence that the control operates.
 
-> The register predicted the failure, the failure happened, and we followed the contingency we
-> wrote. That is a working risk process, not an excuse.
+> Check the live position before presenting — the number of merged and open Pull Requests
+> changes through the day. The argument does not: the control bound us first and caught real
+> defects second, which is a working process rather than a decorative one.
 
 ---
 
