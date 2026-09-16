@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380" font-family="Calibri, Carlito, sans-serif">
+  <rect x="0" y="0" width="900" height="380" fill="#FFFFFF"/>
+  <text x="450" y="34" font-size="20" fill="#2E74B5" text-anchor="middle">CivicConnect deployment view</text>
+  <text x="450" y="56" font-size="13" fill="#22303F" text-anchor="middle">Platform is not chosen here. DEC-010 selects it against these implications.</text>
+
+  <rect x="40" y="120" width="210" height="86" rx="4" fill="#FFFFFF" stroke="#2E74B5" stroke-width="1.5"/>
+  <text x="145" y="152" font-size="14" fill="#22303F" text-anchor="middle">Requester and staff</text>
+  <text x="145" y="172" font-size="14" fill="#22303F" text-anchor="middle">browser</text>
+  <text x="145" y="192" font-size="11" fill="#5A6B7B" text-anchor="middle">STK-01 to STK-04</text>
+
+  <line x1="250" y1="163" x2="332" y2="163" stroke="#2E74B5" stroke-width="1.5"/>
+  <polygon points="340,163 330,158 330,168" fill="#2E74B5"/>
+  <text x="291" y="152" font-size="12" fill="#22303F" text-anchor="middle">HTTPS</text>
+  <text x="291" y="182" font-size="11" fill="#5A6B7B" text-anchor="middle">NFR-006</text>
+
+  <rect x="340" y="110" width="240" height="106" rx="4" fill="#EAF1F6" stroke="#2E74B5" stroke-width="1.5"/>
+  <text x="460" y="142" font-size="14" fill="#22303F" text-anchor="middle">Application instance</text>
+  <text x="460" y="162" font-size="12" fill="#22303F" text-anchor="middle">one deployable unit</text>
+  <text x="460" y="184" font-size="11" fill="#5A6B7B" text-anchor="middle">98 percent across service hours</text>
+  <text x="460" y="200" font-size="11" fill="#5A6B7B" text-anchor="middle">07:00 to 17:00 SAST (NFR-003)</text>
+
+  <line x1="580" y1="163" x2="652" y2="163" stroke="#2E74B5" stroke-width="1.5"/>
+  <polygon points="660,163 650,158 650,168" fill="#2E74B5"/>
+  <text x="616" y="152" font-size="12" fill="#22303F" text-anchor="middle">TLS</text>
+
+  <rect x="660" y="110" width="200" height="106" rx="4" fill="#FFFFFF" stroke="#2E74B5" stroke-width="1.5"/>
+  <text x="760" y="142" font-size="14" fill="#22303F" text-anchor="middle">Managed relational</text>
+  <text x="760" y="162" font-size="14" fill="#22303F" text-anchor="middle">database</text>
+  <text x="760" y="184" font-size="11" fill="#5A6B7B" text-anchor="middle">backup and restore path</text>
+  <text x="760" y="200" font-size="11" fill="#5A6B7B" text-anchor="middle">recorded under DEC-010</text>
+
+  <rect x="40" y="250" width="820" height="96" rx="4" fill="#F7FAFC" stroke="#2E74B5" stroke-dasharray="6 4"/>
+  <text x="56" y="274" font-size="13" fill="#2E74B5">Implications the platform choice must satisfy</text>
+  <text x="56" y="296" font-size="12" fill="#22303F">No always-on background worker is assumed, so email and SMS stay deferred (SC-D-01, FEC-03).</text>
+  <text x="56" y="316" font-size="12" fill="#22303F">Free-tier quotas, idle behaviour and cold starts are measured against NFR-003 and NFR-013 (RSK-02).</text>
+  <text x="56" y="336" font-size="12" fill="#22303F">Configuration and secrets come from the environment, never from the repository (NFR-007, RSK-11).</text>
+</svg>
