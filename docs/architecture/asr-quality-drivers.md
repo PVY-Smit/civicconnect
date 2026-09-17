@@ -1,7 +1,7 @@
 # Architecturally significant requirements and quality drivers
 
-**Status:** drafted for M2 under issue #56. Feeds DEC-009 (ADR-001), DEC-008, DEC-010, DEC-011 and the
-ASR column of the RTM.
+**Status:** drafted for M2 under issue #56, revised on 17 September 2026 after review on #71. Feeds
+DEC-009 (ADR-001), DEC-008, DEC-010, DEC-011 and the ASR column of the RTM.
 
 ## How these were selected
 
@@ -18,11 +18,15 @@ of every attribute taught, so the exclusions are part of the evidence.
 | Driver | One-line statement |
 |---|---|
 | ASR-01 | Authorisation is decided on the server for every protected function, and scope reaches individual records |
-| ASR-02 | The staff queue stays responsive at the baselined volume while management reporting reads the same data |
+| ASR-02 | The staff queue stays responsive at the baselined volume while management reporting reads the same data, and a submission is acknowledged quickly |
 | ASR-03 | Every status, assignee and priority change produces exactly one audit entry that nothing can edit |
 | ASR-04 | The team can change the system safely under two-approval review with three people |
 | ASR-05 | The service runs inside a free tier at the committed availability |
-| ASR-06 | Three students can build and support the result inside the milestone schedule |
+| ASR-06 | Three students can build and support the result inside the milestone schedule. A bound on complexity, with no measurable target |
+
+ASR-01 to ASR-05 each carry a measurable target from the M1 baseline. ASR-06 does not, so wherever
+the drivers are compared in a later decision, ASR-06 is treated as a bound on complexity and is not
+scored alongside the other five.
 
 ## ASR-01 Server-side authorisation with record-level scope
 
@@ -44,19 +48,25 @@ of every attribute taught, so the exclusions are part of the evidence.
   that scope is expressible in the query (DEC-011). This is the first constraint on DEC-009 and on
   design decision 2 (#62).
 
-## ASR-02 Queue performance at the baselined volume, with reporting over the same data
+## ASR-02 Responsiveness at the baselined volume: the queue, reporting and submission
 
 - **Requirements:** NFR-001 95th percentile under 2.0 seconds for the first page of a 5 000-request
   queue; FR-013 and FR-014 queue retrieval with search, filter and sort; FR-022 to FR-024 management
-  counts, breakdowns and the overdue list; NFR-002 submission acknowledged within 3.0 seconds.
-- **Evidence:** STK-02 staff and STK-04 management; FEC-06 records that aggregate reporting against
-  the transactional store can degrade the staff queue, and that expected volume and retention have
-  not been supplied by the organisation.
+  counts, breakdowns and the overdue list; NFR-002 95th percentile under 3.0 seconds from submission
+  to acknowledgement.
+- **Evidence:** STK-02 staff and STK-04 management; STK-01, since NFR-002 exists so that a slow
+  acknowledgement does not lead a Requester to submit the same request again; FEC-06 records that
+  aggregate reporting against the transactional store can degrade the staff queue, and that expected
+  volume and retention have not been supplied by the organisation.
 - **Measurable expectation:** NFR-001 as baselined, 20 timed retrievals against a seeded
-  5 000-request dataset, recording the distribution rather than the mean.
+  5 000-request dataset, recording the distribution rather than the mean; and NFR-002 as baselined,
+  20 timed submissions on the target environment under normal conditions.
 - **What it drives:** data access and indexing (DEC-011); whether reporting reads the transactional
   store directly or through a separate read path; and it counts against any structure that answers a
-  single queue page through several network calls.
+  single queue page through several network calls. On the write side, request creation is a
+  different path from a status change, and NFR-002 keeps it to one transaction inside the
+  application, with no synchronous call to anything outside it, so the target does not depend on an
+  external service.
 
 ## ASR-03 Auditability of every status, assignee and priority change
 
@@ -119,7 +129,6 @@ of every attribute taught, so the exclusions are part of the evidence.
 
 | Attribute | Why it does not drive structure |
 |---|---|
-| NFR-002 submission acknowledged within 3.0 seconds | Satisfied by the same write path ASR-03 already constrains. It sets no separate structural demand. |
 | NFR-004 credential storage | A library and configuration choice inside authentication, settled under DEC-008. |
 | NFR-006 encryption in transit | A deployment and configuration concern, settled under DEC-010. |
 | NFR-007 no credential in the repository | A process and pipeline control, carried by #67 and RSK-11. |
@@ -130,9 +139,9 @@ of every attribute taught, so the exclusions are part of the evidence.
 
 | Decision | Drivers it must answer | Issue |
 |---|---|---|
-| DEC-009 architecture style | ASR-01 to ASR-06 | #57, ADR-001 |
+| DEC-009 architecture style | ASR-01 to ASR-05, with ASR-06 as a bound on complexity | #57, ADR-001 |
 | DEC-011 persistence and data model | ASR-01, ASR-02, ASR-03 | #58 |
-| DEC-008 technology stack | ASR-04, ASR-05, ASR-06 | #59 |
+| DEC-008 technology stack | ASR-04 and ASR-05, with ASR-06 as a bound on complexity | #59 |
 | DEC-010 deployment platform | ASR-05 | #60 |
 | Design decisions 1 and 2 | ASR-03, ASR-01 | #61, #62 |
 | RTM ASR column | all | #54 |
