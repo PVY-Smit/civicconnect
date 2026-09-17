@@ -1,7 +1,7 @@
 # ADR-001: Software architecture style
 
 - **Status:** Proposed. Awaiting two approvals under issue #57.
-- **Date:** 16 September 2026
+- **Date:** 16 September 2026, revised 17 September 2026 after review on #72
 - **Decision Log entry:** DEC-009, recorded in M1 as deferred to M2.
 - **Drivers:** ASR-01 to ASR-06 in `docs/architecture/asr-quality-drivers.md` (#56).
 
@@ -16,9 +16,9 @@ DEC-009 was deferred to M2 with three stated evidence conditions. Each is answer
 
 | Evidence M1 required | Position now |
 |---|---|
-| Which NFRs prove architecturally significant | Answered in the ASR list: NFR-005, NFR-001, NFR-011, NFR-012, NFR-013 and NFR-003, with CON-06 carried as a bounding driver. |
-| The record-level authorisation shape from FEC-01 | Partly answered. The baseline commits to per-requester isolation (FR-012) and category-scoped staff queues (FR-013), so scope reaches individual records. Whether staff scope later becomes site-based or global is still open, and the decision below is built so that answer changes one component rather than the structure. |
-| The reporting load position from FEC-06 | Answered for now. Reporting reads the transactional store, because expected volume and retention have not been supplied by the organisation. The trade-off and the trigger for revisiting it are recorded below. |
+| Which NFRs prove architecturally significant | Answered in the ASR list: NFR-005, NFR-001, NFR-002, NFR-011, NFR-012, NFR-013 and NFR-003, with CON-06 carried as a bound on complexity. |
+| The record-level authorisation shape from FEC-01 | Partly answered. The baseline commits to per-requester isolation (FR-012) and category-scoped staff queues (FR-013), so scope reaches individual records. Whether staff scope later becomes site-based or global is still open, and the decision below is built so that answer changes only the policy module, under rule 2. |
+| The reporting load position from FEC-06 | Answered for now. Reporting reads the transactional store, because expected volume and retention have not been supplied by the organisation. The trade-off is recorded below, and the conditions for revisiting it are set out under Later consequences. |
 
 The workload is one organisation's transactional request handling, with management reporting over the
 same records. There is no second consumer, no external integration in the baseline (SC-O-02), and no
@@ -45,6 +45,9 @@ reporting, communicating over HTTP.
 **D. Client application over a hosted data service.** A browser application talking to a hosted
 database with its own access rules, and little or no application server of the team's own.
 
+The comparison below is qualitative. ASR-06 appears as a bound on complexity and has no measurable
+target, so it is weighed against the alternatives and never scored.
+
 | Driver | A. Modular monolith | B. Service per capability | C. Function per operation | D. Client over hosted data service |
 |---|---|---|---|---|
 | ASR-01 authorisation | One server-side enforcement point that every call passes through | Achievable, and it has to be repeated or centralised across services | Achievable, and it has to be repeated per function | Weak. Enforcement moves into store rules and a client the team does not control, against FR-002 |
@@ -52,7 +55,7 @@ database with its own access rules, and little or no application server of the t
 | ASR-03 audit atomicity | Change and audit entry commit in one transaction | Needs a distributed transaction or a compensation design | Same, and per function | Hard to guarantee from a client |
 | ASR-04 changeability | Tested in process; one pipeline; one review surface | Several pipelines and contracts for three people to keep consistent | Many small units and contract tests | Little of the logic is testable in the repository |
 | ASR-05 free tier and availability | One always-on unit, which is the cheapest shape to keep inside a free tier | Several units, each with its own idle behaviour and quota | Suits idle workloads, at the cost of cold-start latency | Cheap, and it ties the project to one vendor's rules |
-| ASR-06 capability and schedule | Fewest moving parts to learn and operate | Distributed failure handling on top of the domain work | New operational model to learn | Fastest to start, weakest to defend under FR-002 |
+| ASR-06 capability and schedule (bound) | Fewest moving parts to learn and operate | Distributed failure handling on top of the domain work | New operational model to learn | Fastest to start, weakest to defend under FR-002 |
 
 ## Decision
 
@@ -78,14 +81,22 @@ The rules that make those boundaries real, rather than folder names:
 
 1. Every call enters through the application's own server-side entry point. No client reaches the
    store directly (ASR-01).
-2. Authorisation decisions are taken in the policy module. Read scope is applied in the query rather
-   than by filtering results after they are loaded (ASR-01, ASR-02).
+2. Authorisation decisions are taken in the policy module, and so is read scope. Every scoped query
+   takes its scope condition from the policy module, and no other module encodes who may see what,
+   whether by requester, by category or by any scope added later. The condition is applied inside the
+   query, so records outside it are never loaded (ASR-01, ASR-02).
 3. A status change passes through the workflow module, and its audit entry is written in the same
    transaction (ASR-03).
 4. Notification is called through an in-process interface, with an extension point for asynchronous
    delivery if SC-D-01 is reinstated (ASR-05).
 5. Modules depend on one another through declared interfaces only, and shared data access lives
    behind the persistence module (ASR-04).
+
+The rules differ in how far they can be enforced today.
+Rules 1, 3 and 4 can be checked by inspection in review now. Rule 2 can be checked in review once the
+policy module exists, by confirming that no query builds its own scope condition. Rule 5 has no
+automated enforcement until a dependency check is added under #67, and until then it rests on review
+discipline alone.
 
 Logical modules are not deployment tiers. The module view and the deployment view are held separately
 in `docs/architecture/diagrams/`.
@@ -118,7 +129,7 @@ authorisation.
   is recorded under DEC-010.
 - **Reporting queries share the transactional store.** Accepted while volume and retention are
   unknown. FEC-06 already records the failure mode, which is that oversight queries degrade the queue
-  that does the work.
+  that does the work. The conditions for revisiting it are set out under Later consequences.
 - **Scaling is whole-application scaling.** No current requirement asks for one capability to scale on
   its own.
 
@@ -144,10 +155,15 @@ assigns the identifiers:
 
 ## Later consequences
 
-- If FEC-01 resolves to site-based or global staff scope, the policy module and the query scope
-  change. The module boundaries do not.
-- If FEC-06 is measured and shows contention, a separate read path or reporting replica is introduced
-  behind the reporting module, without moving the other modules.
+- If FEC-01 resolves to site-based or global staff scope, only the policy module changes, because
+  every scoped query takes its condition from it under rule 2. The module boundaries do not change.
+- Reporting's use of the transactional store is revisited when either of two things happens. The
+  first is the NFR-001 measurement, 20 timed retrievals of the first queue page against a seeded
+  5 000-request dataset, showing the 95th percentile above 2.0 seconds while reporting queries run
+  against the same store. The second is the organisation supplying expected volume and retention
+  (FEC-06, #2) with a projection above the 5 000 requests NFR-001 was baselined at. Either one leads
+  to a separate read path or a reporting replica behind the reporting module, without moving the
+  other modules.
 - If SC-D-01 is reinstated, the notification extension point becomes an asynchronous consumer, and
   DEC-010 must then supply background processing capability (FEC-03).
 - If DEC-008 selects a stack whose idiom conflicts with these boundaries, this record is revisited
