@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" font-family="Calibri, Carlito, sans-serif">
+  <rect x="0" y="0" width="900" height="600" fill="#FFFFFF"/>
+  <text x="450" y="34" font-size="20" fill="#2E74B5" text-anchor="middle">CivicConnect module view (logical)</text>
+  <text x="450" y="56" font-size="13" fill="#22303F" text-anchor="middle">One deployable application. Logical modules, not deployment tiers.</text>
+
+  <rect x="330" y="76" width="240" height="44" rx="4" fill="#FFFFFF" stroke="#2E74B5" stroke-width="1.5"/>
+  <text x="450" y="104" font-size="14" fill="#22303F" text-anchor="middle">Browser client</text>
+  <line x1="450" y1="120" x2="450" y2="150" stroke="#2E74B5" stroke-width="1.5"/>
+  <polygon points="450,158 445,148 455,148" fill="#2E74B5"/>
+  <text x="462" y="142" font-size="12" fill="#22303F">HTTPS</text>
+
+  <rect x="40" y="158" width="820" height="332" rx="6" fill="#F7FAFC" stroke="#2E74B5" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="56" y="180" font-size="13" fill="#2E74B5">Application (single deployable)</text>
+
+  <rect x="60" y="192" width="780" height="40" rx="4" fill="#EAF1F6" stroke="#2E74B5"/>
+  <text x="450" y="217" font-size="14" fill="#22303F" text-anchor="middle">Server-side entry point (every call passes through here)</text>
+
+  <rect x="60" y="246" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="153" y="271" font-size="13" fill="#22303F" text-anchor="middle">Identity and access</text>
+  <text x="153" y="291" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-001 to FR-004</text>
+
+  <rect x="258" y="246" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="351" y="271" font-size="13" fill="#22303F" text-anchor="middle">Request capture</text>
+  <text x="351" y="291" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-005 to FR-009</text>
+
+  <rect x="456" y="246" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="549" y="271" font-size="13" fill="#22303F" text-anchor="middle">Access and queue</text>
+  <text x="549" y="291" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-010 to FR-014</text>
+
+  <rect x="654" y="246" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="747" y="271" font-size="13" fill="#22303F" text-anchor="middle">Workflow and status</text>
+  <text x="747" y="291" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-015 to FR-021</text>
+
+  <rect x="60" y="316" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="153" y="341" font-size="13" fill="#22303F" text-anchor="middle">Audit</text>
+  <text x="153" y="361" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-025, FR-026</text>
+
+  <rect x="258" y="316" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="351" y="341" font-size="13" fill="#22303F" text-anchor="middle">Notification</text>
+  <text x="351" y="361" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-029</text>
+
+  <rect x="456" y="316" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="549" y="341" font-size="13" fill="#22303F" text-anchor="middle">Reporting</text>
+  <text x="549" y="361" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-022 to FR-024</text>
+
+  <rect x="654" y="316" width="186" height="58" rx="4" fill="#FFFFFF" stroke="#2E74B5"/>
+  <text x="747" y="341" font-size="13" fill="#22303F" text-anchor="middle">Administration</text>
+  <text x="747" y="361" font-size="11" fill="#5A6B7B" text-anchor="middle">FR-027, FR-028</text>
+
+  <rect x="60" y="386" width="780" height="44" rx="4" fill="#EAF1F6" stroke="#2E74B5"/>
+  <text x="450" y="406" font-size="13" fill="#22303F" text-anchor="middle">Authorisation policy: used by every module, read scope applied in the query</text>
+  <text x="450" y="423" font-size="11" fill="#5A6B7B" text-anchor="middle">NFR-005, FR-002, FR-011 to FR-013</text>
+
+  <rect x="60" y="438" width="780" height="44" rx="4" fill="#EAF1F6" stroke="#2E74B5"/>
+  <text x="450" y="458" font-size="13" fill="#22303F" text-anchor="middle">Persistence: repositories and transaction boundaries</text>
+  <text x="450" y="475" font-size="11" fill="#5A6B7B" text-anchor="middle">DEC-011; a status change and its audit entry commit together (NFR-011)</text>
+
+  <line x1="450" y1="490" x2="450" y2="518" stroke="#2E74B5" stroke-width="1.5"/>
+  <polygon points="450,526 445,516 455,516" fill="#2E74B5"/>
+  <rect x="300" y="526" width="300" height="46" rx="4" fill="#FFFFFF" stroke="#2E74B5" stroke-width="1.5"/>
+  <text x="450" y="548" font-size="14" fill="#22303F" text-anchor="middle">Relational database (one store)</text>
+  <text x="450" y="564" font-size="11" fill="#5A6B7B" text-anchor="middle">Reporting reads the same store; revisit under FEC-06</text>
+</svg>
