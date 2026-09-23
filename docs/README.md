@@ -9,6 +9,8 @@ Master Project Brief, Appendix C.
 | `requirements/` | The registers workbook: requirements, RTM, risk, decisions, forward considerations, AI usage, change requests | M1 |
 | `architecture/` | Architecture description, diagrams, data and interface design | M2 |
 | `decisions/` | Architecture Decision Records | M2 |
+| `research/` | Assignment research that informs project decisions, one file per member or question. The research recommends; the decisions are recorded in `decisions/` and the registers | M2 |
+| `presentation/` | Each member's segment for a milestone presentation, one file per member | M1 |
 | `risk/` | Risk artefacts that outgrow the workbook sheet | ongoing |
 | `change/` | Change requests and impact analyses | M3 |
 | `quality/` | Test strategy, test and coverage evidence, defect register | M3 |
