@@ -13,7 +13,8 @@ artefact, which is read and never written:
   case only its formatting is copied. A bare URL that GitHub renders as a link therefore stays plain
   text where v1.0 had it as plain text;
 - an element that is new or changed takes v1.0's formatting for that kind of element: a table takes
-  the formatting of the v1.0 table with the same header row, or of v1.0's widest table;
+  the formatting of the v1.0 table with the same header row, or of v1.0's widest table, and a table
+  with no v1.0 column layout is sized to the text width of the page it lands on;
 - section breaks, orientation and page breaks follow v1.0 at headings with the same text, plus the
   headings listed in NEW_SECTIONS. A page break directly before a section break is dropped, since
   the section already starts a new page. In v1.0 those produced five blank pages;
@@ -271,7 +272,10 @@ def emit(out, el, source=None, table=False):
         out.append(etree.fromstring(standard_spacer))
 
 
-def transplant_runs(p, source_p):
+def transplant_runs(p, source_p, inherit_bold=False):
+    """Give p's runs the run formatting of source_p. Bold and italic come from the markdown, except
+    that with inherit_bold a run is also bold where v1.0's is: headings, table header rows and the
+    cover are bold in v1.0 without being written in bold in the markdown."""
     src_runs = [r for r in source_p.iter(q("w:r")) if r.find("w:rPr", NS) is not None]
     base = next((r for r in src_runs if r.find("w:rPr/w:b", NS) is None), src_runs[0] if src_runs else None)
     bold = next((r for r in src_runs if r.find("w:rPr/w:b", NS) is not None), None)
@@ -282,6 +286,7 @@ def transplant_runs(p, source_p):
         rstyle = old.find("w:rStyle", NS) if old is not None else None
         src = bold if (is_b and bold is not None) else base
         new = copy.deepcopy(src.find("w:rPr", NS)) if src is not None else etree.fromstring(dominant_rpr)
+        is_b = is_b or (inherit_bold and new.find("w:b", NS) is not None)
         for tag in ("w:b", "w:bCs", "w:i", "w:iCs"):
             el = new.find(tag, NS)
             if el is not None:
@@ -299,7 +304,7 @@ def transplant_runs(p, source_p):
             r.insert(0, new)
 
 
-def transplant_para(p, source_p):
+def transplant_para(p, source_p, inherit_bold=False):
     src = source_p.find("w:pPr", NS)
     new = copy.deepcopy(src) if src is not None else etree.Element(q("w:pPr"))
     for sp in new.findall("w:sectPr", NS):
@@ -309,7 +314,7 @@ def transplant_para(p, source_p):
         p.replace(old, new)
     else:
         p.insert(0, new)
-    transplant_runs(p, source_p)
+    transplant_runs(p, source_p, inherit_bold)
 
 
 def plain_para(p):
@@ -322,19 +327,43 @@ def plain_para(p):
     transplant_runs(p, fake)
 
 
-def transplant_table(tbl, src):
+to_fit = {}
+
+
+def fit_table(tbl, weights, width):
+    """Share the page's text width between the columns, in proportion to their content."""
+    cols = [int(width * w_ / sum(weights)) for w_ in weights]
+    tblw = tbl.find("w:tblPr/w:tblW", NS)
+    tblw.set(q("w:w"), str(sum(cols)))
+    tblw.set(q("w:type"), "dxa")
+    for g, c in zip(tbl.find("w:tblGrid", NS), cols):
+        g.set(q("w:w"), str(c))
+    for tr in rows(tbl):
+        for tc, c in zip(cells(tr), cols):
+            tcw = tc.find("w:tcPr/w:tcW", NS)
+            if tcw is not None:
+                tcw.set(q("w:w"), str(c))
+                tcw.set(q("w:type"), "dxa")
+
+
+def text_width(orient):
+    size, margins = t_page_setup[orient]
+    return int(size.get(q("w:w"))) - int(margins.get(q("w:left"))) - int(margins.get(q("w:right")))
+
+
+def transplant_table(tbl, src, fit=False):
     set_child(tbl, copy.deepcopy(src.find("w:tblPr", NS)), first=True)
     ncols = len(cells(rows(tbl)[0]))
     s_rows = rows(src)
-    if len(cells(s_rows[0])) == ncols:
+    if not fit and len(cells(s_rows[0])) == ncols:
         set_child(tbl, copy.deepcopy(src.find("w:tblGrid", NS)))
     else:
-        total = int(src.find("w:tblPr/w:tblW", NS).get(q("w:w")))
-        lens = [max(len(text(tr_c)) for tr_c in col) for col in zip(*[cells(tr) for tr in rows(tbl)])]
-        weights = [max(4.0, l) ** 0.5 for l in lens]
+        # Sized later to the text width of the page it lands on, which is known once sections are placed.
+        lens = [max(len(text(c)) for c in col) for col in zip(*[cells(tr) for tr in rows(tbl)])]
+        to_fit[tbl] = [max(6.0, n) ** 0.5 for n in lens]
         grid = etree.Element(q("w:tblGrid"))
-        for w_ in weights:
-            etree.SubElement(grid, q("w:gridCol")).set(q("w:w"), str(int(total * w_ / sum(weights))))
+        for _ in lens:
+            etree.SubElement(grid, q("w:gridCol")).set(q("w:w"), "1000")
         set_child(tbl, grid)
     widths = [g.get(q("w:w")) for g in tbl.find("w:tblGrid", NS)]
     for i, tr in enumerate(rows(tbl)):
@@ -352,7 +381,7 @@ def transplant_table(tbl, src):
             set_child(tc, tcpr, first=True)
             s_p = s_tc.find("w:p", NS)
             for p in tc.findall("w:p", NS):
-                transplant_para(p, s_p)
+                transplant_para(p, s_p, inherit_bold=(i == 0))
 
 
 def callout_table(paras):
@@ -431,7 +460,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
                 emit(out, copy.deepcopy(exact), exact, table=True)
                 stats["table copied"] += 1
             else:
-                transplant_table(el, candidates[0] if candidates else widest_table)
+                transplant_table(el, candidates[0] if candidates else widest_table, fit=not candidates)
                 emit(out, el, candidates[0] if candidates else None, table=True)
                 stats["table formatted" if candidates else "table new"] += 1
             continue
@@ -459,7 +488,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             else:
                 if lvl == 1 and t not in NEW_SECTIONS:
                     out.append(page_break())
-                transplant_para(el, t_level.get(lvl, t_level[max(t_level)]))
+                transplant_para(el, t_level.get(lvl, t_level[max(t_level)]), inherit_bold=True)
                 emit(out, el)
                 stats["heading formatted"] += 1
             continue
@@ -469,7 +498,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             if text(src) == t:
                 emit(out, copy.deepcopy(src), src)
             else:
-                transplant_para(el, src)
+                transplant_para(el, src, inherit_bold=True)
                 emit(out, el, src)
             stats["cover"] += 1
             continue
@@ -530,6 +559,9 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
                 etree.SubElement(carrier, q("w:pPr")).append(make_sect(current))
                 placed.append(carrier)
             current = start_orient[k]
+        if e.tag == q("w:tbl") and e in to_fit:
+            fit_table(e, to_fit[e], text_width(current))
+            stats["table sized to page"] += 1
         placed.append(e)
     out = placed
     final = make_sect(current)
