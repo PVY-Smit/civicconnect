@@ -8,14 +8,13 @@ still has to make.
 
 ## Why quality strategy is not "test everything equally"
 
-Quality assurance and quality control are related but distinct activities inside a wider quality
-management effort. Quality assurance is the process-oriented half: it is concerned with whether the
-right activities are being carried out, in the right way, to build confidence that quality requirements
-will be met, and its defects-prevention focus means it operates earliest, before code exists to test
-(ISTQB, no date). Quality control is the product-oriented half: it examines the actual product for
-defects, most visibly through testing. The distinction matters practically because a team that only
-resources quality control -- more testing, more scanning -- while leaving the process that produced the
-defects unchanged will keep finding the same classes of problem release after release.
+Quality assurance is defined as activities focused on providing confidence that quality requirements 
+will be fulfilled (ISTQB, no date). That makes it the process-oriented half: it is concerned with 
+whether the right activities are being carried out, in the right way, and it can operate earliest, 
+before code exists to test. Quality control is the product-oriented half: it examines the actual 
+product for defects, most visibly through testing. The distinction matters practically because a 
+team that only resources quality control -- more testing, more scanning -- while leaving the process 
+that produced the defects unchanged will keep finding the same classes of problem release after release.
 
 Verification and validation are a further distinction inside quality control. ISO/IEC/IEEE 29119-1
 frames software testing as a major activity of verification, and separately notes that verification and
