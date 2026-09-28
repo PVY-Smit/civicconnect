@@ -212,6 +212,8 @@ long_paras = [p for p in t_para.values() if len(text(p)) > 120 and p.getparent()
 dominant_ppr = collections.Counter(etree.tostring(p.find("w:pPr", NS)) for p in long_paras if p.find("w:pPr", NS) is not None).most_common(1)[0][0]
 plain_runs = [r for p in long_paras for r in p.findall("w:r", NS) if r.find("w:rPr/w:b", NS) is None and r.find("w:rPr", NS) is not None]
 dominant_rpr = collections.Counter(etree.tostring(r.find("w:rPr", NS)) for r in plain_runs).most_common(1)[0][0]
+numbered_ppr = next((etree.tostring(p.find("w:pPr", NS)) for p in tkids if p.tag == q("w:p")
+                     and re.match(r"\d+\.\s", text(p)) and p.find("w:pPr/w:ind", NS) is not None), None)
 widest_table = max((t for ts in t_tables.values() for t in ts), key=lambda t: len(cells(rows(t)[0])))
 first_callout = next(iter(t_callouts.values()))
 
@@ -318,7 +320,10 @@ def transplant_para(p, source_p, inherit_bold=False):
 
 
 def plain_para(p):
-    new = etree.fromstring(dominant_ppr)
+    # v1.0 numbers items as paragraphs starting with a bold "1." and a hanging indent, never as Word
+    # lists, so a new numbered paragraph takes that format.
+    numbered = re.match(r"\d+\.\s", text(p)) and numbered_ppr is not None
+    new = etree.fromstring(numbered_ppr if numbered else dominant_ppr)
     old = p.find("w:pPr", NS)
     p.replace(old, new) if old is not None else p.insert(0, new)
     fake = etree.Element(q("w:p"))
