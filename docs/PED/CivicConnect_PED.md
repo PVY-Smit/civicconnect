@@ -661,7 +661,23 @@ Five rules make the module boundaries real rather than folder names:
 
 # 21. Data and Persistence
 
-\[To be completed under #58 (DEC-011, ADR-003): the initial data model and the module that owns each entity; the integrity rules, including the database-managed reference sequence and unique constraint A2 Task 2 recommended for FR-008; the fields the authorisation scopes in s22.2 rely on, `requesterId`, `categoryId` and `visibility`; the audit entry and the transaction it shares with a status change under ADR-001 rule 3; and the availability and single-point-of-failure implications of one relational store.\]
+**1.** CivicConnect uses PostgreSQL as its single relational transactional store. The initial model contains User, Category, UserCategory, Request, RequestStatusHistory and AuditEntry. A User may submit many Requests, each Request belongs to one requester and one category, and a Request may have an assignee. RequestStatusHistory and AuditEntry are append-only records linked to the Request. The persistence module owns database access and transaction boundaries; other modules access persistence through the interfaces defined by the modular-monolith architecture in ADR-001.
+
+**2.** The Request entity carries the externally visible `reference` and the fields required by the authorisation policy: `requesterId`, `categoryId` and, where information is exposed to a requester, `visibility`. Keeping these fields aligned with ADR-006 means the authorisation policy can scope records without a separate translation of the data model.
+
+**3.** FR-008's human-readable request reference is generated from a database-managed atomic sequence and protected by a unique constraint. The application does not obtain the next reference by reading the current maximum value, because concurrent submissions could then select the same value. A sequence value can be consumed by a transaction that later rolls back, so gaps in reference numbers are accepted; uniqueness and concurrency safety are required, while gap-free numbering is not.
+
+**4.** Request creation is transactional: the requester and input are validated, referenced records are checked, the next reference is obtained, the Request and its initial history/audit evidence are written, and the transaction commits. If a required write fails, the transaction rolls back rather than exposing a partially created Request.
+
+**5.** Status changes follow the same consistency boundary required by ADR-001 rule 3. After ADR-005 validates the transition and ADR-006 authorises it, the current Request status and the corresponding immutable history/audit entry are written in the same transaction. This prevents a successful state change from existing without the evidence needed to explain who changed it and when.
+
+**6.** Integrity is enforced at more than one layer. Interface validation gives early feedback, service validation applies workflow and authorisation rules, and database constraints protect facts that must remain true regardless of the caller, including primary keys, foreign keys, required relationships, email uniqueness and request-reference uniqueness. Categories and users that are already referenced by historical records are deactivated rather than normally deleted.
+
+**7.** One relational store keeps the M2 architecture proportionate and supports the strongly related operational data, but it also creates a shared availability and performance dependency. Operational request queries and management reporting initially use the same database. The first controls are appropriate indexes and measured queries rather than premature replication. Under ADR-001, the reporting path is reconsidered if the NFR-001 measurement against 5,000 requests exceeds its target while reporting runs, or later FEC-06 evidence projects materially beyond that baseline.
+
+**8.** Because PostgreSQL is the system of record, production deployment must provide persistent storage that survives an application-process restart and a defined backup and restore mechanism. A backup alone is not recovery evidence until restoration can be demonstrated. The concrete hosting platform, backup schedule and recovery procedure remain part of the deployment and production-readiness decisions rather than DEC-011.
+
+The full decision and initial schema are recorded under DEC-011 in the data-persistence ADR and `docs/data/initial-schema.sql` (#58).
 
 # 22. Design Decisions
 
@@ -695,8 +711,23 @@ The transition table holds which roles may make each move, and the authorisation
 
 # 23. Interface and Integration
 
-\[To be completed under #63 (ADR-004): the notification interface decision, following A2 Task 3's recommendation of an in-process interface with an extension point for asynchronous delivery (ADR-001 rule 4, SC-D-01); and the application's API boundary, as far as implementation has reached it.\]
+**1.** The M2 notification boundary is an in-process interface inside the CivicConnect modular monolith. The request/status workflow is the producer and the in-application notification component is the consumer. After an authorised status change has been successfully persisted, the workflow passes notification information through this interface rather than calling a separate notification service.
 
+**2.** The notification contract carries only the information needed across the boundary: `requestId`, `requestReference`, `requesterId`, `fromStatus`, `toStatus`, `changedAt`, `actorId` where required, and `visibility`. It does not expose database table names, SQL details or persistence objects. The consumer is responsible for making the resulting notification available to the intended Requester; it does not decide whether the underlying status transition was valid.
+
+**3.** The interaction follows the existing design boundaries. Authentication and authorisation are evaluated, ADR-005 checks the status transition, DEC-011 persists the status and required history/audit evidence, and only after successful persistence is the notification interface invoked. A rejected or rolled-back status change therefore does not produce a successful status-change notification.
+
+**4.** An in-process interface is used because the current requirement, FR-029, is for an in-application notification and both producer and consumer are modules in the same deployed application. Introducing REST between them, a message broker or a separate notification microservice would add network, deployment and failure-handling complexity without a current requirement for independent deployment or scaling.
+
+**5.** The boundary nevertheless remains separate from its implementation. Under ADR-001 rule 4, future evidence can replace the implementation with an asynchronous adapter without changing the workflow's conceptual dependency. Such a change would require an explicit later decision covering retries, idempotency, ordering, delivery guarantees, schema compatibility, dead-letter handling, security and monitoring.
+
+**6.** The notification path remains inside the existing security boundary. `requesterId` identifies the intended recipient and `visibility` prevents internal-only information from being returned as requester-visible information. Retrieval remains subject to ADR-006; the notification component does not create an alternative path around authorisation.
+
+**7.** Email and SMS remain deferred under SC-D-01. No email provider, SMS provider, message broker or external notification platform is selected by M2. That decision is reopened only when evidence establishes a need for notification outside the application, durable asynchronous delivery, background processing under FEC-03, or a delivery-time or reliability requirement that the in-process mechanism cannot meet.
+
+**8.** The application's external HTTP/API boundary remains separate from this internal notification interface. External consumers depend on the API contract rather than internal database or command names. Requests carry the context needed for the server to process them without hidden per-client in-memory session state, while normal persisted application data remains in PostgreSQL. API resources, validation and error responses therefore remain transport concerns at the application boundary and do not leak persistence implementation details into consumers.
+
+The notification decision is recorded in the notification-interface ADR (#63). The end-to-end implementation under #65 will connect the API, workflow, authorisation, persistence and notification boundaries and provide the later implementation evidence for this section.
 # 24. Deployment Direction
 
 \[To be completed under #60 (DEC-010): the deployment direction and its compatibility with the stack in s20; the free-tier limits that support NFR-013 and NFR-003; the configuration and secrets implications; the single always-on instance node-cron requires if scheduling is used; and the deployment decisions deliberately deferred, with the evidence still required.\]
