@@ -1,0 +1,116 @@
+{
+  "source": "Access Matrix sheet, docs/requirements/CivicConnect_M1_Registers.xlsx at 7f5ae05",
+  "roles": [
+    "Requester",
+    "Staff",
+    "Coordinator",
+    "Manager"
+  ],
+  "functions": [
+    {
+      "function": "Submit a request",
+      "Requester": true,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "View own requests",
+      "Requester": true,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "View any request in authorised categories",
+      "Requester": false,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "View internal action entries",
+      "Requester": false,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Assign a request to another user",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Accept an unassigned request in scope",
+      "Requester": false,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": false
+    },
+    {
+      "function": "Record an action entry",
+      "Requester": false,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Change status (model-permitted transitions)",
+      "Requester": false,
+      "Staff": true,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Move Resolved to Closed",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Reject a request",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Set or change priority",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "View management counts and breakdowns",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": true,
+      "Manager": true
+    },
+    {
+      "function": "Maintain the category list",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": false,
+      "Manager": true
+    },
+    {
+      "function": "Create or deactivate a user account",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": false,
+      "Manager": true
+    },
+    {
+      "function": "Edit or delete an audit entry",
+      "Requester": false,
+      "Staff": false,
+      "Coordinator": false,
+      "Manager": false
+    }
+  ]
+}
