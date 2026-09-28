@@ -50,6 +50,12 @@ generated from it (#55).
 
 - A new top-level section that needs landscape pages, for a wide table, is added to `NEW_SECTIONS`
   in `tools/build_ped.py`. Sections that exist in v1.0 keep v1.0's orientation.
+- Numbered items and lists are written as paragraphs, as v1.0 does: a numbered item starts with a bold
+  number such as `**1.**`, a list item starts with a bold lead phrase, and each is separated from the
+  next by a blank line. The build gives a numbered paragraph v1.0's hanging indent. Markdown list
+  syntax would lose its numbering in the Word document.
+- A section still to be written by its owner is a bracketed placeholder naming its issue, such as
+  `[To be completed under #58: ...]`, following the square-bracket convention in s2.
 - No raw HTML. GitHub renders it, and the build does not carry it into Word.
 
 ## Building the Word document

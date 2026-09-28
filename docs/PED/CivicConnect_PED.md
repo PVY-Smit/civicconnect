@@ -2,16 +2,16 @@
 
 **CivicConnect**
 
-Project Engineering Document (PED) v1.0
+Project Engineering Document (PED) v2.0
 
-*Engineering Foundation and Requirements Baseline*
+*Architecture, Technology and Initial Design Baseline*
 
 | **Project** | CivicConnect - Community Service Request Management Platform |
 |----|----|
-| **Milestone** | Milestone 1 - Engineering Foundation and Requirements Baseline |
-| **Document** | PED v1.0. This document evolves through v2.0, v3.0 and v4.0; it is not recreated per milestone (Master Brief, s6). |
+| **Milestone** | Milestone 2 - Architecture, Technology and Initial Design Baseline |
+| **Document** | PED v2.0, evolved from PED v1.0, which is kept unchanged in the repository as the M1 record. This document evolves through v3.0 and v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | DRAFT. Not yet baselined: the gate outcome, readiness fields and approvals are recorded in s16 and are still incomplete. |
+| **Baseline status** | v2.0 IN PROGRESS. The M1 sign-off of v1.0 is recorded in s16, and the M2 baseline sign-off in s26.3. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -26,6 +26,10 @@ Project Engineering Document (PED) v1.0
 >
 > Four such decisions are recorded in the Engineering Decision Log as **deliberately deferred**, each with the evidence still required before it can responsibly be taken (s13.2). Recording a future constraint is not the same as deciding it.
 
+> **Milestone 2 boundary**
+>
+> M2 takes the architecture, technology and initial design decisions M1 deferred, and records them in s18 to s26 with their ADRs. It decides what the application is built from and how its core rules are enforced. It does not select the quality, security, deployment and operational controls that Milestone 3 decides, informed by Assignment 3.
+
 # 1. Document Control and Version History
 
 This document is a controlled artefact. Baselined content is not silently overwritten: changes after sign-off enter through the change control process in s12.4 and are recorded here (Master Brief, s6.1).
@@ -35,12 +39,13 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.1 | 3 September 2026 | Jean Smit | Full initial draft: problem and business need, stakeholders, scope baseline, constraints, functional and non-functional requirements with acceptance criteria, RTM, Risk Register, Forward Engineering Considerations, Decision Log and governance. AI-assisted; recorded in s14.2. | Not reviewed. Direct commit, predating the branch controls established on 4 September 2026. | Superseded |
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
-
-**Note on the version rows above.** These are the placeholder authorship records. Replace the dates, names and change summaries with your team's actual history, and keep the row order. The repository commit history must corroborate what this table claims (Master Brief, s23).
+| 2.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | In progress |
 
 # 2. Purpose and How to Read This Document
 
 PED v1.0 records what CivicConnect is committing to engineer, for whom, under which constraints, and what has deliberately been left open. It is the reference against which every later milestone measures change.
+
+**From v2.0.** Sections 1 to 17 are the M1 baseline and keep their numbers, because the registers and the repository cite them. Milestone 2 is recorded in sections 18 to 26, placed after the reference list for that reason, and s17 holds the references for the whole document. Where M2 changes an M1 section, the change is recorded in the version history in s1 rather than made silently.
 
 | **Convention** | **What it means** |
 |----|----|
@@ -589,3 +594,195 @@ Republic of South Africa (2013) *Protection of Personal Information Act 4 of 201
 Sonatype (2026) *State of the Software Supply Chain Report: the evolving software supply chain attack surface*. Available at: https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware
 
 W3C (2023) *Web Content Accessibility Guidelines (WCAG) 2.2*. W3C Recommendation, 5 October. Available at: https://www.w3.org/TR/WCAG22/
+
+# 18. Architecturally Significant Requirements
+
+Milestone 2 turns the M1 baseline into architecture, technology and initial design. The first step was to establish which requirements shape the structure of the system, and why. Six drivers were selected from the M1 baseline. The full record, with the evidence for each driver, the measurable expectation already committed in M1 and the decisions each one constrains, is `docs/architecture/asr-quality-drivers.md` (#56).
+
+| **Driver** | **Statement** | **Comes from** |
+|----|----|----|
+| ASR-01 | Authorisation is decided on the server for every protected function, and scope reaches individual records | NFR-005, FR-002, FEC-01 |
+| ASR-02 | The staff queue stays responsive at the baselined volume while management reporting reads the same data, and a submission is acknowledged quickly | NFR-001, NFR-002, FEC-06 |
+| ASR-03 | Every status, assignee and priority change produces exactly one audit entry that nothing can edit | NFR-011, FR-025, FR-026 |
+| ASR-04 | The team can change the system safely under two-approval review with three people | NFR-012, CON-08, RSK-04 |
+| ASR-05 | The service runs inside a free tier at the committed availability | NFR-013, NFR-003, CON-03, RSK-02 |
+| ASR-06 | Three students can build and support the result inside the milestone schedule. A bound on complexity, with no measurable target | CON-06, RSK-01 |
+
+ASR-01 to ASR-05 each carry a measurable target from the M1 baseline. ASR-06 does not, so it is treated as a bound on complexity in every decision that follows and is never scored alongside the other five. The committed quality attributes that do not shape structure are listed in the same record, with the reason each is excluded.
+
+# 19. Architecture
+
+**Decision (DEC-009, ADR-001).** CivicConnect is a modular monolith: one deployable application, divided into modules with explicit interfaces, over one relational database. Reporting reads the transactional store for now. The record is `docs/decisions/ADR-001-architecture-style.md` (#57), approved under #72.
+
+Four alternatives were compared against the six drivers. A service per capability would have to repeat authorisation across services and would need a distributed transaction or a compensation design for every audited change (ASR-01, ASR-03). A function per operation puts cold starts directly on NFR-001. A client over a hosted data service moves enforcement into store rules and a client the team does not control, against FR-002. No baselined requirement asks for independent deployment, independent scaling or a second consumer of the data, so the evidence for the distributed options is absent. The M2 brief's point that a more distributed architecture is not automatically more advanced applies directly.
+
+Five rules make the module boundaries real rather than folder names:
+
+**1.** Every call enters through the application's own server-side entry point (ASR-01).
+
+**2.** Authorisation decisions and read scope are taken in the policy module, and no other module encodes who may see what (ASR-01, ASR-02).
+
+**3.** A status change passes through the workflow module, and its audit entry is written in the same transaction (ASR-03).
+
+**4.** Notification is called through an in-process interface, with an extension point for asynchronous delivery (ASR-05).
+
+**5.** Modules depend on one another through declared interfaces only, and shared data access lives behind the persistence module (ASR-04).
+
+![Figure 3. Module view of the modular monolith, from ADR-001.](../architecture/diagrams/module-view.png)
+
+**Figure 3.** Module view of the modular monolith, from ADR-001. Original diagram produced by the team; its source is `module-view.svg` beside the image.
+
+![Figure 4. Deployment view, from ADR-001.](../architecture/diagrams/deployment-view.png)
+
+**Figure 4.** Deployment view, from ADR-001. Original diagram produced by the team; its source is `deployment-view.svg` beside the image.
+
+**The M1 evidence conditions for DEC-009, answered.** The architecturally significant NFRs are identified in s18. FEC-01 is partly answered: scope reaches individual records, and if staff scope later becomes site-based or global, only the policy module changes, under rule 2. FEC-06 is answered for now: reporting reads the transactional store, and ADR-001 records the two measurements that would reopen that choice.
+
+# 20. Technology Stack
+
+**Decision (DEC-008, ADR-002).** Node.js 24 LTS, Express 5 and PostgreSQL through Prisma 7, with React 19 built with Vite for the client, argon2 for password hashing and Node's built-in test runner. The record is `docs/decisions/ADR-002-technology-stack.md` (#91).
+
+| **Component** | **Version** | **Why it is here** |
+|----|----|----|
+| Node.js | 24 LTS, supported until 30 April 2028 | Runtime |
+| Express | 5.2.1 | Server-side entry point (ADR-001 rule 1) |
+| Prisma CLI, client and PostgreSQL adapter | 7.10.0, pinned exactly | Schema, migrations and data access (DEC-011) |
+| pg | 8.23.0 | PostgreSQL driver the Prisma adapter uses |
+| argon2 | 0.45.1 | Password hashing for NFR-004 |
+| node-cron | 4.6.0 | In-process scheduling, if FEC-03 requires it |
+| Test runner | `node:test`, built in | NFR-012's evidence, with no added dependency |
+| React, React DOM, Vite | 19.3.0, 8.3.0 | Client, added with the first client work |
+
+**How it was decided.** Node and Django both passed the hard gates, and the five measurable drivers came out level between them. Two register entries pointed in opposite directions: RSK-12 (Medium, 8) favours Django, which needs fewer packages, and RSK-01 (Critical, 20) favours Node, because its baselined mitigation prefers a stack in which at least two of three members have prior exposure, and Node meets that on both readings of prior exposure while Django meets it on neither. RSK-01 decided it, as the highest-scored risk on the register, with a preference fixed in M1 before any candidate was named. ADR-002 records how the drafts reached that answer, including two reversals.
+
+**Conditions.** Two things must happen before the bootstrap in #90 merges: the stack is run on a BC Desktop machine, recording the Node version found (gate 3), and the RSK-01 proof of concept passes, covering authentication, one persisted entity and one automated test.
+
+**Dependency finding.** Prisma 7.10.0 pins two packages that carry high-severity advisories no 7.x release has fixed (Prisma issue #30295). The bootstrap overrides them to their fixed versions, and the finding is recorded under RSK-12.
+
+# 21. Data and Persistence
+
+\[To be completed under #58 (DEC-011, ADR-003): the initial data model and the module that owns each entity; the integrity rules, including the database-managed reference sequence and unique constraint A2 Task 2 recommended for FR-008; the fields the authorisation scopes in s22.2 rely on, `requesterId`, `categoryId` and `visibility`; the audit entry and the transaction it shares with a status change under ADR-001 rule 3; and the availability and single-point-of-failure implications of one relational store.\]
+
+# 22. Design Decisions
+
+Milestone 2 requires at least two final project-specific design decisions informed by the Assignment 2 research (M2 brief, s5.6). Both below come from design problems A2 Task 1 identified in the CivicConnect requirements, and both are built and tested. The research is held in `docs/research/A2_jean-smit.md`, sections 1.1 to 1.3, and is referenced here rather than repeated.
+
+## 22.1 Status transition mechanism (ADR-005)
+
+**Problem.** The Status Model permits twelve transitions between seven statuses, each with authorised roles and a guard of a different kind. The service, the interface and the tests all need the same rules, and RSK-09 expects the model to change. Copies in three places would drift, and FR-016 would fail wherever a copy was not updated.
+
+**Decision.** A declarative transition table with Strategy guards, the option A2 recommended over conditional logic and the State pattern. The table holds the twelve transitions as frozen data in code, each with its roles, its guard and the requirement it traces to. The transition check refuses a move outside the model first, then asks the authorisation policy, then evaluates the guard. The same module tells the interface which moves to offer. The record is `docs/decisions/ADR-005-status-transition-mechanism.md` (#93).
+
+**Applied and verified.** `src/modules/workflow-status/transition-table.js` and `transitions.js`. The tests check the table against a fixture exported from the Status Model register and exercise all 196 combinations of status pair and role. Three deliberate faults in the table each failed the suite.
+
+**Complexity accepted.** Guards could grow into an informal rules language, so they are kept small and in code, and the fixture has to be re-exported whenever the register changes.
+
+## 22.2 Authorisation enforcement (ADR-006)
+
+**Problem.** Authorisation has a role dimension and a record dimension. NFR-005 is an absolute target, so one forgotten check is a breach, and NFR-001 rules out loading every request and filtering afterwards.
+
+**Decision.** Scope applied at the query for reads, and a central policy for actions, the combination A2 recommended. Under ADR-001 rule 2 both come from one policy module, which removes most of the complexity A2 recorded against combining them. Scopes are Specifications, so the query condition and the check on a single request come from one rule. The record is `docs/decisions/ADR-006-authorisation-enforcement.md` (#94).
+
+**Applied and verified.** `src/modules/authorisation-policy/policy.js`. The tests generate a case from all sixty cells of a fixture exported from the Access Matrix register, and check for every role that the query condition and the single-request check select the same requests. Four deliberate faults in the policy each failed the suite.
+
+**What the tests found.** Four cells of the Access Matrix grant what the requirements refuse: the Manager assigning, rejecting and setting priority, and the Coordinator accepting an unassigned request. FR-016 makes the Status Model authoritative for transitions, and FR-021 gives priority to the Coordinator only. The policy denies all four, and #92 takes the conflict to change control.
+
+**Complexity accepted.** A query that does not use the scope bypasses it. Until a check enforces this, it rests on review, and the M3 negative tests at the endpoints are what catch a miss.
+
+## 22.3 Where the two decisions meet
+
+The transition table holds which roles may make each move, and the authorisation policy evaluates them, together with the actor's scope. Every authorisation decision, including those about status changes, is therefore taken in one component, and the one transition that depends on category scope, accepting an unassigned request, does not duplicate the scoping rule.
+
+# 23. Interface and Integration
+
+\[To be completed under #63 (ADR-004): the notification interface decision, following A2 Task 3's recommendation of an in-process interface with an extension point for asynchronous delivery (ADR-001 rule 4, SC-D-01); and the application's API boundary, as far as implementation has reached it.\]
+
+# 24. Deployment Direction
+
+\[To be completed under #60 (DEC-010): the deployment direction and its compatibility with the stack in s20; the free-tier limits that support NFR-013 and NFR-003; the configuration and secrets implications; the single always-on instance node-cron requires if scheduling is used; and the deployment decisions deliberately deferred, with the evidence still required.\]
+
+# 25. Development Evidence and Traceability
+
+## 25.1 What has been built
+
+| **Work** | **Evidence** | **State at the time of writing** |
+|----|----|----|
+| Project bootstrap aligned to ADR-001's ten modules | #90 | Open, merge gated by the ADR-002 conditions |
+| Status transition mechanism | #93, ADR-005 | Open for review |
+| Authorisation policy | #94, ADR-006 | Open for review |
+| Secret scanning as the first CI check | #87 | Draft. The account's Actions are locked on a billing issue, so the check has not yet run |
+| End-to-end path from submission to notification | #65 | Not started. Needs the data model from #58 |
+
+## 25.2 The two M1 traces, continued
+
+s9.1 traced FR-011 and FR-016 on the evidence that existed at M1, with their later links deliberately left empty. The links M2 fills are shown below against what M1 recorded. The M1 rows in s9.1 stand unchanged.
+
+**FR-011: the Requester sees only requester-visible entries.**
+
+| **Link** | **At M1 (s9.1)** | **At M2** |
+|----|----|----|
+| Design evidence | Not yet produced. Due M2, RTM row TR-011, column H | ADR-006: action-entry scope in the policy module limits a Requester to entries marked requester-visible (FR-011, FR-017) |
+| Issue and Pull Request | Not yet produced. Due M3 | #62 and #94, ahead of the M3 schedule |
+| Test evidence | Not yet produced. Due M3 | A unit test asserts that a Requester's scope admits only requester-visible entries. The negative case in the acceptance criterion, that no internal entry appears in the response payload, is still due in M3 at the endpoint |
+
+**FR-016: a status change only where the model allows it, by an authorised role.**
+
+| **Link** | **At M1 (s9.1)** | **At M2** |
+|----|----|----|
+| Design evidence | Not yet produced. Due M2, RTM row TR-016, column H | ADR-005: the transition table holds the model, and ADR-006 evaluates its roles. ADR-001 rule 3 places the change in the workflow module |
+| Issue and Pull Request | Not yet produced. Due M3 | #61 and #93, ahead of the M3 schedule |
+| Test evidence | Not yet produced. Due M3: a matrix over all ordered status pairs | The matrix exists at unit level: all 196 combinations of status pair and role, checked against the Status Model register. The acceptance criterion's refusal "when issued directly to the endpoint" is still due in M3, once #65 builds the endpoint |
+
+RTM columns H to K for both rows are updated to match through #54.
+
+# 26. Architecture, Technology and Initial Design Baseline
+
+## 26.1 What the baseline contains
+
+| **Item** | **Record** | **Evidence** |
+|----|----|----|
+| Architecturally significant requirements | `docs/architecture/asr-quality-drivers.md` | #71, merged |
+| Architecture style, with module and deployment views | ADR-001, DEC-009 | #72, merged; Decision Log row #82 |
+| Technology stack | ADR-002, DEC-008 | #91 |
+| Data and persistence | ADR-003, DEC-011 | #58 |
+| Notification interface | ADR-004 | #63 |
+| Status transition mechanism | ADR-005 | #93 |
+| Authorisation enforcement | ADR-006 | #94 |
+| Deployment direction | DEC-010 | #60 |
+| This document | PED v2.0 | #55 |
+
+## 26.2 Open decisions and deferred concerns
+
+These are recorded separately from the baseline, as the M2 brief requires, each with what would close it.
+
+**The two ADR-002 conditions**: the campus check (gate 3) and the RSK-01 proof of concept, both before #90 merges.
+
+**#92**: four Access Matrix cells that conflict with FR-016 and FR-021, for change control.
+
+**FEC-01**: whether staff and management scope stays by category, moves to site or becomes global. Only the policy module changes when it is answered.
+
+**FEC-06**: reporting reads the transactional store until one of the two measurements in ADR-001 reopens it.
+
+**SC-D-01**: notification beyond the in-application indication stays deferred, and the extension point under ADR-001 rule 4 keeps it possible.
+
+**Prisma 8**: a separate decision, taken once Prisma 8 is released as stable.
+
+## 26.3 Baseline sign-off
+
+| **Field** | **Value** |
+|----|----|
+| Project | CivicConnect - Community Service Request Management Platform |
+| Baseline type | Architecture, Technology and Initial Design Baseline |
+| Document | PED v2.0 |
+| Date | \[Insert date\] |
+| ASRs and architecture reviewed | YES / NO |
+| Technology selection and deployment direction reviewed | YES / NO |
+| Data and persistence model reviewed | YES / NO |
+| Design decisions reviewed against the code | YES / NO |
+| RTM, Risk Register and Forward Considerations updated | YES / NO |
+| AI Usage Register current and verified | YES / NO |
+| Outcome | ACCEPTED / CONDITIONALLY ACCEPTED / REVISION REQUIRED |
+| Conditions recorded (if any) | \[Insert\] |
+| Team approval - Jean Smit | Signature / date |
+| Team approval - Tristan Roets | Signature / date |
+| Team approval - Darius Mushi | Signature / date |
