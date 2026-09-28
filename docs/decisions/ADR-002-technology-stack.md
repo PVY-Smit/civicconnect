@@ -2,7 +2,7 @@
 
 - **Status:** Proposed. Awaiting two approvals under issue #59.
 - **Date:** Drafted 19 September 2026 by Darius Mushi (three drafts). Finalised 23 September 2026 by
-  Jean Smit at Darius's request.
+  Jean Smit at Darius's request. Amended 28 September 2026 after review on #91.
 - **Decision Log entry:** DEC-008, recorded in M1 as deferred to M2.
 - **Drivers:** ASR-04 and ASR-05 in `docs/architecture/asr-quality-drivers.md` (#56), with ASR-06 as a
   bound on complexity, which is how #56 assigns drivers to DEC-008. Team capability is weighed through
@@ -90,8 +90,8 @@ candidates fail gate 3.
 ## Hard gates applied
 
 1. **Builds and runs the tests from a clean checkout with no manual step.** Both pass, given a
-   PostgreSQL service in CI. A: `npm ci`, then a test script that runs `prisma generate` and
-   `node --test`. B: `pip install -r requirements.txt`, then `python manage.py test`.
+   PostgreSQL service in CI. A: `npm ci`, then `npm test`, which runs `node --test`. Once a module imports the generated Prisma client,
+   the test script runs `prisma generate` first. B: `pip install -r requirements.txt`, then `python manage.py test`.
 2. **A supported relational store the team can run free during assessment.** Both use PostgreSQL. The
    host is chosen under DEC-010 (#60).
 3. **Runs on the machines all three members actually have (CON-07).** **Open for both.** Documentation
@@ -152,8 +152,8 @@ to both candidates equally.
 
 **A meets RSK-01's preference on both readings, and B meets it on neither**, so the decision does not
 depend on which reading the team adopts. The framework reading is the one Tristan gave. Jean Smit, who
-finalised this record, is one of the two members counted for A on that reading. The drafts recorded
-him as not having written an Express server, and he corrected that on 23 September 2026. The proof of
+finalised this record, is one of the two members counted for A on that reading. His earlier message to the team said he had not written an Express server. That was wrong, and he
+corrected it on 23 September 2026. The proof of
 concept is still required before committing, because RSK-01's mitigation requires it whichever stack
 is chosen.
 
@@ -161,8 +161,8 @@ is chosen.
 
 | | A | B |
 |---|---|---|
-| Direct packages the team adds and must justify | Ten: express, react, react-dom, vite, prisma, @prisma/client, @prisma/adapter-pg, pg, argon2, node-cron | Three or four: django, psycopg, django-apscheduler, and argon2-cffi if Argon2id is chosen |
-| Weakest cell | Prisma is between major versions. On npm the `prisma` CLI's `latest` tag is `8.0.0-rc.15` while `@prisma/client` is at 7.10.0, so an unpinned install mixes a release candidate with the stable client | django-apscheduler's last release was 28 September 2024, and it declares support only up to Django 5.1. Its compatibility with Django 6.1 is unverified |
+| Direct packages the team adds and must justify | Ten in all. The bootstrap (#90) installs seven: express, prisma, @prisma/client, @prisma/adapter-pg, pg, argon2 and node-cron. react, react-dom and vite arrive with the first client work | Three or four: django, psycopg, django-apscheduler, and argon2-cffi if Argon2id is chosen |
+| Weakest cell | Prisma is between major versions. On npm the `prisma` CLI's `latest` tag is `8.0.0-rc.15` while `@prisma/client` is at 7.10.0, so an unpinned install mixes a release candidate with the stable client. Prisma 7.10.0 also pins deepmerge-ts 7.1.5 and mysql2 3.15.3, which carry high-severity advisories no 7.x release has fixed (Prisma issue #30295). The bootstrap overrides both to their fixed versions, and mysql2 is never loaded at runtime with the PostgreSQL adapter | django-apscheduler's last release was 28 September 2024, and it declares support only up to Django 5.1. Its compatibility with Django 6.1 is unverified |
 | Support window | Node 24 is supported until 30 April 2028 | Django 6.1 is supported until December 2027 |
 
 B needs fewer packages, and that is a real advantage. Transitive dependency counts were not measured for
@@ -178,15 +178,22 @@ for a clean build. Neither candidate differs materially here.
 
 **Candidate A: Node.js 24 LTS, Express 5, PostgreSQL through Prisma 7, and React 19 built with Vite,
 at the versions pinned above.** Password hashing uses argon2. In-process scheduling, if needed, uses
-node-cron. Tests run on Node's built-in `node:test`.
+node-cron. Tests run on Node's built-in `node:test`. The bootstrap (#90) installs the server side.
+React, React DOM and Vite are added with the first client work, each justified in the pull request
+that adds it.
 
-The decision is conditional. Two things must happen before #64 (bootstrap) starts, and if either fails,
+The decision is conditional. Two things must happen before the bootstrap for #64 (#90) merges, and if either fails,
 this record is revisited through controlled change:
 
 1. **Gate 3 closes.** The stack is installed and run on a BC Desktop machine, or the Node zip archive is
-   shown to work there.
+   shown to work there. The check records the Node version the machine has, since the bootstrap sets a
+   minimum.
 2. **The RSK-01 proof of concept passes.** It covers authentication, one persisted entity and one
-   automated test, within a timebox the team agrees and records on #64.
+      automated test, within a timebox the team agrees and records on #64.
+
+The conditions were first set to apply before the bootstrap started. #90 was raised before either was
+met, and on review of this record the team agreed that they gate its merge instead. #90 does not yet
+meet the second: it has no authentication, no persisted entity and no database.
 
 Prisma is pinned exactly at 7.10.0 for all three packages, the CLI included. Upgrading to Prisma 8 is a
 separate decision, taken after Prisma 8 is released as stable.
@@ -251,7 +258,8 @@ Updates proposed to existing risks under #68:
   readings, and that the proof of concept is still outstanding. Whether the score changes once the proof
   of concept passes is the owner's assessment. Owner: Tristan Roets.
 - **RSK-12:** record the dependency list and pins above as the baseline the first construction pull
-  request inherits. Owner: Darius Mushi.
+  request inherits, and the overrides for deepmerge-ts and mysql2 as a workaround for Prisma issue
+  #30295, to be removed when a Prisma 7 release fixes it. Owner: Darius Mushi.
 - **RSK-02:** unchanged by this decision. It is decided under DEC-010.
 
 ## Evidence
@@ -274,6 +282,8 @@ Updates proposed to existing risks under #68:
 - React, *Build a React app from scratch*, react.dev/learn/build-a-react-app-from-scratch (accessed 23
   September 2026).
 - OWASP, *Password Storage Cheat Sheet*, cheatsheetseries.owasp.org (accessed 19 September 2026).
+- Prisma, issue #30295, github.com/prisma/prisma/issues/30295, for the advisories on the packages
+  Prisma 7.10.0 pins (accessed 28 September 2026).
 - node-cron, npmjs.com/package/node-cron, for the ISC licence and the zero-dependency design (accessed
   19 September 2026).
 
@@ -285,7 +295,7 @@ Updates proposed to existing risks under #68:
 - **DEC-010 (#60)** must choose a host that runs Node 24 and one PostgreSQL database inside a free tier,
   and must allow exactly one always-on instance if scheduling is used (FEC-03).
 - **#64 (bootstrap)** fixes JavaScript or TypeScript and any frontend test tooling, each justified in
-  its pull request under RSK-12. It cannot start until both conditions under Decision are met.
+  its pull request under RSK-12. It cannot merge until both conditions under Decision are met.
 - **#67 (checks)** runs `npm ci` against the lockfile and `node --test` on every pull request, which is
   NFR-012's evidence.
 - **Node 24** enters maintenance on 20 October 2026 and remains supported until 30 April 2028, which
