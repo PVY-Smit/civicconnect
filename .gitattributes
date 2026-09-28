@@ -1,0 +1,14 @@
+# Line endings and binary handling for the whole repository (#73).
+#
+# Text files are stored with LF in the repository and checked out with LF on every
+# machine, whatever the local core.autocrlf setting, so an edit on one platform
+# cannot come back as a whole-file diff on another.
+* text=auto eol=lf
+
+# Controlled binaries. git never attempts a text diff, a text merge or a line-ending
+# rewrite on these. Two branches changing the same binary must be sequenced, which
+# is item 2 of #49.
+*.xlsx binary
+*.docx binary
+*.pdf binary
+*.png binary
