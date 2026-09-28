@@ -143,7 +143,7 @@ Part 1: General concepts*. Geneva: International Organization for Standardizatio
 https://www.iso.org/standard/81291.html (Accessed: 24 September 2026).
 
 ISTQB (no date) *Quality assurance*. ISTQB Glossary. Available at:
-https://glossary.istqb.org/en_US/term/quality-assurance-3-2 (Accessed: 24 September 2026).
+(https://glossary.istqb.org/en_US/term/quality-assurance) (Accessed: 28 September 2026).
 
 Pearce, H., Ahmad, B., Tan, B., Dolan-Gavitt, B. and Karri, R. (2022) 'Asleep at the keyboard? Assessing
 the security of GitHub Copilot's code contributions', in *2022 IEEE Symposium on Security and Privacy
