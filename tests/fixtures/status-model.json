@@ -1,0 +1,106 @@
+{
+  "source": "Status Model sheet, docs/requirements/CivicConnect_M1_Registers.xlsx at 7f5ae05",
+  "transitions": [
+    {
+      "from": "New",
+      "to": "Assigned",
+      "roles": [
+        "Coordinator"
+      ],
+      "guard": "An assignee is nominated"
+    },
+    {
+      "from": "New",
+      "to": "In Progress",
+      "roles": [
+        "Staff"
+      ],
+      "guard": "Staff member accepts an unassigned request within their authorised categories"
+    },
+    {
+      "from": "New",
+      "to": "Rejected",
+      "roles": [
+        "Coordinator"
+      ],
+      "guard": "A rejection reason is supplied (FR-020)"
+    },
+    {
+      "from": "Assigned",
+      "to": "In Progress",
+      "roles": [
+        "Staff",
+        "Coordinator"
+      ],
+      "guard": "The assignee begins work"
+    },
+    {
+      "from": "Assigned",
+      "to": "Assigned",
+      "roles": [
+        "Coordinator"
+      ],
+      "guard": "Reassignment to a different assignee; audited as an assignee change (FR-025)"
+    },
+    {
+      "from": "Assigned",
+      "to": "Rejected",
+      "roles": [
+        "Coordinator"
+      ],
+      "guard": "A rejection reason is supplied"
+    },
+    {
+      "from": "In Progress",
+      "to": "On Hold",
+      "roles": [
+        "Staff",
+        "Coordinator"
+      ],
+      "guard": "A hold reason is recorded as an action entry"
+    },
+    {
+      "from": "In Progress",
+      "to": "Resolved",
+      "roles": [
+        "Staff",
+        "Coordinator"
+      ],
+      "guard": "A resolution summary is supplied (FR-018)"
+    },
+    {
+      "from": "On Hold",
+      "to": "In Progress",
+      "roles": [
+        "Staff",
+        "Coordinator"
+      ],
+      "guard": "The blocking condition is recorded as cleared"
+    },
+    {
+      "from": "On Hold",
+      "to": "Rejected",
+      "roles": [
+        "Coordinator"
+      ],
+      "guard": "A rejection reason is supplied"
+    },
+    {
+      "from": "Resolved",
+      "to": "Closed",
+      "roles": [
+        "Coordinator",
+        "Manager"
+      ],
+      "guard": "Closure confirmed (FR-019)"
+    },
+    {
+      "from": "Resolved",
+      "to": "In Progress",
+      "roles": [
+        "Coordinator"
+      ],
+      "guard": "Reopened because the resolution was not accepted; reason recorded"
+    }
+  ]
+}
