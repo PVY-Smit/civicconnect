@@ -1,10 +1,4 @@
-
 # A3 Q3 --- Production Readiness, Deployment and Operational Evidence
-
-> **Working research draft for Issue #76.** A3 researches candidate
-> approaches and evidence. It does not select CivicConnect M3
-> deployment, monitoring, secret-management, recovery or release
-> decisions.
 
 ## Production readiness
 
@@ -42,13 +36,13 @@ source code (Wiggins, 2017b).
 Sensitive values such as passwords, API keys, tokens and certificates
 should not be committed as normal source-code configuration. OWASP
 identifies hard-coded or poorly controlled secrets as an exposure risk
-and recommends controlled storage, access, auditing and rotation (OWASP
-Foundation, 2026).
+and recommends controlled storage, access, auditing and rotation (OWASP,
+no date c).
 
 Possible approaches range from environment-scoped secret storage to
 dedicated secret-management services. GitHub Actions, for example,
 supports repository, organisation and environment-level secrets (GitHub,
-2026). This is an example of a candidate mechanism only; it is **not** a
+no date). This is an example of a candidate mechanism only; it is **not** a
 CivicConnect M3 selection.
 
 Stronger secret-management mechanisms can improve control but also add
@@ -67,7 +61,7 @@ differences.
 Repeatable automated deployment can reduce variation from manual steps.
 Microsoft recommends predictable deployment practices, versioned
 artefacts, quality controls and mechanisms for detecting unhealthy
-releases (Microsoft, 2026a; Microsoft, 2026b). Automation is not proof
+releases (Microsoft, 2025b; Microsoft, 2026b). Automation is not proof
 of safety by itself because an automated process can repeatedly apply an
 incorrect configuration.
 
@@ -107,7 +101,7 @@ four important monitoring signals for user-facing systems (Ewaschuk,
 
 Collecting telemetry alone is insufficient. Microsoft recommends
 interpreting and correlating telemetry against workload health and
-defining meaningful alerts (Microsoft, 2026c). An alert that nobody can
+defining meaningful alerts (Microsoft, 2026a). An alert that nobody can
 act on, or logs that are collected but never used during diagnosis,
 provide limited operational value.
 
@@ -120,7 +114,7 @@ increase cost. More telemetry can improve diagnosis while increasing
 storage and operational overhead. Scaling can protect performance but
 make cost less predictable. Microsoft's Well-Architected guidance treats
 operational excellence, reliability, performance and cost as related
-concerns rather than independent guarantees (Microsoft, 2025).
+concerns rather than independent guarantees (Microsoft, 2025a).
 
 A3 therefore does not conclude that any particular platform, scaling
 approach or monitoring product is suitable for CivicConnect. M3 must
@@ -128,60 +122,16 @@ compare actual implementation evidence and project constraints.
 
 ## Production-Readiness Evidence Matrix
 
-  -------------------------------------------------------------------------------------
-  Concern              Risk if ignored   Evidence before release Evidence to observe
-                                                                 after release
-  -------------------- ----------------- ----------------------- ----------------------
-  Environment parity   Works in          Documented environment  Configuration drift;
-  and configuration    development but   differences; compatible environment-specific
-                       fails in          versions; staging       incidents; deployment
-                       production due to deployment;             failures
-                       different         smoke/integration       
-                       runtimes,         results                 
-                       dependencies or                           
-                       settings                                  
-
-  Secrets and          Credentials leak  Secrets absent from     Unauthorised/failed
-  sensitive            through source,   normal source; access   access; rotation
-  configuration        logs or excessive scope documented;       events; secret-related
-                       access            controlled              incidents
-                                         storage/injection       
-
-  Repeatable           Manual variation  Versioned artefact;     Deployment
-  release/deployment   causes missed     repeatable deployment   success/failure;
-                       steps, wrong      process; staging        running version;
-                       versions or       result; release checks  post-deployment health
-                       inconsistent                              
-                       releases                                  
-
-  Data compatibility   Failed release    Rollback/roll-forward   Failed migrations;
-  and rollback         cannot safely be  procedure; migration    recovery events;
-                       reversed or       and compatibility       data-integrity errors
-                       leaves            testing                 
-                       incompatible data                         
-
-  Backup and recovery  Data/service      Backup procedure;       Backup failures;
-                       cannot be         restore procedure;      restore-test results;
-                       restored despite  evidence from a         recovery time
-                       backups existing  recovery test           
-
-  Logs and diagnostics Failures happen   Logging on important    Error patterns;
-                       but the team      paths/errors; suitable  repeated exceptions;
-                       cannot determine  context and access      incident diagnostic
-                       why                                       evidence
-
-  Metrics, monitoring  Degradation is    Defined health          Latency, traffic,
-  and alerts           missed, or noisy  indicators; meaningful  errors, saturation;
-                       alerts produce no alert conditions;       alert frequency;
-                       useful action     response expectation    incidents
-
-  Reliability,         System becomes    Relevant                Response times;
-  performance,         slow,             performance/capacity    failures; resource
-  scalability, cost    unavailable, too  evidence; cost          use; usage growth;
-  and supportability   expensive or      constraints; support    cost; support
-                       difficult to      expectations            incidents
-                       support                                   
-  -------------------------------------------------------------------------------------
+| Concern | Risk if ignored | Evidence before release | Evidence to observe after release |
+|---|---|---|---|
+| Environment parity and configuration | Works in development but fails in production due to different runtimes, dependencies or settings | Documented environment differences; compatible versions; staging deployment; smoke/integration results | Configuration drift; environment-specific incidents; deployment failures |
+| Secrets and sensitive configuration | Credentials leak through source, logs or excessive access | Secrets absent from normal source; access scope documented; controlled storage/injection | Unauthorised/failed access; rotation events; secret-related incidents |
+| Repeatable release/deployment | Manual variation causes missed steps, wrong versions or inconsistent releases | Versioned artefact; repeatable deployment process; staging result; release checks | Deployment success/failure; running version; post-deployment health |
+| Data compatibility and rollback | Failed release cannot safely be reversed or leaves incompatible data | Rollback/roll-forward procedure; migration and compatibility testing | Failed migrations; recovery events; data-integrity errors |
+| Backup and recovery | Data/service cannot be restored despite backups existing | Backup procedure; restore procedure; evidence from a recovery test | Backup failures; restore-test results; recovery time |
+| Logs and diagnostics | Failures happen but the team cannot determine why | Logging on important paths/errors; suitable context and access | Error patterns; repeated exceptions; incident diagnostic evidence |
+| Metrics, monitoring and alerts | Degradation is missed, or noisy alerts produce no useful action | Defined health indicators; meaningful alert conditions; response expectation | Latency, traffic, errors, saturation; alert frequency; incidents |
+| Reliability, performance, scalability, cost and supportability | System becomes slow, unavailable, too expensive or difficult to support | Relevant performance/capacity evidence; cost constraints; support expectations | Response times; failures; resource use; usage growth; cost; support incidents |
 
 The matrix separates pre-release evidence from evidence that must
 continue after release. A release gate only gives evidence at a point in
@@ -210,15 +160,13 @@ This research identifies candidate evidence and questions. M3 must still
 decide, against CivicConnect's actual implementation and controlled
 evidence:
 
--   how closely development, staging and production need to match;
--   how production configuration and secrets should be controlled;
--   which release and deployment controls are proportionate;
--   what rollback, roll-forward, backup and recovery evidence is
-    required;
--   which operational signals need logs, metrics, monitoring or alerts;
-    and
--   what reliability, performance, scalability, cost and supportability
-    expectations are appropriate.
+- how closely development, staging and production need to match;
+- how production configuration and secrets should be controlled;
+- which release and deployment controls are proportionate;
+- what rollback, roll-forward, backup and recovery evidence is required;
+- which operational signals need logs, metrics, monitoring or alerts; and
+- what reliability, performance, scalability, cost and supportability
+  expectations are appropriate.
 
 No deployment platform, monitoring product, secret-management product or
 release strategy is selected by this A3 research.
@@ -230,16 +178,16 @@ Reliability Engineering. Available at:
 https://sre.google/sre-book/monitoring-distributed-systems/ (Accessed:
 21 September 2026).
 
-GitHub (2026) *Secrets reference*. GitHub Docs. Available at:
+GitHub (no date) *Secrets reference*. GitHub Docs. Available at:
 https://docs.github.com/en/actions/reference/security/secrets (Accessed:
 21 September 2026).
 
-Microsoft (2025) *Microsoft Azure Well-Architected Framework*. Microsoft
+Microsoft (2025a) *Microsoft Azure Well-Architected Framework*. Microsoft
 Learn. Available at:
 https://learn.microsoft.com/en-us/azure/well-architected/pillars
 (Accessed: 21 September 2026).
 
-Microsoft (2026a) *Operational Excellence design principles*. Microsoft
+Microsoft (2025b) *Operational Excellence design principles*. Microsoft
 Learn. Available at:
 https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/principles
 (Accessed: 21 September 2026).
@@ -249,20 +197,20 @@ practices*. Microsoft Learn. Available at:
 https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/safe-deployments
 (Accessed: 21 September 2026).
 
-Microsoft (2026c) *Architecture strategies for designing a monitoring
+Microsoft (2026a) *Architecture strategies for designing a monitoring
 system*. Microsoft Learn. Available at:
 https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/observability
 (Accessed: 21 September 2026).
 
-OWASP Foundation (2026) *Secrets Management Cheat Sheet*. OWASP Cheat
+OWASP (no date c) *Secrets Management Cheat Sheet*. OWASP Cheat
 Sheet Series. Available at:
 https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
 (Accessed: 21 September 2026).
 
 Swanson, M., Bowen, P., Phillips, A.W., Gallup, D. and Lynes, D. (2010)
 *Contingency Planning Guide for Federal Information Systems*. NIST
-Special Publication 800-34 Rev. 1. Available at:
-https://doi.org/10.6028/NIST.SP.800-34rev1 (Accessed: 21 September
+Special Publication 800-34 Rev. 1. Available at:
+https://doi.org/10.6028/NIST.SP.800-34r1 (Accessed: 21 September
 2026).
 
 Wiggins, A. (2017a) *The Twelve-Factor App: Dev/prod parity*. Available
@@ -273,22 +221,6 @@ https://12factor.net/config (Accessed: 21 September 2026).
 
 ## AI Research & Verification Record --- Tristan Roets
 
-  -------------------------------------------------------------------------------------------
-  Team member AI tool /   Purpose            Output      How independently What was
-              use                            used?       verified          changed/rejected
-  ----------- ----------- ------------------ ----------- ----------------- ------------------
-  Tristan     ChatGPT     Research           Working     Claims mapped to  Tool-specific
-  Roets       (OpenAI,    structure,         draft used  Twelve-Factor,    suggestions were
-              GPT-5.6     drafting and       subject to  OWASP, GitHub     not accepted as
-              Sol), 21    candidate-source   review      Docs, Microsoft   CivicConnect
-              September   identification for             Learn, Google SRE decisions; wording
-              2026        Q3                             and NIST sources  remains
-                                                         listed above;     conditional so M3
-                                                         final             retains the
-                                                         source/citation   project decisions
-                                                         reconciliation    
-                                                         still requires    
-                                                         student/team      
-                                                         review            
-
-  -------------------------------------------------------------------------------------------
+| Team member | AI tool / use | Purpose | Output used? | How independently verified | What was changed/rejected |
+|---|---|---|---|---|---|
+| Tristan Roets | ChatGPT (OpenAI, GPT-5.6 Sol), 21 September 2026 | Research structure, drafting and candidate-source identification for Q3 | Working draft used subject to review | Claims mapped to Twelve-Factor, OWASP, GitHub Docs, Microsoft Learn, Google SRE and NIST sources listed above | Tool-specific suggestions were not accepted as CivicConnect decisions; wording remains conditional so M3 retains the project decisions |
