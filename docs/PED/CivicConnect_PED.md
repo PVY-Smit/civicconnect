@@ -11,7 +11,7 @@ Project Engineering Document (PED) v2.0
 | **Milestone** | Milestone 2 - Architecture, Technology and Initial Design Baseline |
 | **Document** | PED v2.0, evolved from PED v1.0, which is kept unchanged in the repository as the M1 record. This document evolves through v3.0 and v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v2.0 IN PROGRESS. The M1 sign-off of v1.0 is recorded in s16, and the M2 baseline sign-off in s26.3. |
+| **Baseline status** | v2.0 IN PROGRESS. The M1 gate for v1.0 has not yet been held, so s16 is still blank and s1 records v1.0 as a proposed baseline. Its outcome is recorded in s16 when it is held (#7), and the M2 baseline sign-off in s26.3. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -39,7 +39,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.1 | 3 September 2026 | Jean Smit | Full initial draft: problem and business need, stakeholders, scope baseline, constraints, functional and non-functional requirements with acceptance criteria, RTM, Risk Register, Forward Engineering Considerations, Decision Log and governance. AI-assisted; recorded in s14.2. | Not reviewed. Direct commit, predating the branch controls established on 4 September 2026. | Superseded |
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
-| 2.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | In progress |
+| 2.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s13 and s14.2, which show the registers as at M1 until the M2 register changes update them. Two references for s20 are added to s17. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | In progress |
 
 # 2. Purpose and How to Read This Document
 
@@ -263,6 +263,8 @@ Every target below states a number and the method by which it is measured. A qua
 
 This matrix is the authoritative statement of FR-002. Every entry marked No is a negative test case in M3, which is how NFR-005 becomes verifiable rather than aspirational.
 
+*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2), and #92 takes the conflict to change control. Until it is resolved, the requirements govern those four cells.*
+
 | **Function** | **Requester** | **Staff** | **Coordinator** | **Manager** |
 |----|----|----|----|----|
 | Submit a request | Yes | Yes | Yes | Yes |
@@ -294,6 +296,8 @@ Three properties of this model carry engineering weight. First, it is closed: FR
 # 9. Requirements Traceability Matrix
 
 The live RTM is maintained in the registers workbook and in the repository; it holds one row per requirement, 42 rows in total. The extract below shows its structure. Columns for design, issue and Pull Request, implementation, test and release evidence are present and deliberately empty: they are the structure into which M2, M3 and M4 evidence is added, and their presence now is what makes the M3 change request an impact lookup rather than an investigation (RSK-03).
+
+*Reading note from v2.0: this extract is shown as at the M1 baseline, so the design column still reads Pending M2. The M2 design evidence is in s18 to s25, and s25.2 continues the two traces in s9.1. The extract is updated with the M2 register changes (#54), and this note is removed when it is.*
 
 | **RTM ID** | **Source (stakeholder / brief)** | **Req ID** | **Requirement summary** | **Priority** | **Acceptance criteria** | **Related risk / FEC** | **Design ref (M2)** | **Issue / PR (M3)** | **Implementation (M3)** | **Test ref (M3)** | **Release evidence (M4)** | **Status** |
 |----|----|----|----|----|----|----|----|----|----|----|----|----|
@@ -459,6 +463,8 @@ Once PED v1.0 is signed off, a change to baselined scope, requirements or the st
 
 Significant decisions are recorded so that later consequences can be evaluated against what was known at the time (Master Brief, s13). Entries marked DEFERRED are as deliberate as those marked Decided: each states the evidence still required before the decision can responsibly be taken.
 
+*Reading note from v2.0: this log is shown as at the M1 baseline. DEC-008 to DEC-011 are taken or proposed in M2, and their current state is in s19 to s24 and s26.1. This section is updated with the M2 register changes, and this note is removed when it is.*
+
 | **ID** | **Decision** | **Status** | **Context** | **Constraints** | **Alternatives** | **Decision taken** | **Rationale** | **Trade-offs** | **Risks** | **Evidence / still required** | **Later consequence** |
 |----|----|----|----|----|----|----|----|----|----|----|----|
 | DEC-001 | Adopt four roles: Requester, Staff, Coordinator and Manager | Decided | The capabilities in Master Brief s3 group into three actor types, but assignment and prioritisation are distinct from carrying out work. | CON-06 team capability; CON-02 schedule; least privilege under CON-05. | \(a\) Three roles, folding coordination into Staff. (b) Four roles as adopted. (c) Five roles, separating Administrator from Manager. | Four roles, with administration held by Manager. | Three roles would give every Staff member the ability to set priority, defeating DEC-002 and the accountability the platform exists to create. Five roles adds a permission set and a test column for a separation no stakeholder in the analysis has asked for. | More roles means a larger access matrix and more negative tests. Manager holds both oversight and administration, which is a mild separation-of-duties compromise accepted for a team of this size. | If the organisation later requires separation of administration from oversight, the matrix and tests must be revised. | PED s5 stakeholder analysis; the access matrix in s8.4. | Sets the permission model that FR-002 and every negative test in M3 are derived from. |
@@ -501,6 +507,8 @@ AI is used as an engineering assistant. It is not authoritative evidence and doe
 **5.** No credentials, confidential material or personal data belonging to the organisation are exposed to external AI systems.
 
 ## 14.2 AI Usage Register
+
+*Reading note from v2.0: this register holds the M1 entries. The M2 entries are added with the M2 register changes (#70), and this note is removed when they are.*
 
 > **This register is incomplete by design**
 >
@@ -587,7 +595,11 @@ ISO (2023) *ISO/IEC 25010:2023 Systems and software engineering - Systems and so
 
 ISO/IEC/IEEE (2018) *ISO/IEC/IEEE 29148:2018 Systems and software engineering - Life cycle processes - Requirements engineering*. Geneva: International Organization for Standardization. Available at: https://www.iso.org/standard/72089.html
 
+Node.js (no date) *Node.js release schedule*. GitHub repository nodejs/Release. Available at: https://github.com/nodejs/Release (Accessed: 29 September 2026).
+
 OWASP (2025) *OWASP Top 10:2025 - Introduction*. Open Worldwide Application Security Project. Available at: https://owasp.org/Top10/2025/0x00_2025-Introduction/
+
+Prisma (2026) *Prisma 7.10.0 pins deepmerge-ts 7.1.5 and mysql2 3.15.3, which carry high-severity npm audit advisories*. GitHub issue #30295, prisma/prisma, 15 September. Available at: https://github.com/prisma/prisma/issues/30295 (Accessed: 29 September 2026).
 
 Republic of South Africa (2013) *Protection of Personal Information Act 4 of 2013*. Pretoria: Government Printer. Available at: https://www.gov.za/documents/protection-personal-information-act
 
@@ -614,7 +626,7 @@ ASR-01 to ASR-05 each carry a measurable target from the M1 baseline. ASR-06 doe
 
 **Decision (DEC-009, ADR-001).** CivicConnect is a modular monolith: one deployable application, divided into modules with explicit interfaces, over one relational database. Reporting reads the transactional store for now. The record is `docs/decisions/ADR-001-architecture-style.md` (#57), approved under #72.
 
-Four alternatives were compared against the six drivers. A service per capability would have to repeat authorisation across services and would need a distributed transaction or a compensation design for every audited change (ASR-01, ASR-03). A function per operation puts cold starts directly on NFR-001. A client over a hosted data service moves enforcement into store rules and a client the team does not control, against FR-002. No baselined requirement asks for independent deployment, independent scaling or a second consumer of the data, so the evidence for the distributed options is absent. The M2 brief's point that a more distributed architecture is not automatically more advanced applies directly.
+The modular monolith and three alternatives were compared against the six drivers. A service per capability would have to repeat authorisation across services and would need a distributed transaction or a compensation design for every audited change (ASR-01, ASR-03). A function per operation puts cold starts directly on NFR-001. A client over a hosted data service moves enforcement into store rules and a client the team does not control, against FR-002. No baselined requirement asks for independent deployment, independent scaling or a second consumer of the data, so the evidence for the distributed options is absent. The M2 brief's point that a more distributed architecture is not automatically more advanced applies directly.
 
 Five rules make the module boundaries real rather than folder names:
 
@@ -644,20 +656,20 @@ Five rules make the module boundaries real rather than folder names:
 
 | **Component** | **Version** | **Why it is here** |
 |----|----|----|
-| Node.js | 24 LTS, supported until 30 April 2028 | Runtime |
+| Node.js | 24 LTS, supported until 30 April 2028 (Node.js, no date) | Runtime |
 | Express | 5.2.1 | Server-side entry point (ADR-001 rule 1) |
 | Prisma CLI, client and PostgreSQL adapter | 7.10.0, pinned exactly | Schema, migrations and data access (DEC-011) |
 | pg | 8.23.0 | PostgreSQL driver the Prisma adapter uses |
 | argon2 | 0.45.1 | Password hashing for NFR-004 |
 | node-cron | 4.6.0 | In-process scheduling, if FEC-03 requires it |
 | Test runner | `node:test`, built in | NFR-012's evidence, with no added dependency |
-| React, React DOM, Vite | 19.3.0, 8.3.0 | Client, added with the first client work |
+| React and React DOM; Vite | 19.3.0; 8.3.0 | Client, added with the first client work |
 
 **How it was decided.** Node and Django both passed the hard gates, and the five measurable drivers came out level between them. Two register entries pointed in opposite directions: RSK-12 (Medium, 8) favours Django, which needs fewer packages, and RSK-01 (Critical, 20) favours Node, because its baselined mitigation prefers a stack in which at least two of three members have prior exposure, and Node meets that on both readings of prior exposure while Django meets it on neither. RSK-01 decided it, as the highest-scored risk on the register, with a preference fixed in M1 before any candidate was named. ADR-002 records how the drafts reached that answer, including two reversals.
 
 **Conditions.** Two things must happen before the bootstrap in #90 merges: the stack is run on a BC Desktop machine, recording the Node version found (gate 3), and the RSK-01 proof of concept passes, covering authentication, one persisted entity and one automated test.
 
-**Dependency finding.** Prisma 7.10.0 pins two packages that carry high-severity advisories no 7.x release has fixed (Prisma issue #30295). The bootstrap overrides them to their fixed versions, and the finding is recorded under RSK-12.
+**Dependency finding.** Prisma 7.10.0 pins two packages, deepmerge-ts 7.1.5 and mysql2 3.15.3, that carry high-severity advisories no 7.x release has fixed (Prisma, 2026). The bootstrap overrides them to their fixed versions. The finding is the risk RSK-12 describes, and RSK-12 is re-scored for it with the M2 register changes (#68).
 
 # 21. Data and Persistence
 
@@ -675,6 +687,10 @@ Milestone 2 requires at least two final project-specific design decisions inform
 
 **Applied and verified.** `src/modules/workflow-status/transition-table.js` and `transitions.js`. The tests check the table against a fixture exported from the Status Model register and exercise all 196 combinations of status pair and role. Three deliberate faults in the table each failed the suite.
 
+**Expected benefit.** The service, the interface and the tests read one set of rules, so FR-016 cannot fail through a copy that was not updated. A change to the Status Model, which RSK-09 expects, is one edited entry and a re-exported fixture, and leaves the other eleven transitions untouched.
+
+**Against the A2 recommendation.** It matches: A2 recommended the transition table (option 1C) over conditional logic in the service (1A) and the State pattern (1B). ADR-005 refines it in two ways. The table is frozen JavaScript data reviewed like code, where A2 said typed code, which keeps the property A2 wanted, that it cannot grow into an external configuration language. The authorisation policy is passed in as a function, so neither module imports the other.
+
 **Complexity accepted.** Guards could grow into an informal rules language, so they are kept small and in code, and the fixture has to be re-exported whenever the register changes.
 
 ## 22.2 Authorisation enforcement (ADR-006)
@@ -685,7 +701,13 @@ Milestone 2 requires at least two final project-specific design decisions inform
 
 **Applied and verified.** `src/modules/authorisation-policy/policy.js`. The tests generate a case from all sixty cells of a fixture exported from the Access Matrix register, and check for every role that the query condition and the single-request check select the same requests. Four deliberate faults in the policy each failed the suite.
 
-**What the tests found.** Four cells of the Access Matrix grant what the requirements refuse: the Manager assigning, rejecting and setting priority, and the Coordinator accepting an unassigned request. FR-016 makes the Status Model authoritative for transitions, and FR-021 gives priority to the Coordinator only. The policy denies all four, and #92 takes the conflict to change control.
+**Alternatives.** A2 compared three approaches: checks written inline in each handler (2A), which fails NFR-005 on the first omitted check; a central policy component (2B), testable against the Access Matrix but loading and then filtering on its own; and authorisation applied at the query (2C), correct for lists by construction but poor at decisions about actions.
+
+**Expected benefit.** NFR-005 becomes testable cell by cell against the register. Lists are filtered in the database, so NFR-001 is not spent loading requests the actor may not see. If FEC-01 moves staff scope to site or makes it global, only the policy module changes.
+
+**Against the A2 recommendation.** It matches: A2 recommended 2C for reads and 2B for actions. ADR-006 refines where the scope comes from. A2 placed query scoping in the repository methods, and under ADR-001 rule 2 the condition comes from the policy module and the persistence layer only applies it.
+
+**What the tests found.** Four cells of the Access Matrix grant what the requirements refuse: the Manager assigning, rejecting and setting priority, and the Coordinator accepting an unassigned request. FR-016 makes the Status Model authoritative for transitions, and the Status Model gives assigning to the Coordinator and accepting to Staff (FR-015), and rejecting to the Coordinator (FR-020). FR-021 gives priority to the Coordinator only. The policy denies all four, and #92 takes the conflict to change control.
 
 **Complexity accepted.** A query that does not use the scope bypasses it. Until a check enforces this, it rests on review, and the M3 negative tests at the endpoints are what catch a miss.
 
@@ -711,7 +733,7 @@ The transition table holds which roles may make each move, and the authorisation
 | Status transition mechanism | #93, ADR-005 | Open for review |
 | Authorisation policy | #94, ADR-006 | Merged |
 | Secret scanning as the first CI check | #87 | Draft. The account's Actions are locked on a billing issue, so the check has not yet run |
-| End-to-end path from submission to notification | #65 | Not started. Needs the data model from #58 |
+| End-to-end path from submission to notification | #65 | Not started. Needs the data model from #97 |
 
 ## 25.2 The two M1 traces, continued
 
@@ -721,17 +743,25 @@ s9.1 traced FR-011 and FR-016 on the evidence that existed at M1, with their lat
 
 | **Link** | **At M1 (s9.1)** | **At M2** |
 |----|----|----|
+| Architecture driver | Not in the M1 trace. The drivers were identified in M2 | ASR-01: authorisation is decided on the server, and scope reaches individual records (s18) |
+| Module | Not in the M1 trace | `authorisation-policy`, which owns read scope under ADR-001 rule 2 (s19) |
+| Technology | Not in the M1 trace. DEC-008 was deferred | Node.js 24 and `node:test` (ADR-002, #91, open for review) |
+| Data | FEC-01: the requester-visible split is a data-model property, so it constrains the M2 persistence design | ADR-007 (#97, changes requested) puts `visibility`, the field the policy's scope filters, on the entries. The review on #97 asks for action entries as their own entity |
 | Design evidence | Not yet produced. Due M2, RTM row TR-011, column H | ADR-006: action-entry scope in the policy module limits a Requester to entries marked requester-visible (FR-011, FR-017) |
-| Issue and Pull Request | Not yet produced. Due M3 | #62 and #94, ahead of the M3 schedule |
-| Test evidence | Not yet produced. Due M3 | A unit test asserts that a Requester's scope admits only requester-visible entries. The negative case in the acceptance criterion, that no internal entry appears in the response payload, is still due in M3 at the endpoint |
+| Issue and Pull Request | Not yet produced. Due M3 | #62 and #94, merged ahead of the M3 schedule |
+| Test evidence | Not yet produced. Due M3 | `tests/authorisation-policy.test.js` asserts that a Requester's scope admits only requester-visible entries. The negative case in the acceptance criterion, that no internal entry appears in the response payload, is still due in M3 at the endpoint |
 
 **FR-016: a status change only where the model allows it, by an authorised role.**
 
 | **Link** | **At M1 (s9.1)** | **At M2** |
 |----|----|----|
+| Architecture driver | Not in the M1 trace. The drivers were identified in M2 | ASR-03: every status change produces exactly one audit entry that nothing can edit (s18) |
+| Module | Not in the M1 trace | `workflow-status`, through which every status change passes under ADR-001 rule 3, with its roles evaluated by `authorisation-policy` (s19) |
+| Technology | Not in the M1 trace. DEC-008 was deferred | Node.js 24 and `node:test` (ADR-002, #91, open for review) |
+| Data | FEC-02: the model constrains the M2 persistence design | ADR-007 (#97, changes requested): the Request's current status and its status-history row, written in one transaction under ADR-001 rule 3 |
 | Design evidence | Not yet produced. Due M2, RTM row TR-016, column H | ADR-005: the transition table holds the model, and ADR-006 evaluates its roles. ADR-001 rule 3 places the change in the workflow module |
-| Issue and Pull Request | Not yet produced. Due M3 | #61 and #93, ahead of the M3 schedule |
-| Test evidence | Not yet produced. Due M3: a matrix over all ordered status pairs | The matrix exists at unit level: all 196 combinations of status pair and role, checked against the Status Model register. The acceptance criterion's refusal "when issued directly to the endpoint" is still due in M3, once #65 builds the endpoint |
+| Issue and Pull Request | Not yet produced. Due M3 | #61 and #93, open for review, ahead of the M3 schedule |
+| Test evidence | Not yet produced. Due M3: a matrix over all ordered status pairs | The matrix exists at unit level in `tests/workflow-status.test.js`: all 196 combinations of status pair and role, checked against the Status Model register. The acceptance criterion's refusal "when issued directly to the endpoint" is still due in M3, once #65 builds the endpoint |
 
 RTM columns H to K for both rows are updated to match through #54.
 
@@ -757,7 +787,9 @@ The baseline is PED v2.0 and the registers workbook as signed off in s26.3, date
 
 These are recorded separately from the baseline, as the M2 brief requires, each with what would close it.
 
-**The two ADR-002 conditions**: the campus check (gate 3) and the RSK-01 proof of concept, both before #90 merges.
+**DEC-008, the two ADR-002 conditions**: the campus check (gate 3), recording the Node version a BC Desktop machine has, and the RSK-01 proof of concept covering authentication, one persisted entity and one automated test. Both must pass before #90 merges, and if either fails, DEC-008 is revisited through change control.
+
+**DEC-010, the deployment direction (#60)**: not yet recorded. ADR-002 leaves to it the stack's deployment compatibility, the free-tier limits and the likely running cost (NFR-013), and ADR-007 leaves to it persistent storage, the backup schedule and a demonstrated restore. Section 24 records it.
 
 **#92**: four Access Matrix cells that conflict with FR-016 and FR-021, for change control.
 
