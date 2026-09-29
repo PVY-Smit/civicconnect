@@ -709,7 +709,7 @@ The transition table holds which roles may make each move, and the authorisation
 |----|----|----|
 | Project bootstrap aligned to ADR-001's ten modules | #90 | Open, merge gated by the ADR-002 conditions |
 | Status transition mechanism | #93, ADR-005 | Open for review |
-| Authorisation policy | #94, ADR-006 | Open for review |
+| Authorisation policy | #94, ADR-006 | Merged |
 | Secret scanning as the first CI check | #87 | Draft. The account's Actions are locked on a billing issue, so the check has not yet run |
 | End-to-end path from submission to notification | #65 | Not started. Needs the data model from #58 |
 
@@ -744,10 +744,10 @@ RTM columns H to K for both rows are updated to match through #54.
 | Architecturally significant requirements | `docs/architecture/asr-quality-drivers.md` | #71, merged |
 | Architecture style, with module and deployment views | ADR-001, DEC-009 | #72, merged; Decision Log row #82 |
 | Technology stack | ADR-002, DEC-008 | #91 |
-| Data and persistence | ADR-003, DEC-011 | #58 |
-| Notification interface | ADR-004 | #63 |
+| Data and persistence | ADR-007, DEC-011 | #97 |
+| Notification interface | ADR-008 | #98 |
 | Status transition mechanism | ADR-005 | #93 |
-| Authorisation enforcement | ADR-006 | #94 |
+| Authorisation enforcement | ADR-006 | #94, merged |
 | Deployment direction | DEC-010 | #60 |
 | This document | PED v2.0 | #55 |
 
