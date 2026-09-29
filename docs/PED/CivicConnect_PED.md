@@ -730,7 +730,7 @@ The transition table holds which roles may make each move, and the authorisation
 | **Work** | **Evidence** | **State at the time of writing** |
 |----|----|----|
 | Project bootstrap aligned to ADR-001's ten modules | #90 | Open, merge gated by the ADR-002 conditions |
-| Status transition mechanism | #93, ADR-005 | Open for review |
+| Status transition mechanism | #93, ADR-005 | Merged |
 | Authorisation policy | #94, ADR-006 | Merged |
 | Secret scanning as the first CI check | #87 | Draft. The account's Actions are locked on a billing issue, so the check has not yet run |
 | End-to-end path from submission to notification | #65 | Not started. Needs the data model from #97 |
@@ -760,7 +760,7 @@ s9.1 traced FR-011 and FR-016 on the evidence that existed at M1, with their lat
 | Technology | Not in the M1 trace. DEC-008 was deferred | Node.js 24 and `node:test` (ADR-002, #91, open for review) |
 | Data | FEC-02: the model constrains the M2 persistence design | ADR-007 (#97, changes requested): the Request's current status and its status-history row, written in one transaction under ADR-001 rule 3 |
 | Design evidence | Not yet produced. Due M2, RTM row TR-016, column H | ADR-005: the transition table holds the model, and ADR-006 evaluates its roles. ADR-001 rule 3 places the change in the workflow module |
-| Issue and Pull Request | Not yet produced. Due M3 | #61 and #93, open for review, ahead of the M3 schedule |
+| Issue and Pull Request | Not yet produced. Due M3 | #61 and #93, merged ahead of the M3 schedule |
 | Test evidence | Not yet produced. Due M3: a matrix over all ordered status pairs | The matrix exists at unit level in `tests/workflow-status.test.js`: all 196 combinations of status pair and role, checked against the Status Model register. The acceptance criterion's refusal "when issued directly to the endpoint" is still due in M3, once #65 builds the endpoint |
 
 RTM columns H to K for both rows are updated to match through #54.
@@ -778,7 +778,7 @@ The baseline is PED v2.0 and the registers workbook as signed off in s26.3, date
 | Technology stack | ADR-002, DEC-008 | #91 | Open for review. Conditional on the two ADR-002 conditions in s26.2 |
 | Data and persistence | ADR-007, DEC-011 | #97 | Changes requested |
 | Notification interface | ADR-008 | #98 | Changes requested |
-| Status transition mechanism | ADR-005 | #93 | Open for review |
+| Status transition mechanism | ADR-005 | #93 | Merged |
 | Authorisation enforcement | ADR-006 | #94 | Merged |
 | Deployment direction | DEC-010 | #60 | Not yet raised |
 | This document | PED v2.0 | #95 | Draft. s21 and s23 are in #99, and s24 is still to be written |
