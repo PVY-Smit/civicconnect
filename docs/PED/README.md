@@ -40,7 +40,9 @@ generated from it (#55).
   ```
 
 - A figure is an image line followed by its caption paragraph. Keep the PNG in this folder, with its
-  source beside it (#36):
+  source beside it (#36). A figure that belongs to another record, such as the architecture views in
+  `docs/architecture/diagrams/`, is referenced where it lives, with its source beside it there, so
+  that there is only one copy to correct:
 
   ```markdown
   ![Figure 3. Caption text.](fig3_name.png)
@@ -74,6 +76,8 @@ subtitle beneath it and the milestone in the cover table.
 - If Pandoc is not on the PATH, set `PANDOC` to its location.
 - `--out PATH` writes somewhere else, for checking a build without replacing the committed one.
 - The build refuses to overwrite the v1.0 document.
+- The build stops without writing if a section heading it sets the page orientation for is missing,
+  for example after a heading is renamed.
 
 The formatting comes from the v1.0 document. Anything whose text matches v1.0 is reused from it, and
 anything new takes v1.0's formatting for that kind of element, so additions look like the rest. The

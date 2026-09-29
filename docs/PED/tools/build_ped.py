@@ -543,6 +543,9 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
     plan = list(section_plan) + list(NEW_SECTIONS.items())
     heading_pos = {text(e): k for k, e in enumerate(out) if e.tag == q("w:p") and heading_level(e, style_names)}
     missing = [h for h, _ in plan if h is not None and h not in heading_pos]
+    if missing:
+        # A renamed or removed heading would leave its section in the wrong orientation.
+        raise SystemExit(f"section headings not found, so their page setup cannot be applied: {missing}")
     start_orient = {heading_pos[h]: o for h, o in plan if h is not None and h in heading_pos}
     current = next(o for h, o in plan if h is None)
     placed = []
@@ -600,5 +603,3 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
 sects = len(gdoc.findall(".//w:sectPr", NS))
 print(f"built {args.out.name}: version {version}, milestone {milestone}, {sects} sections")
 print("  " + ", ".join(f"{k} {v}" for k, v in sorted(stats.items())))
-if missing:
-    print("  section headings not found:", missing)
