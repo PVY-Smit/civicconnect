@@ -739,17 +739,19 @@ RTM columns H to K for both rows are updated to match through #54.
 
 ## 26.1 What the baseline contains
 
-| **Item** | **Record** | **Evidence** |
-|----|----|----|
-| Architecturally significant requirements | `docs/architecture/asr-quality-drivers.md` | #71, merged |
-| Architecture style, with module and deployment views | ADR-001, DEC-009 | #72, merged; Decision Log row #82 |
-| Technology stack | ADR-002, DEC-008 | #91 |
-| Data and persistence | ADR-007, DEC-011 | #97 |
-| Notification interface | ADR-008 | #98 |
-| Status transition mechanism | ADR-005 | #93 |
-| Authorisation enforcement | ADR-006 | #94, merged |
-| Deployment direction | DEC-010 | #60 |
-| This document | PED v2.0 | #55 |
+The baseline is PED v2.0 and the registers workbook as signed off in s26.3, dated \[Insert the s26.3 sign-off date\]. The status column is as at 29 September 2026 and is updated at the sign-off.
+
+| **Item** | **Record** | **Evidence** | **Status** |
+|----|----|----|----|
+| Architecturally significant requirements | `docs/architecture/asr-quality-drivers.md` | #71 | Merged |
+| Architecture style, with module and deployment views | ADR-001, DEC-009 | #72; Decision Log row #82 | ADR merged. Decision Log row open for review |
+| Technology stack | ADR-002, DEC-008 | #91 | Open for review. Conditional on the two ADR-002 conditions in s26.2 |
+| Data and persistence | ADR-007, DEC-011 | #97 | Changes requested |
+| Notification interface | ADR-008 | #98 | Changes requested |
+| Status transition mechanism | ADR-005 | #93 | Open for review |
+| Authorisation enforcement | ADR-006 | #94 | Merged |
+| Deployment direction | DEC-010 | #60 | Not yet raised |
+| This document | PED v2.0 | #95 | Draft. s21 and s23 are in #99, and s24 is still to be written |
 
 ## 26.2 Open decisions and deferred concerns
 
