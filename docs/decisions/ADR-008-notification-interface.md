@@ -159,6 +159,7 @@ getRequesterNotifications(authenticatedRequesterId, since?)
     -> RequesterNotification[]
 ```
 
+
 where each returned notification contains only the information required for the in-application indication, for example:
 
 RequesterNotification
