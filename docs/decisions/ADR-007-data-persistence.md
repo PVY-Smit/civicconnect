@@ -224,7 +224,7 @@ Validation is deliberately split across three layers.
 
 **Database constraints** protect facts that must remain true regardless of the caller, including primary keys, foreign keys, uniqueness, required relationships, the unique request reference and non-null ActionEntry visibility.
 
-The database schema should also constrain `status` to the eight states defined by ADR-005 so an invalid status cannot be stored by bypassing service validation.
+The database schema should also constrain `status` to the seven states defined by ADR-005 so an invalid status cannot be stored by bypassing service validation.
 
 The layers therefore complement rather than replace each other.
 
