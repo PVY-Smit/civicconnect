@@ -264,6 +264,12 @@ Deployment under DEC-010 must therefore provide persistent storage independent o
 
 The exact hosting platform, backup schedule and recovery procedure belong to the deployment decision rather than this ADR.
 
+## Alternatives considered
+
+- Generate request references by reading the current maximum and adding one. Rejected because concurrent submissions can generate the same value; the database sequence is atomic.
+- Store FR-025 audit evidence only in RequestStatusHistory. Rejected because assignee and priority changes also require structured previous/new-value audit evidence.
+- Store ActionEntry records inside the audit trail. Rejected because FR-017 operational notes and FR-025/FR-026 immutable audit evidence have different purposes and access rules.
+
 ## Trade-offs accepted
 
 - Database-native sequence generation can leave gaps after failed or rolled-back transactions. This is accepted because uniqueness is required while gap-free numbering is not.
