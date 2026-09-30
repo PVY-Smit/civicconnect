@@ -39,7 +39,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.1 | 3 September 2026 | Jean Smit | Full initial draft: problem and business need, stakeholders, scope baseline, constraints, functional and non-functional requirements with acceptance criteria, RTM, Risk Register, Forward Engineering Considerations, Decision Log and governance. AI-assisted; recorded in s14.2. | Not reviewed. Direct commit, predating the branch controls established on 4 September 2026. | Superseded |
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
-| 2.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s13 and s14.2, which show the registers as at M1 until the M2 register changes update them. Two references for s20 are added to s17. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | In progress |
+| 2.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s13 and s14.2, which show the registers as at M1 until the M2 register changes update them. Three references are added to s17, two for s20 and one for s26.2. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | In progress |
 
 # 2. Purpose and How to Read This Document
 
@@ -601,6 +601,8 @@ OWASP (2025) *OWASP Top 10:2025 - Introduction*. Open Worldwide Application Secu
 
 Prisma (2026) *Prisma 7.10.0 pins deepmerge-ts 7.1.5 and mysql2 3.15.3, which carry high-severity npm audit advisories*. GitHub issue #30295, prisma/prisma, 15 September. Available at: https://github.com/prisma/prisma/issues/30295 (Accessed: 29 September 2026).
 
+Render (no date) *Deploy for free*. Render Docs. Available at: https://render.com/docs/free (Accessed: 30 September 2026).
+
 Republic of South Africa (2013) *Protection of Personal Information Act 4 of 2013*. Pretoria: Government Printer. Available at: https://www.gov.za/documents/protection-personal-information-act
 
 Sonatype (2026) *State of the Software Supply Chain Report: the evolving software supply chain attack surface*. Available at: https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware
@@ -787,19 +789,37 @@ The baseline is PED v2.0 and the registers workbook as signed off in s26.3, date
 
 These are recorded separately from the baseline, as the M2 brief requires, each with what would close it.
 
-**DEC-008, the two ADR-002 conditions**: the campus check (gate 3), recording the Node version a BC Desktop machine has, and the RSK-01 proof of concept covering authentication, one persisted entity and one automated test. Both must pass before #90 merges, and if either fails, DEC-008 is revisited through change control.
+**DEC-008, the two ADR-002 conditions**: ADR-002 merged under #91 on 30 September 2026, conditional on the campus check (gate 3), which records the Node version a BC Desktop machine has, and on the RSK-01 proof of concept covering authentication, one persisted entity and one automated test. Both must pass before #90 merges, and if either fails, DEC-008 is revisited through change control.
 
-**DEC-010, the deployment direction (#60)**: not yet recorded. ADR-002 leaves to it the stack's deployment compatibility, the free-tier limits and the likely running cost (NFR-013), and ADR-007 leaves to it persistent storage, the backup schedule and a demonstrated restore. Section 24 records it.
+**DEC-010, the deployment direction (#60)**: not yet recorded. ADR-002 leaves to it the stack's deployment compatibility, the free-tier limits and the likely running cost (NFR-013), and ADR-007 leaves to it persistent storage, the backup schedule and a demonstrated restore. The evidence gathered so far is Render's free tier: a web service that spins down after 15 minutes idle and a PostgreSQL database that expires after 30 days with no backups (Render, no date). Section 24 records the direction when it is taken.
 
-**#92**: four Access Matrix cells that conflict with FR-016 and FR-021, for change control.
+**DEC-011 and DEC-015, proposed**: ADR-007 (#97) and ADR-008 (#98) are reviewed and recorded as proposed in the Decision Log. Each becomes decided when its pull request merges.
+
+**CR-002, the Access Matrix**: four cells grant what FR-015, FR-016, FR-020 and FR-021 refuse (#92). CR-002 recommends correcting the matrix to the requirements; the team decides it at the sign-off. The authorisation policy denies the four cells in the meantime, so no code depends on the outcome.
+
+**#65, the end-to-end path**: moves to M3. It needs the bootstrap (#90), whose merge is gated on the DEC-008 conditions, and the data model (#97). The two design decisions and their tests are merged (#93, #94), so M3 wires them into a working path rather than designing them.
 
 **FEC-01**: whether staff and management scope stays by category, moves to site or becomes global. Only the policy module changes when it is answered.
 
 **FEC-06**: reporting reads the transactional store until one of the two measurements in ADR-001 reopens it.
 
-**SC-D-01**: notification beyond the in-application indication stays deferred, and the extension point under ADR-001 rule 4 keeps it possible.
+**SC-D-01**: notification beyond the in-application indication stays deferred. ADR-008 lists the conditions that would reopen it, and the extension point under ADR-001 rule 4 keeps it possible.
 
-**Prisma 8**: a separate decision, taken once Prisma 8 is released as stable.
+**Prisma**: the overrides for deepmerge-ts and mysql2 are removed when a Prisma 7 release fixes issue #30295 (RSK-12). Upgrading to Prisma 8 is a separate decision, taken once it is released as stable.
+
+**Known limitations carried from M1.** Each is an open issue, recorded here so the baseline does not imply it is resolved.
+
+**#27**: the Figure 2 label defect recorded in s16.1. Closed by regenerating the figure once its source is held (#36).
+
+**#36**: the sources of Figures 1 and 2 are not in the repository, so neither figure can be corrected. Figures 3 and 4 hold their sources beside them.
+
+**#37**: five branches breached the naming convention during M1. Closed by a check on branch names, or by recording the convention as advisory.
+
+**#47**: the definition of done and the PR template require checks to pass. The first check exists in #87; the requirement is met when a check runs on every pull request to main.
+
+**#48**: PED s12.4 covers scope, requirements and the status model, which is narrower than Master Brief s14. Closed by a change request widening s12.4.
+
+**#49**: the repository controls A2 Task 4 recommended. #87 is the first of them; the rest are M3 work.
 
 ## 26.3 Baseline sign-off
 
