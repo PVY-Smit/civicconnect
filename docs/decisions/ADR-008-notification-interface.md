@@ -40,7 +40,7 @@ FR-029's four requester indications map to controlled CivicConnect events as fol
 | `accepted` | RequestStatusHistory transition from `New` to `Assigned` or from `New` to `In Progress` | The first transition showing that staff have taken responsibility for the request is treated as acceptance. Either path is valid because ADR-005 permits the request to enter active handling with or without a separate assignment step. Only the first qualifying transition produces the accepted indication. |
 | `updated` | A new requester-visible ActionEntry under FR-017 | An authored update intended for the Requester produces the updated indication. Internal ActionEntries do not. Routine internal status transitions are not labelled `updated` merely because the status changed. |
 | `rejected` | Any RequestStatusHistory transition whose `toStatus` is `Rejected` | Moving the request into `Rejected` produces the rejected indication. |
-| `completed` | The first RequestStatusHistory transition whose `toStatus` is `Resolved` | `Resolved` is treated as completion for FR-029. A later move to `Closed` does not create a second completed indication for the same completion event. |
+| `completed` | Each RequestStatusHistory transition whose `toStatus` is `Resolved` | `Resolved` is treated as completion for FR-029. If a request is reopened and later resolved again, that new transition to `Resolved` produces a new completed indication. A later move to `Closed` does not create an additional completed indication. |
 
 This mapping makes FR-029 deterministic rather than leaving the notification component to infer meanings independently.
 
