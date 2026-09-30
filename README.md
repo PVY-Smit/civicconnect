@@ -43,3 +43,32 @@ Request as the change that affects them.
 | M2 | Architecture, Design and Engineering Decisions | Not started |
 | M3 | Controlled Construction, Integration, Quality and Release Readiness | Not started |
 | M4 | Final Product, Project Success and Engineering Defence | Not started |
+
+
+
+## 💻 Local Developer Environment Installation & Setup (#66)
+
+Follow these steps sequentially to clone, configure, and verify your local sandbox environment:
+
+### 1. Engine & Environment Verification
+Ensure your local host machine satisfies the system runtime version engine constraints baselined in ADR-002:
+*   Verify your active Node.js execution engine (`node -v` must return `>=24`).
+
+### 2. Environment Configuration Profile
+Construct an active configuration credentials file named **`.env`** directly in the root directory of the repository. Populate it with your target local or remote PostgreSQL connection string parameters:
+```env
+DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database>?schema=public"
+```
+
+### 3. Core Ecosystem Initialization
+Execute these commands sequentially in your terminal daemon to initialize third-party package dependencies, compile the local Prisma Client configurations, and trigger local verification sweeps:
+```bash
+# Install local node modules
+npm install
+
+# Compile engine database schemas and generate Prisma Client hooks
+npm run prisma:generate
+
+# Execute the local automated integration testing suite
+npm test
+```
