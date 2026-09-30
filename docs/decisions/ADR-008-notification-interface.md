@@ -157,3 +157,106 @@ A logical interface is:
 ```text
 getRequesterNotifications(authenticatedRequesterId, since?)
     -> RequesterNotification[]
+```
+
+where each returned notification contains only the information required for the in-application indication, for example:
+
+RequesterNotification
+- type: accepted | updated | rejected | completed
+- requestId
+- requestReference
+- occurredAt
+
+The implementation may query the persisted status-history and ActionEntry evidence through the persistence module, but callers do not access the database directly.
+
+The exact programming-language signature belongs to implementation. The architectural contract is the ownership, event mapping, authorisation and information boundary defined here.
+
+## Coupling and proportionality
+
+An in-process boundary is proportionate because both producer evidence and consumer logic currently live inside the same modular monolith.
+
+Introducing a message broker, external notification API or separate notification service in M2 would add:
+
+- another deployable or operational dependency;
+- network failure handling;
+- additional authentication and secret-management requirements;
+- retry and duplicate-delivery behaviour; and
+- more production monitoring.
+
+FR-029 does not currently require those costs.
+
+The interface still prevents the request workflow from depending directly on a particular UI implementation.
+
+## Future asynchronous delivery
+
+SC-D-01 keeps email/SMS outside the current scope.
+
+The decision should be reconsidered if a future requirement introduces:
+
+- email or SMS delivery;
+- delivery while the user is offline;
+- durable read/unread or acknowledgement state;
+- retry after external-provider failure;
+- independent scaling of notification processing; or
+- a deployment boundary between request processing and notification delivery.
+
+At that point, a persisted Notification/Outbox record can become the durable hand-off and an asynchronous worker or external provider can consume it.
+
+That extension must define idempotency, retries, duplicate handling, provider failure behaviour, secrets and operational monitoring before external delivery is enabled.
+
+## Versioning
+
+The M2 notification interface is internal to the modular monolith and is not a public versioned HTTP API.
+
+Breaking changes are therefore coordinated through the application code and ADR/RTM controls rather than through a public endpoint version.
+
+If the boundary later becomes asynchronous or externally consumed, the event/message contract must receive an explicit versioning and compatibility policy.
+
+## Trade-offs accepted
+
+- Deriving M2 indications from existing persisted evidence avoids duplicate notification state, but notification reads require mapping history/action entries into FR-029 indication types.
+- `updated` is deliberately tied to requester-visible ActionEntry creation rather than every internal state change.
+- `Resolved`, rather than `Closed`, produces `completed`, avoiding duplicate completion indications.
+- An in-process interface is simpler and easier to test but does not independently buffer work if the application process is unavailable.
+- Email/SMS is deferred, so M2 does not provide an external notification channel.
+
+## Risks created
+
+1. The FR-029 event mapping becomes inconsistent with workflow changes.  
+   Mitigation: ADR-005 remains the status-transition authority; changes to relevant transitions must review this mapping.
+
+2. An internal ActionEntry is accidentally exposed as a requester update.  
+   Mitigation: ADR-006 controls ActionEntry scope and only explicitly requester-visible ActionEntries qualify for `updated`.
+
+3. Derived notification queries become inefficient as history grows.  
+   Mitigation: ADR-007 owns indexing/query measurement; if measured evidence shows this path is inadequate, introduce a dedicated notification read model or persisted Notification entity.
+
+4. Future external delivery is added without durable retry/idempotency behaviour.  
+   Mitigation: SC-D-01 remains deferred and reopening it requires a follow-up interface/deployment decision covering persistence, retries, duplicates, secrets and monitoring.
+
+## Evidence
+
+- FR-029
+- FR-017
+- ADR-001 rule 4
+- ADR-005
+- ADR-006
+- ADR-007
+- DEC-005
+- SC-D-01
+- FEC-03
+- Assignment 2 Task 3
+- Issue #63
+- PR #98 review feedback
+
+## Later consequences
+
+- #65 uses this interface when the end-to-end path exposes requester notifications.
+- ADR-007 supplies the persisted RequestStatusHistory and ActionEntry evidence consumed by this interface.
+- The RTM interface column for FR-029 references ADR-008 and the implemented notification boundary.
+- Email/SMS remains deferred under SC-D-01.
+- If M3 introduces durable read/unread state or external delivery, the persistence and deployment decisions must be extended before that behaviour is implemented.
+
+
+getRequesterNotifications(authenticatedRequesterId, since?)
+    -> RequesterNotification[]
