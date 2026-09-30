@@ -48,7 +48,7 @@ CREATE TABLE requests (
             'Resolved',
             'Closed',
             'Rejected',
-            'Reopened'
+       
         )
     )
 );
