@@ -1,8 +1,9 @@
 # ADR-001: Software architecture style
 
-- **Status:** Proposed. Awaiting two approvals under issue #57.
+- **Status:** Accepted. Approved by Darius Mushi and Tristan Roets on #72, merged 23 September 2026.
 - **Date:** 16 September 2026, revised 17 September 2026 after review on #72
-- **Decision Log entry:** DEC-009, recorded in M1 as deferred to M2.
+- **Decision Log entry:** DEC-009, recorded in M1 as deferred to M2, and recorded as decided in M2 with
+  the M1 entry kept in the same row.
 - **Drivers:** ASR-01 to ASR-06 in `docs/architecture/asr-quality-drivers.md` (#56).
 
 ## Context
