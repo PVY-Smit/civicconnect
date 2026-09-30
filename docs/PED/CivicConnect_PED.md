@@ -766,8 +766,8 @@ The controlling decision is recorded in [ADR-008: Request status notification in
 | Project bootstrap aligned to ADR-001's ten modules | #90 | Open, merge gated by the ADR-002 conditions |
 | Status transition mechanism | #93, ADR-005 | Merged |
 | Authorisation policy | #94, ADR-006 | Merged |
-| Secret scanning as the first CI check | #87 | Open, one approval. Its first run passed on 29 September 2026: 2 commits scanned, no leaks found |
-| End-to-end path from submission to notification | #65 | Not started. Needs the data model from #97 |
+| Secret scanning as the first CI check | #87 | Merged 30 September 2026. It runs on every pull request and push to main, and has passed on each run |
+| End-to-end path from submission to notification | #65 | Not started, and moved to M3 (s26.2). The data model has merged (#97); it needs the bootstrap (#90) |
 
 ## 25.2 The two M1 traces, continued
 
@@ -780,7 +780,7 @@ s9.1 traced FR-011 and FR-016 on the evidence that existed at M1, with their lat
 | Architecture driver | Not in the M1 trace. The drivers were identified in M2 | ASR-01: authorisation is decided on the server, and scope reaches individual records (s18) |
 | Module | Not in the M1 trace | `authorisation-policy`, which owns read scope under ADR-001 rule 2 (s19) |
 | Technology | Not in the M1 trace. DEC-008 was deferred | Node.js 24 and `node:test` (ADR-002, merged under #91) |
-| Data | FEC-01: the requester-visible split is a data-model property, so it constrains the M2 persistence design | ADR-007 (#97, under review) holds action entries as their own entity, ActionEntry, whose `visibility` is chosen explicitly with no default. It is the field the policy's scope filters |
+| Data | FEC-01: the requester-visible split is a data-model property, so it constrains the M2 persistence design | ADR-007 (#97, merged) holds action entries as their own entity, ActionEntry, whose `visibility` is chosen explicitly with no default. It is the field the policy's scope filters |
 | Design evidence | Not yet produced. Due M2, RTM row TR-011, column H | ADR-006: action-entry scope in the policy module limits a Requester to entries marked requester-visible (FR-011, FR-017) |
 | Issue and Pull Request | Not yet produced. Due M3 | #62 and #94, merged ahead of the M3 schedule |
 | Test evidence | Not yet produced. Due M3 | `tests/authorisation-policy.test.js` asserts that a Requester's scope admits only requester-visible entries. The negative case in the acceptance criterion, that no internal entry appears in the response payload, is still due in M3 at the endpoint |
@@ -792,7 +792,7 @@ s9.1 traced FR-011 and FR-016 on the evidence that existed at M1, with their lat
 | Architecture driver | Not in the M1 trace. The drivers were identified in M2 | ASR-03: every status change produces exactly one audit entry that nothing can edit (s18) |
 | Module | Not in the M1 trace | `workflow-status`, through which every status change passes under ADR-001 rule 3, with its roles evaluated by `authorisation-policy` (s19) |
 | Technology | Not in the M1 trace. DEC-008 was deferred | Node.js 24 and `node:test` (ADR-002, merged under #91) |
-| Data | FEC-02: the model constrains the M2 persistence design | ADR-007 (#97, under review): the Request's current status, its status-history row and one audit entry with the previous and new status, written in one transaction under ADR-001 rule 3 |
+| Data | FEC-02: the model constrains the M2 persistence design | ADR-007 (#97, merged): the Request's current status, its status-history row and one audit entry with the previous and new status, written in one transaction under ADR-001 rule 3 |
 | Design evidence | Not yet produced. Due M2, RTM row TR-016, column H | ADR-005: the transition table holds the model, and ADR-006 evaluates its roles. ADR-001 rule 3 places the change in the workflow module |
 | Issue and Pull Request | Not yet produced. Due M3 | #61 and #93, merged ahead of the M3 schedule |
 | Test evidence | Not yet produced. Due M3: a matrix over all ordered status pairs | The matrix exists at unit level in `tests/workflow-status.test.js`: all 196 combinations of status pair and role, checked against the Status Model register. The acceptance criterion's refusal "when issued directly to the endpoint" is still due in M3, once #65 builds the endpoint |
@@ -810,12 +810,12 @@ The baseline is PED v2.0 and the registers workbook as signed off in s26.3, date
 | Architecturally significant requirements | `docs/architecture/asr-quality-drivers.md` | #71 | Merged |
 | Architecture style, with module and deployment views | ADR-001, DEC-009 | #72; Decision Log row #82 | Merged |
 | Technology stack | ADR-002, DEC-008 | #91 | Merged. Conditional on the two ADR-002 conditions in s26.2 |
-| Data and persistence | ADR-007, DEC-011 | #97 | Changes requested: one fix to the SQL remaining |
-| Notification interface | ADR-008, DEC-015 | #98 | One approval |
+| Data and persistence | ADR-007, DEC-011 | #97 | Merged |
+| Notification interface | ADR-008, DEC-015 | #98 | Merged |
 | Status transition mechanism | ADR-005, DEC-013 | #93 | Merged |
 | Authorisation enforcement | ADR-006, DEC-014 | #94 | Merged |
 | Deployment direction | DEC-010 | #60, #103 | Section 24 under review in #103 |
-| This document | PED v2.0 | #95 | Draft. s21 and s23 are in #99, with one approval, and s24 is in #103 |
+| This document | PED v2.0 | #95 | Draft. s21 and s23 merged from #99; s24 is in #103 |
 
 ## 26.2 Open decisions and deferred concerns
 
@@ -824,8 +824,6 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 **DEC-008, the two ADR-002 conditions**: ADR-002 merged under #91 on 30 September 2026, conditional on the campus check (gate 3), which records the Node version a BC Desktop machine has, and on the RSK-01 proof of concept covering authentication, one persisted entity and one automated test. Both must pass before #90 merges, and if either fails, DEC-008 is revisited through change control.
 
 **DEC-010, the deployment direction (#60)**: not yet recorded. ADR-002 leaves to it the stack's deployment compatibility, the free-tier limits and the likely running cost (NFR-013), and ADR-007 leaves to it persistent storage, the backup schedule and a demonstrated restore. The evidence gathered so far is Render's free tier: a web service that spins down after 15 minutes idle and a PostgreSQL database that expires after 30 days with no backups (Render, no date). Section 24 records the direction when it is taken.
-
-**DEC-011 and DEC-015, proposed**: ADR-007 (#97) and ADR-008 (#98) are reviewed and recorded as proposed in the Decision Log. Each becomes decided when its pull request merges.
 
 **CR-002, the Access Matrix**: four cells grant what FR-015, FR-016, FR-020 and FR-021 refuse (#92). CR-002 recommends correcting the matrix to the requirements; the team decides it at the sign-off. The authorisation policy denies the four cells in the meantime, so no code depends on the outcome.
 
