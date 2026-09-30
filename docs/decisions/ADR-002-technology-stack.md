@@ -1,9 +1,11 @@
 # ADR-002: Technology stack
 
-- **Status:** Proposed. Awaiting two approvals under issue #59.
+- **Status:** Accepted, conditional on the two conditions under Decision. Approved by Tristan Roets and
+  Darius Mushi on #91, merged 30 September 2026.
 - **Date:** Drafted 19 September 2026 by Darius Mushi (three drafts). Finalised 23 September 2026 by
   Jean Smit at Darius's request. Amended 28 September 2026 after review on #91.
-- **Decision Log entry:** DEC-008, recorded in M1 as deferred to M2.
+- **Decision Log entry:** DEC-008, recorded in M1 as deferred to M2, and recorded as decided in M2 with
+  the M1 entry kept in the same row.
 - **Drivers:** ASR-04 and ASR-05 in `docs/architecture/asr-quality-drivers.md` (#56), with ASR-06 as a
   bound on complexity, which is how #56 assigns drivers to DEC-008. Team capability is weighed through
   the rule in RSK-01's baselined mitigation.
