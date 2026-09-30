@@ -8,7 +8,7 @@ CREATE TABLE users (
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+);action_entries 
 
 CREATE TABLE categories (
     id BIGSERIAL PRIMARY KEY,
@@ -74,7 +74,10 @@ CREATE TABLE action_entries (
     author_id BIGINT NOT NULL REFERENCES users(id),
     body TEXT NOT NULL,
     visibility VARCHAR(30) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_action_entry_visibility CHECK (
+        visibility IN ('internal', 'requester-visible')
+    )
 );
 
 CREATE INDEX idx_action_entries_request
