@@ -11,7 +11,7 @@ Project Engineering Document (PED) v2.0
 | **Milestone** | Milestone 2 - Architecture, Technology and Initial Design Baseline |
 | **Document** | PED v2.0, evolved from PED v1.0, which is kept unchanged in the repository as the M1 record. This document evolves through v3.0 and v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v2.0 IN PROGRESS. The M1 gate for v1.0 has not yet been held, so s16 is still blank and s1 records v1.0 as a proposed baseline. Its outcome is recorded in s16 when it is held (#7), and the M2 baseline sign-off in s26.3. |
+| **Baseline status** | v2.0 BASELINED, CONDITIONALLY ACCEPTED on 30 September 2026 (s26.3, #69). The M1 baseline, v1.0, was signed off as conditionally accepted on the same date (s16, #7), after the M1 submission. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -39,7 +39,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.1 | 3 September 2026 | Jean Smit | Full initial draft: problem and business need, stakeholders, scope baseline, constraints, functional and non-functional requirements with acceptance criteria, RTM, Risk Register, Forward Engineering Considerations, Decision Log and governance. AI-assisted; recorded in s14.2. | Not reviewed. Direct commit, predating the branch controls established on 4 September 2026. | Superseded |
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
-| 2.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s13 and s14.2, which show the registers as at M1 until the M2 register changes update them. Three references are added to s17, two for s20 and one for s26.2. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | In progress |
+| 2.0 | 30 September 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s13 and s14.2, which show the registers as at M1 and point to the live versions in the workbook. Four references are added to s17, for s20, s24 and s26.2. The M1 sign-off is recorded in s16, after the M1 submission. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | Baselined, conditionally accepted (s26.3) |
 
 # 2. Purpose and How to Read This Document
 
@@ -263,7 +263,7 @@ Every target below states a number and the method by which it is measured. A qua
 
 This matrix is the authoritative statement of FR-002. Every entry marked No is a negative test case in M3, which is how NFR-005 becomes verifiable rather than aspirational.
 
-*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2), and #92 takes the conflict to change control. Until it is resolved, the requirements govern those four cells.*
+*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69); the correction of the Access Matrix and of this table is M3 work under #92.*
 
 | **Function** | **Requester** | **Staff** | **Coordinator** | **Manager** |
 |----|----|----|----|----|
@@ -297,7 +297,7 @@ Three properties of this model carry engineering weight. First, it is closed: FR
 
 The live RTM is maintained in the registers workbook and in the repository; it holds one row per requirement, 42 rows in total. The extract below shows its structure. Columns for design, issue and Pull Request, implementation, test and release evidence are present and deliberately empty: they are the structure into which M2, M3 and M4 evidence is added, and their presence now is what makes the M3 change request an impact lookup rather than an investigation (RSK-03).
 
-*Reading note from v2.0: this extract is shown as at the M1 baseline, so the design column still reads Pending M2. The M2 design evidence is in s18 to s25, and s25.2 continues the two traces in s9.1. The extract is updated with the M2 register changes (#54), and this note is removed when it is.*
+*Reading note from v2.0: this extract is shown as at the M1 baseline. The live RTM in the registers workbook carries the eight M2 columns (CR-003) for every requirement, with FR-016 traced end to end (#101, #105). s25.2 continues the two traces in s9.1.*
 
 | **RTM ID** | **Source (stakeholder / brief)** | **Req ID** | **Requirement summary** | **Priority** | **Acceptance criteria** | **Related risk / FEC** | **Design ref (M2)** | **Issue / PR (M3)** | **Implementation (M3)** | **Test ref (M3)** | **Release evidence (M4)** | **Status** |
 |----|----|----|----|----|----|----|----|----|----|----|----|----|
@@ -463,7 +463,7 @@ Once PED v1.0 is signed off, a change to baselined scope, requirements or the st
 
 Significant decisions are recorded so that later consequences can be evaluated against what was known at the time (Master Brief, s13). Entries marked DEFERRED are as deliberate as those marked Decided: each states the evidence still required before the decision can responsibly be taken.
 
-*Reading note from v2.0: this log is shown as at the M1 baseline. DEC-008 to DEC-011 are taken or proposed in M2, and their current state is in s19 to s24 and s26.1. This section is updated with the M2 register changes, and this note is removed when it is.*
+*Reading note from v2.0: this log is shown as at the M1 baseline. The live Decision Log in the registers workbook records DEC-008, DEC-009 and DEC-011 as decided, DEC-010 as still deferred for the production database, and DEC-013 to DEC-015 as the M2 design decisions (#101, #105). s19 to s24 and s26.1 summarise them.*
 
 | **ID** | **Decision** | **Status** | **Context** | **Constraints** | **Alternatives** | **Decision taken** | **Rationale** | **Trade-offs** | **Risks** | **Evidence / still required** | **Later consequence** |
 |----|----|----|----|----|----|----|----|----|----|----|----|
@@ -508,7 +508,7 @@ AI is used as an engineering assistant. It is not authoritative evidence and doe
 
 ## 14.2 AI Usage Register
 
-*Reading note from v2.0: this register holds the M1 entries. The M2 entries are added with the M2 register changes (#70), and this note is removed when they are.*
+*Reading note from v2.0: this register holds the M1 entries. The live AI Usage Register in the registers workbook adds the A2, A3 and M2 entries for all three members (#101, #104).*
 
 > **This register is incomplete by design**
 >
@@ -547,19 +547,19 @@ PED v1.0 becomes the controlled engineering baseline when this sign-off is compl
 | **Baseline type** | Engineering Foundation and Requirements Baseline |
 | **Document** | PED v1.0 |
 | **Version** | 1.0 |
-| **Date** | \[Insert date\] |
-| **Scope reviewed** | YES / NO |
-| **Requirements and traceability checked** | YES / NO |
-| **Risk review completed** | YES / NO |
-| **Repository and governance controls checked** | YES / NO |
-| **Forward Engineering Considerations reviewed** | YES / NO |
-| **AI Usage Register current and verified** | YES / NO |
-| **Outcome** | ACCEPTED / CONDITIONALLY ACCEPTED / REVISION REQUIRED |
-| **Conditions recorded (if any)** | \[Insert\] |
-| **Team approval - Jean Smit** | Signature / date |
-| **Team approval - Tristan Roets** | Signature / date |
-| **Team approval - Darius Mushi** | Signature / date |
-| **Assessor / client gate decision** | \[Insert\] |
+| **Date** | 30 September 2026, after the M1 submission. Answers recorded on #69 |
+| **Scope reviewed** | YES |
+| **Requirements and traceability checked** | YES |
+| **Risk review completed** | YES |
+| **Repository and governance controls checked** | YES, noting #37 and #47 |
+| **Forward Engineering Considerations reviewed** | YES |
+| **AI Usage Register current and verified** | YES |
+| **Outcome** | CONDITIONALLY ACCEPTED |
+| **Conditions recorded (if any)** | #27 the Figure 2 label defect; #36 figure sources not held in the repository; #37 branch naming breached on five branches; #47 checks required before any existed; #48 s12.4 narrower than Master Brief s14. Each is carried in s26.2 |
+| **Team approval - Jean Smit** | Approved, 30 September 2026 (#69) |
+| **Team approval - Tristan Roets** | Approved, 30 September 2026 (#69) |
+| **Team approval - Darius Mushi** | Approved, 30 September 2026 (#69) |
+| **Assessor / client gate decision** | For the assessor to complete |
 
 > **Gate outcomes (M1 brief, s9)**
 >
@@ -813,7 +813,7 @@ RTM rows TR-011 and TR-016 carry the same links in the M2 columns (#54, #101), a
 
 ## 26.1 What the baseline contains
 
-The baseline is PED v2.0 and the registers workbook as signed off in s26.3, dated \[Insert the s26.3 sign-off date\]. The status column is as at 30 September 2026 and is updated at the sign-off.
+The baseline is PED v2.0 and the registers workbook as signed off in s26.3, dated 30 September 2026. The status column is as at 30 September 2026 and is updated at the sign-off.
 
 | **Item** | **Record** | **Evidence** | **Status** |
 |----|----|----|----|
@@ -824,18 +824,18 @@ The baseline is PED v2.0 and the registers workbook as signed off in s26.3, date
 | Notification interface | ADR-008, DEC-015 | #98 | Merged |
 | Status transition mechanism | ADR-005, DEC-013 | #93 | Merged |
 | Authorisation enforcement | ADR-006, DEC-014 | #94 | Merged |
-| Deployment direction | DEC-010 | #60, #103 | Section 24 under review in #103 |
-| This document | PED v2.0 | #95 | Draft. s21 and s23 merged from #99; s24 is in #103 |
+| Deployment direction | DEC-010 | #60, #103 | Merged. The production database is deferred to M3 (s26.2) |
+| This document | PED v2.0 | #95 | Signed off 30 September 2026 (s26.3) |
 
 ## 26.2 Open decisions and deferred concerns
 
 These are recorded separately from the baseline, as the M2 brief requires, each with what would close it.
 
-**DEC-008, the two ADR-002 conditions**: ADR-002 merged under #91 on 30 September 2026, conditional on the campus check (gate 3), which records the Node version a BC Desktop machine has, and on the RSK-01 proof of concept covering authentication, one persisted entity and one automated test. Both must pass before #90 merges, and if either fails, DEC-008 is revisited through change control.
+**DEC-008, the two ADR-002 conditions**: ADR-002 merged under #91 on 30 September 2026, conditional on the campus check (gate 3), which records the Node version a BC Desktop machine has, and on the RSK-01 proof of concept covering authentication, one persisted entity and one automated test. Both must pass before #90 merges, and if either fails, DEC-008 is revisited through change control. The check posted on #64 on 30 September 2026 was run on a member's own machine, on Node 25.9.0 with mock data, so neither condition is met yet.
 
-**DEC-010, the deployment direction (#60)**: not yet recorded. ADR-002 leaves to it the stack's deployment compatibility, the free-tier limits and the likely running cost (NFR-013), and ADR-007 leaves to it persistent storage, the backup schedule and a demonstrated restore. The evidence gathered so far is Render's free tier: a web service that spins down after 15 minutes idle and a PostgreSQL database that expires after 30 days with no backups (Render, no date). Section 24 records the direction when it is taken.
+**DEC-010, the production database**: Section 24 records the application running as a Render web service (#103). The production database is deferred to M3. Render's free PostgreSQL expires 30 days after creation and is then deleted, and it supports no backups (Render, no date), so it cannot be the system of record that ADR-007 requires to be backed up and restorable (RSK-20). Closing it needs one of two pieces of evidence: the projected cost of a paid database plan, assessed against CON-03 and NFR-013, or a free PostgreSQL host without the expiry. The single instance node-cron requires (RSK-26) and the cold start after 15 minutes idle, which NFR-002 and NFR-001 cannot absorb on the first request, are recorded in s24 as limits of the direction taken.
 
-**CR-002, the Access Matrix**: four cells grant what FR-015, FR-016, FR-020 and FR-021 refuse (#92). CR-002 recommends correcting the matrix to the requirements; the team decides it at the sign-off. The authorisation policy denies the four cells in the meantime, so no code depends on the outcome.
+**CR-002, the Access Matrix**: four cells grant what FR-015, FR-016, FR-020 and FR-021 refuse (#92). On 30 September 2026 the team decided to correct the matrix to the requirements for all four cells (#69). The correction of the Access Matrix sheet, s8.3 and the test fixture is M3 work; the authorisation policy already denies the four cells, so no code depends on it.
 
 **#65, the end-to-end path**: moves to M3. It needs the bootstrap (#90), whose merge is gated on the DEC-008 conditions, and the data model (#97). The two design decisions and their tests are merged (#93, #94), so M3 wires them into a working path rather than designing them.
 
@@ -853,11 +853,11 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 
 **#36**: the sources of Figures 1 and 2 are not in the repository, so neither figure can be corrected. Figures 3 and 4 hold their sources beside them.
 
-**#37**: five branches breached the naming convention during M1. Closed by a check on branch names, or by recording the convention as advisory.
+**#37**: five branches breached the naming convention during M1. Closed by a check on branch names.
 
 **#47**: the definition of done and the PR template require checks to pass. The first check exists in #87; the requirement is met when a check runs on every pull request to main.
 
-**#48**: PED s12.4 covers scope, requirements and the status model, which is narrower than Master Brief s14. Closed by a change request widening s12.4.
+**#48**: PED s12.4 is narrower than Master Brief s14. Closed by a change request widening it.
 
 **#49**: the repository controls A2 Task 4 recommended. #87 is the first of them; the rest are M3 work.
 
@@ -868,15 +868,15 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 | Project | CivicConnect - Community Service Request Management Platform |
 | Baseline type | Architecture, Technology and Initial Design Baseline |
 | Document | PED v2.0 |
-| Date | \[Insert date\] |
-| ASRs and architecture reviewed | YES / NO |
-| Technology selection and deployment direction reviewed | YES / NO |
-| Data and persistence model reviewed | YES / NO |
-| Design decisions reviewed against the code | YES / NO |
-| RTM, Risk Register and Forward Considerations updated | YES / NO |
-| AI Usage Register current and verified | YES / NO |
-| Outcome | ACCEPTED / CONDITIONALLY ACCEPTED / REVISION REQUIRED |
-| Conditions recorded (if any) | \[Insert\] |
-| Team approval - Jean Smit | Signature / date |
-| Team approval - Tristan Roets | Signature / date |
-| Team approval - Darius Mushi | Signature / date |
+| Date | 30 September 2026. Answers recorded on #69 |
+| ASRs and architecture reviewed | YES |
+| Technology selection and deployment direction reviewed | NO. ADR-002 is accepted, but DEC-010's production database is deferred to M3 (s24, s26.2) |
+| Data and persistence model reviewed | YES |
+| Design decisions reviewed against the code | YES |
+| RTM, Risk Register and Forward Considerations updated | YES |
+| AI Usage Register current and verified | YES |
+| Outcome | CONDITIONALLY ACCEPTED |
+| Conditions recorded (if any) | 1. DEC-010: the production database is chosen in M3 on the evidence in s24 and s26.2. 2. #90 merges only after the campus Node check (gate 3) and the RSK-01 proof of concept pass against a database. 3. #65, the end-to-end path, moves to M3. 4. CR-002 is implemented: the four Access Matrix cells are corrected to the requirements (#92) |
+| Team approval - Jean Smit | Approved, 30 September 2026 (#69) |
+| Team approval - Tristan Roets | Approved, 30 September 2026 (#69) |
+| Team approval - Darius Mushi | Approved, 30 September 2026 (#69) |
