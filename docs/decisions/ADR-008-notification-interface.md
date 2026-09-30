@@ -223,6 +223,12 @@ Breaking changes are therefore coordinated through the application code and ADR/
 
 If the boundary later becomes asynchronous or externally consumed, the event/message contract must receive an explicit versioning and compatibility policy.
 
+## Alternatives considered
+
+- Store each indication in a separate Notification table. Rejected for M2 because the qualifying RequestStatusHistory and requester-visible ActionEntry evidence is already persisted and can be mapped directly to FR-029 indications.
+- Introduce an external notification service or message broker now. Rejected because both producer and consumer are inside the current modular monolith and FR-029 does not require an external delivery boundary.
+- Treat every status transition as an `updated` indication. Rejected because FR-029 distinguishes accepted, updated, rejected and completed, while FR-017 requester-visible ActionEntries provide the clearer source for authored updates.
+
 ## Trade-offs accepted
 
 - Deriving M2 indications from existing persisted evidence avoids duplicate notification state, but notification reads require mapping history/action entries into FR-029 indication types.
