@@ -11,7 +11,7 @@ test("RSK-01: Authentication Logic and Data Persistence Verification", async (t)
 
   await t.test("Should successfully execute user registration, hashing, and password authentication lifecycle", async () => {
     // 1. Create an isolated proof-of-concept user table matching actual authentication needs
-    await prisma.\$executeRawUnsafe(`
+    await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS _rsk01_users (
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -26,14 +26,14 @@ test("RSK-01: Authentication Logic and Data Persistence Verification", async (t)
     const passwordHash = await argon2.hash(plainPassword);
 
     // 3. Persist the credentials to verify database write capability (Throws if database layer is broken)
-    await prisma.\$executeRawUnsafe(
+    await prisma.$executeRawUnsafe(
       `INSERT INTO _rsk01_users (email, password_hash) VALUES ($1, $2);`,
       testEmail,
       passwordHash
     );
 
     // 4. Read the user record back to simulate a login retrieval step
-    const records = await prisma.\$queryRawUnsafe(
+    const records = await prisma.$queryRawUnsafe(
       `SELECT * FROM _rsk01_users WHERE email = $1 LIMIT 1;`,
       testEmail
     );
@@ -50,6 +50,6 @@ test("RSK-01: Authentication Logic and Data Persistence Verification", async (t)
     assert.strictEqual(wrongPasswordMatches, false, "Authentication check must reject invalid passwords");
 
     // 7. Clean up database state completely
-    await prisma.\$executeRawUnsafe(`DROP TABLE IF EXISTS _rsk01_users;`);
+    await prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS _rsk01_users;`);
   });
 });
