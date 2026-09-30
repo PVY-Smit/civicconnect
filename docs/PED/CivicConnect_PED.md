@@ -607,6 +607,8 @@ Republic of South Africa (2013) *Protection of Personal Information Act 4 of 201
 
 Sonatype (2026) *State of the Software Supply Chain Report: the evolving software supply chain attack surface*. Available at: https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware
 
+Supabase (no date) *Edge Functions*. Supabase Docs. Available at: https://supabase.com/docs/guides/functions (Accessed: 30 September 2026).
+
 W3C (2023) *Web Content Accessibility Guidelines (WCAG) 2.2*. W3C Recommendation, 5 October. Available at: https://www.w3.org/TR/WCAG22/
 
 # 18. Architecturally Significant Requirements
@@ -755,7 +757,15 @@ The controlling decision is recorded in [ADR-008: Request status notification in
 
 # 24. Deployment Direction
 
-\[To be completed under #60 (DEC-010): the deployment direction and its compatibility with the stack in s20; the free-tier limits that support NFR-013 and NFR-003; the configuration and secrets implications; the single always-on instance node-cron requires if scheduling is used; and the deployment decisions deliberately deferred, with the evidence still required.\]
+**1.** **Evaluation of Baseline Hosting Infrastructures (DEC-010):** To resolve the operational hosting direction, a comparative architectural review was performed between Supabase and Render. Supabase provides a managed PostgreSQL database, but it runs server-side code as Edge Functions: TypeScript functions on the Deno runtime, distributed at the edge (Supabase, no date). The Express application in s20 is a long-running Node.js server, so on Supabase it would need a separate host. Render was selected because it natively supports generic multi-language web service runtimes, allowing the team to host our Express application and relational database in a unified workspace area that accommodates the s20 baseline technology stack footprint.
+
+**2.** **Infrastructure Constraints and Free Tier Disadvantages (NFR-013 & NFR-002):** In compliance with NFR-013, the platform's free tier bounds are explicitly constrained by official platform specifications (Render, no date). Operating under these parameters introduces severe operational limitations that alter system capability. Free web services automatically spin down after 15 minutes of idle traffic. A subsequent inbound request forces a container cold start that takes approximately one full minute to resolve, which explicitly breaks the 3-second application layer maximum latency bound required by NFR-002.
+
+**3.** **Storage Ephemerality and Milestone 3 Database Deferral (NFR-003):** Relational storage validation passes are fundamentally bound to Render Free PostgreSQL limits. Free PostgreSQL instances automatically expire 30 days after creation, after which a strict 14-day upgrade grace period is triggered before Render permanently deletes the database and all its associated data rows. Furthermore, the free database tier lacks all automated backup layers and connection pooling. Consequently, this managed instance serves strictly as an initial environment proof of concept and cannot function as our persistent production database cluster. The final production database choice is deliberately deferred to Milestone 3, pending team investigation into paid tier operational costs or identifying an alternative free PostgreSQL host that does not enforce an automatic 30-day deletion limit.
+
+**4.** **Credential Isolation and Automated TLS Mapping (NFR-006):** Security baseline parameters conform strictly to NFR-006; Render automatically provisions and manages free fully-managed TLS certificates across all custom web service endpoints, removing manual certificate configuration blocks from the Milestone 3 roadmap scope. All production infrastructure connection strings and database credential keys are completely abstracted away from source control, injected at the container instance tier, and resolved at runtime via centralized wrapper modules (`src/lib/env.js`).
+
+**5.** **Background Automation Task Scheduling Restrictions (FEC-03):** Localized automation routines designed via standard background tracking daemons (`node-cron`) are severely limited on this tier. Because free web service containers sleep during idle cycles, the application event loop pauses, meaning background cron routines will completely fail to execute when the platform is asleep. Additionally, standalone Render background workers and native cron jobs are restricted to paid tiers only. To preserve data integrity and prevent task race anomalies, the platform is restricted strictly to a single (1) active running instance. Advanced continuous delivery deployment scripts and remote log stream aggregators are deliberately deferred for Milestone 3 evaluation.
 
 # 25. Development Evidence and Traceability
 
