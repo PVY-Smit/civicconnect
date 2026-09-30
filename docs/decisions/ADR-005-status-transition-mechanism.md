@@ -1,9 +1,8 @@
 # ADR-005: Status transition mechanism
 
-- **Status:** Proposed. Awaiting two approvals under issue #61.
+- **Status:** Accepted. Approved by Darius Mushi and Tristan Roets on #93, merged 29 September 2026.
 - **Date:** 28 September 2026
-- **Decision Log entry:** a new entry, added with the M2 register changes, which assigns the next free
-  identifier in the order decisions are taken.
+- **Decision Log entry:** DEC-013, added with the M2 register changes (#101).
 - **Drivers:** ASR-03 and ASR-04 in `docs/architecture/asr-quality-drivers.md` (#56), and ADR-001 rule 3.
   This is the first of the two final design decisions the M2 brief requires (s5.6, team criterion E).
 

@@ -1,8 +1,9 @@
 # ADR-008: Request status notification interface
 
-- **Status:** Proposed. Awaiting review under issue #63.
+- **Status:** Accepted. Approved by Jean Smit and Darius Mushi on #98, merged 30 September 2026.
 - **Date:** 28 September 2026
 - **Decision:** Notification interface for M2
+- **Decision Log entry:** DEC-015, added with the M2 register changes (#101).
 - **Drivers:** FR-017, FR-029, DEC-005, SC-D-01, FEC-03, ADR-001 rule 4, ADR-005, ADR-006, ADR-007 and the Assignment 2 Task 3 recommendation.
 
 ## Context

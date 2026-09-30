@@ -1,8 +1,9 @@
 # ADR-007: Data and persistence design
 
-- **Status:** Proposed. Awaiting two approvals under issue #58.
+- **Status:** Accepted. Approved by Jean Smit and Darius Mushi on #97, merged 30 September 2026.
 - **Date:** 28 September 2026
-- **Decision Log entry:** DEC-011, recorded in M1 as deferred to M2.
+- **Decision Log entry:** DEC-011, recorded in M1 as deferred to M2, and recorded as decided in M2 with
+  the M1 entry kept in the same row.
 - **Drivers:** FR-005 to FR-009, FR-011, FR-012, FR-017, FR-018, FR-020, FR-021, FR-025, FR-026, NFR-011, FEC-06, ADR-001 rules 2, 3 and 5.
 
 ## Context

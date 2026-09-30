@@ -1,9 +1,8 @@
 # ADR-006: Authorisation enforcement
 
-- **Status:** Proposed. Awaiting two approvals under issue #62.
+- **Status:** Accepted. Approved by Darius Mushi and Tristan Roets on #94, merged 29 September 2026.
 - **Date:** 28 September 2026
-- **Decision Log entry:** a new entry, added with the M2 register changes, which assigns the next free
-  identifier in the order decisions are taken.
+- **Decision Log entry:** DEC-014, added with the M2 register changes (#101).
 - **Drivers:** ASR-01 and ASR-02 in `docs/architecture/asr-quality-drivers.md` (#56), and ADR-001 rules
   1 and 2. This is the second of the two final design decisions the M2 brief requires (s5.6, team
   criterion E).
