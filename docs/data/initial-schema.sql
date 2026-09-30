@@ -47,7 +47,7 @@ CREATE TABLE requests (
             'On Hold',
             'Resolved',
             'Closed',
-            'Rejected',
+            'Rejected'
        
         )
     )
