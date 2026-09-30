@@ -181,7 +181,7 @@ Creation of a request is one transaction:
 2. Confirm that referenced records such as the category exist and are valid for the operation.
 3. Obtain the next atomic reference value.
 4. Insert the Request in `New` state.
-5. Insert the initial history/audit evidence required by the controlled requirements.
+5. Insert the initial RequestStatusHistory row with `fromStatus = null` and `toStatus = New` so the FR-011 timeline starts at submission. Request creation does not create an FR-025 AuditEntry because FR-025 audits changes to an existing value and creation has no previous value.
 6. Commit.
 
 If a required write fails, the transaction rolls back and no partial Request is exposed.
