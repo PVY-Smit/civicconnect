@@ -1,0 +1,31 @@
+{
+  "name": "civicconnect",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node src/server.js",
+    "test": "node --test",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "argon2": "0.45.1",
+    "dotenv": "18.0.4",
+    "express": "5.2.1",
+    "node-cron": "4.6.0",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "prisma": "7.10.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "mysql2": "3.24.4"
+  }
+}

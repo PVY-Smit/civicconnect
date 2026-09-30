@@ -35,3 +35,5 @@ Thumbs.db
 ~$*.docx
 ~$*.xlsx
 ~$*.pptx
+
+src/generated/
