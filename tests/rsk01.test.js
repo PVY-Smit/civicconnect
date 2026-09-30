@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert";
+import argon2 from "argon2";
 import { prisma } from "../src/lib/prisma.js";
 
 test("RSK-01: Authentication Logic and Data Persistence Verification", async (t) => {
@@ -8,37 +9,47 @@ test("RSK-01: Authentication Logic and Data Persistence Verification", async (t)
     assert.ok(prisma, "Prisma database client instance should be defined");
   });
 
-  await t.test("Should successfully execute a full write and read cycle on the database ledger", async (tContext) => {
-    // 1. Create an isolated proof-of-concept test table
+  await t.test("Should successfully execute user registration, hashing, and password authentication lifecycle", async () => {
+    // 1. Create an isolated proof-of-concept user table matching actual authentication needs
     await prisma.\$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS _rsk01_poc (
+      CREATE TABLE IF NOT EXISTS _rsk01_users (
         id SERIAL PRIMARY KEY,
-        token_auth VARCHAR(255) NOT NULL,
-        persisted_val VARCHAR(255) NOT NULL
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL
       );
     `);
 
-    const uniqueToken = `auth_token_${Date.now()}`;
-    const samplePayload = "Milestone 2 Pass Criteria Verified";
+    const testEmail = `darius-${Date.now()}@civicconnect.local`;
+    const plainPassword = "SecurePassword123!";
 
-    // 2. Persist a record to verify writing capabilities (Fails if database engine is missing)
+    // 2. Hash the raw password using argon2 (Authentic credential processing proof-of-concept)
+    const passwordHash = await argon2.hash(plainPassword);
+
+    // 3. Persist the credentials to verify database write capability (Throws if database layer is broken)
     await prisma.\$executeRawUnsafe(
-      `INSERT INTO _rsk01_poc (token_auth, persisted_val) VALUES ($1, $2);`,
-      uniqueToken,
-      samplePayload
+      `INSERT INTO _rsk01_users (email, password_hash) VALUES ($1, $2);`,
+      testEmail,
+      passwordHash
     );
 
-    // 3. Read the record back to verify data persistence integrity
+    // 4. Read the user record back to simulate a login retrieval step
     const records = await prisma.\$queryRawUnsafe(
-      `SELECT persisted_val FROM _rsk01_poc WHERE token_auth = $1 LIMIT 1;`,
-      uniqueToken
+      `SELECT * FROM _rsk01_users WHERE email = $1 LIMIT 1;`,
+      testEmail
     );
 
-    // 4. Assertions (Validates values and forces a failure if data rows are missing)
-    assert.ok(Array.isArray(records) && records.length > 0, "Database should return a saved data row");
-    assert.strictEqual(records[0].persisted_val, samplePayload, "Read value must match written payload");
+    assert.ok(Array.isArray(records) && records.length > 0, "Database must successfully query the saved user row");
+    const savedUser = records[0];
 
-    // 5. Clean up database state completely
-    await prisma.\$executeRawUnsafe(`DROP TABLE IF EXISTS _rsk01_poc;`);
+    // 5. Verify the login password match via argon2 to complete the authentication proof-of-concept loop
+    const passwordMatches = await argon2.verify(savedUser.password_hash, plainPassword);
+    assert.strictEqual(passwordMatches, true, "Authentication verification must return true for valid passwords");
+
+    // 6. Test that invalid credentials fail the login check cleanly
+    const wrongPasswordMatches = await argon2.verify(savedUser.password_hash, "WrongPassword!");
+    assert.strictEqual(wrongPasswordMatches, false, "Authentication check must reject invalid passwords");
+
+    // 7. Clean up database state completely
+    await prisma.\$executeRawUnsafe(`DROP TABLE IF EXISTS _rsk01_users;`);
   });
 });
