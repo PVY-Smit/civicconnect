@@ -169,14 +169,17 @@ getRequesterNotifications(authenticatedRequesterId, since?)
     -> RequesterNotification[]
 ```
 
+For M2, durable read/unread state is deferred. `since` is only an optional query boundary taken from the authenticated application/session context; it does not mark an indication as read. If no such boundary is available, the component returns all qualifying persisted indications for that Requester.
 
-where each returned notification contains only the information required for the in-application indication, for example:
+Each returned notification contains only the information required for the in-application indication, for example:
 
+```text
 RequesterNotification
 - type: accepted | updated | rejected | completed
 - requestId
 - requestReference
 - occurredAt
+```
 
 The implementation may query the persisted status-history and ActionEntry evidence through the persistence module, but callers do not access the database directly.
 
@@ -276,5 +279,4 @@ If the boundary later becomes asynchronous or externally consumed, the event/mes
 - If M3 introduces durable read/unread state or external delivery, the persistence and deployment decisions must be extended before that behaviour is implemented.
 
 
-getRequesterNotifications(authenticatedRequesterId, since?)
-    -> RequesterNotification[]
+
