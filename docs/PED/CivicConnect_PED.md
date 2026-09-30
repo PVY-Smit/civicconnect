@@ -605,9 +605,9 @@ Republic of South Africa (2013) *Protection of Personal Information Act 4 of 201
 
 Sonatype (2026) *State of the Software Supply Chain Report: the evolving software supply chain attack surface*. Available at: https://www.sonatype.com/state-of-the-software-supply-chain/2026/open-source-malware
 
-W3C (2023) *Web Content Accessibility Guidelines (WCAG) 2.2*. W3C Recommendation, 5 October. Available at: https://www.w3.org/TR/WCAG22/
+Supabase (no date) *Edge Functions*. Supabase Docs. Available at: https://supabase.com/docs/guides/functions (Accessed: 30 September 2026).
 
-Render (no date) Deploy for free. Render Docs. Available at: https://render.com (Accessed: 30 September 2026).
+W3C (2023) *Web Content Accessibility Guidelines (WCAG) 2.2*. W3C Recommendation, 5 October. Available at: https://www.w3.org/TR/WCAG22/
 
 # 18. Architecturally Significant Requirements
 
@@ -723,7 +723,7 @@ The transition table holds which roles may make each move, and the authorisation
 
 # 24. Deployment Direction
 
-**1.** **Evaluation of Baseline Hosting Infrastructures (DEC-010):** To resolve the operational hosting direction, a comparative architectural review was performed between Supabase and Render. Supabase provides an optimized managed database layer, but its native architecture restricts direct custom Express application hosting profiles because it operates on a specialized serverless Backend-as-a-Service model that does not provide a standard persistent Node.js application server daemon context without relying on separate Edge Functions or external container hosting wrappers. Render was selected because it natively supports generic multi-language web service runtimes, allowing the team to host our Express application and relational database in a unified workspace area that accommodates the s20 baseline technology stack footprint.
+**1.** **Evaluation of Baseline Hosting Infrastructures (DEC-010):** To resolve the operational hosting direction, a comparative architectural review was performed between Supabase and Render. Supabase provides a managed PostgreSQL database, but it runs server-side code as Edge Functions: TypeScript functions on the Deno runtime, distributed at the edge (Supabase, no date). The Express application in s20 is a long-running Node.js server, so on Supabase it would need a separate host. Render was selected because it natively supports generic multi-language web service runtimes, allowing the team to host our Express application and relational database in a unified workspace area that accommodates the s20 baseline technology stack footprint.
 
 **2.** **Infrastructure Constraints and Free Tier Disadvantages (NFR-013 & NFR-002):** In compliance with NFR-013, the platform's free tier bounds are explicitly constrained by official platform specifications (Render, no date). Operating under these parameters introduces severe operational limitations that alter system capability. Free web services automatically spin down after 15 minutes of idle traffic. A subsequent inbound request forces a container cold start that takes approximately one full minute to resolve, which explicitly breaks the 3-second application layer maximum latency bound required by NFR-002.
 
