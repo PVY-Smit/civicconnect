@@ -124,6 +124,16 @@ When the Requester signs in and requests their notifications, the application ob
 
 The exact user-interface treatment of previously viewed indications is an implementation concern. If M3 requires durable read/unread state, acknowledgement, retries or external delivery, a persisted Notification/Outbox entity can be introduced through a follow-up decision.
 
+## Security boundary
+
+The notification interface operates inside the authenticated CivicConnect application boundary.
+
+It receives the authenticated Requester identity from the application authentication context and does not trust a requester ID supplied by an arbitrary caller.
+
+All notification-source queries remain subject to ADR-006 authorisation. A Requester may receive only status history and requester-visible ActionEntries for requests they are authorised to view.
+
+The interface does not expose credentials, database access, internal-only ActionEntries, AuditEntry data or unrelated personal information across the notification boundary.
+
 ## Validation and authorisation
 
 The notification component does not accept a caller-supplied requester identity as proof that the caller may see an indication.
