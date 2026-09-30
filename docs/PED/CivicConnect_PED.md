@@ -677,7 +677,7 @@ Five rules make the module boundaries real rather than folder names:
 
 **8.** PostgreSQL remains the system of record for both operational request data and management reporting during M2. Using one relational store keeps the architecture proportionate but creates a shared availability and performance dependency. Production deployment therefore requires persistent storage that survives application-process restart and a defined backup and restore mechanism. Reporting separation, replication and concrete hosting/recovery arrangements remain later evidence-driven deployment decisions rather than being introduced by this section.
 
-The controlling decision and initial schema are recorded in [ADR-007: Data and persistence design](decisions/ADR-007-data-persistence.md) and `docs/data/initial-schema.sql` under #58.
+The controlling decision and initial schema are recorded in [ADR-007: Data and persistence design](../decisions/ADR-007-data-persistence.md) and `docs/data/initial-schema.sql` under #58.
 
 # 22. Design Decisions
 
@@ -727,7 +727,7 @@ The transition table holds which roles may make each move, and the authorisation
 
 **8.** No HTTP call, message broker, notification microservice or separate Notification table is introduced for the M2 path. Email and SMS remain deferred under SC-D-01. The internal boundary remains replaceable under ADR-001 rule 4 if later evidence requires asynchronous delivery. Durable read/unread state, acknowledgement, retries, external delivery and related delivery guarantees would require a later controlled decision rather than being assumed here.
 
-The controlling decision is recorded in [ADR-008: Request status notification interface](decisions/ADR-008-notification-interface.md) under #63.
+The controlling decision is recorded in [ADR-008: Request status notification interface](../decisions/ADR-008-notification-interface.md) under #63.
 
 # 24. Deployment Direction
 
