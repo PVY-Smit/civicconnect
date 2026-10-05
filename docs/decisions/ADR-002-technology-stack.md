@@ -1,7 +1,8 @@
 # ADR-002: Technology stack
 
 - **Status:** Accepted, conditional on the two conditions under Decision. Approved by Tristan Roets and
-  Darius Mushi on #91, merged 30 September 2026.
+  Darius Mushi on #91, merged 30 September 2026. The conditions are amended by CR-004 (5 October 2026,
+  #107, DEC-016); see Amendment.
 - **Date:** Drafted 19 September 2026 by Darius Mushi (three drafts). Finalised 23 September 2026 by
   Jean Smit at Darius's request. Amended 28 September 2026 after review on #91.
 - **Decision Log entry:** DEC-008, recorded in M1 as deferred to M2, and recorded as decided in M2 with
@@ -200,6 +201,37 @@ meet the second: it has no authentication, no persisted entity and no database.
 Prisma is pinned exactly at 7.10.0 for all three packages, the CLI included. Upgrading to Prisma 8 is a
 separate decision, taken after Prisma 8 is released as stable.
 
+## Amendment, 5 October 2026 (CR-004, DEC-016)
+
+The two conditions above stay in this record as they were set. CR-004 replaces them as the conditions
+for merging the bootstrap (#90, under #108).
+
+**Why.** Neither condition could be shown as met by 5 October 2026. The two verification logs posted on
+#64 on 30 September disagree: the one with a screenshot ran on a member's own machine on Node 25.9.0
+with mock data, and the one that reports a campus run has no screenshot or command output. The proof
+of concept in #90 hashed and verified a password with argon2, but persisted it to a table the test
+creates and drops, outside the data model. M3 is due 14 October 2026, and every M3 implementation issue
+depends on the bootstrap.
+
+**The amended conditions:**
+
+1. **A reproducible environment check replaces gate 3 as a merge condition.** A member other than the
+   author runs `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test` on Node 24
+   against PostgreSQL 16 and posts the output, with `node -v`, on #90. Once the CI workflow (#110)
+   merges, it repeats the same check on every pull request. Gate 3 itself is not closed: the campus
+   check is carried as RSK-30 and run when lab access allows, with the Node version recorded on #64.
+2. **The RSK-01 proof of concept persists an entity from the data model.** The test creates a `User`
+   from the ADR-007 model through Prisma, reads it back, verifies the right password and rejects a wrong
+   one with argon2, and removes it, with no table created or dropped by the test. The timebox is #108's
+   due date, 7 October 2026.
+
+**Alternatives considered.** Waiting for a verified campus run holds all of M3 on lab access the team
+does not control. Removing the conditions drops the evidence this record asked for. A check that a
+second member repeats and CI then runs on every pull request is evidence anyone can inspect.
+
+**Consequence.** #90 can merge once both amended conditions are shown on it. The campus environment can
+still differ from the verified one, which RSK-30 records with its mitigation and contingency.
+
 ## Rationale
 
 The five measurable drivers are level. What separates the candidates is two register entries that
@@ -297,7 +329,8 @@ Updates proposed to existing risks under #68:
 - **DEC-010 (#60)** must choose a host that runs Node 24 and one PostgreSQL database inside a free tier,
   and must allow exactly one always-on instance if scheduling is used (FEC-03).
 - **#64 (bootstrap)** fixes JavaScript or TypeScript and any frontend test tooling, each justified in
-  its pull request under RSK-12. It cannot merge until both conditions under Decision are met.
+  its pull request under RSK-12. It cannot merge until both conditions under Decision are met. From 5
+  October 2026 those are the amended conditions under Amendment (CR-004).
 - **#67 (checks)** runs `npm ci` against the lockfile and `node --test` on every pull request, which is
   NFR-012's evidence.
 - **Node 24** enters maintenance on 20 October 2026 and remains supported until 30 April 2028, which
