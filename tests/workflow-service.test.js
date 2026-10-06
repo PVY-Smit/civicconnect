@@ -10,6 +10,8 @@ import { AUDITED_FIELDS, auditEntriesFor, auditEntry } from "../src/modules/audi
 import * as auditModule from "../src/modules/audit/audit.js";
 import { changeStatus, PRIORITY_LEVELS, recordActionEntry, setPriority } from "../src/modules/workflow-status/service.js";
 import { createWorkflowHandlers } from "../src/modules/workflow-status/http.js";
+import { authoriseTransition } from "../src/modules/authorisation-policy/policy.js";
+import { TRANSITIONS } from "../src/modules/workflow-status/transition-table.js";
 
 const USERS = [
   { id: 1, role: "Requester", active: true, categoryIds: [] },
@@ -318,4 +320,25 @@ test("the workflow routes answer 200, 403, 404, 409 and 422 for the matching out
   const res = fakeRes();
   await createWorkflowHandlers(fakeStore().deps).status({ actor: REQ2, params: { reference: "CC-999999" }, body: { to: "Assigned" } }, res);
   assert.deepEqual(res.body, { error: "No request with that reference was found." });
+});
+
+// ---- the accept move without the scope load (#132 review) ----
+
+test("FR-015: the policy alone refuses Staff accepting a New request outside their categories", () => {
+  const accept = TRANSITIONS.find((t) => t.from === "New" && t.to === "In Progress");
+  assert.equal(accept.scope, "category", "the table marks accept as category-scoped");
+  const request = { id: 100, requesterId: 1, categoryId: 10, status: "New", assigneeId: null };
+  assert.equal(authoriseTransition(STAFF, request, accept), true, "Staff in the category");
+  assert.equal(authoriseTransition(STAFF_OTHER, request, accept), false, "Staff in another category");
+  assert.equal(authoriseTransition(COORD, request, accept), false, "a Coordinator is not in the move's roles");
+});
+
+test("FR-015: if the scope load were bypassed, the accept is still refused and nothing is written", async () => {
+  const s = fakeStore();
+  s.deps.requests.findOne = async () => structuredClone(s.state.requests[0]); // ignores the scope condition
+  const result = await move(s, STAFF_OTHER, "In Progress");
+  assert.equal(result.code, "not-authorised");
+  assert.equal(s.row().status, "New");
+  assert.equal(s.row().assigneeId, null);
+  assert.deepEqual([s.state.history, s.state.audit], [[], []]);
 });
