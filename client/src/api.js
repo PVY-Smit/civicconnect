@@ -7,6 +7,9 @@
 //   GET  /api/categories                                                     (#115, active list for FR-006)
 //   POST /api/requests, GET /api/requests/mine, GET /api/requests/:reference (#112)
 //   GET  /api/notifications                                                  (#116)
+//   GET  /api/queue                                                          (#114)
+//   GET  /api/staff, GET /api/requests/:reference/assignable-staff           (#115)
+//   POST /api/requests/:reference/status, /priority, /actions                (#113)
 
 export class ApiError extends Error {
   constructor(status, body) {
@@ -41,5 +44,13 @@ export function createApi({ fetchImpl = globalThis.fetch, onUnauthorised = () =>
     myRequests: () => call("/requests/mine"),
     request: (reference) => call(`/requests/${encodeURIComponent(reference)}`),
     notifications: () => call("/notifications"),
+    // Staff and coordinator calls (#119)
+    queue: (search) => call(`/queue${search ?? ""}`),
+    staff: () => call("/staff"),
+    assignableStaff: (reference) => call(`/requests/${encodeURIComponent(reference)}/assignable-staff`),
+    changeStatus: (reference, body) => call(`/requests/${encodeURIComponent(reference)}/status`, { method: "POST", body }),
+    setPriority: (reference, priority) => call(`/requests/${encodeURIComponent(reference)}/priority`, { method: "POST", body: { priority } }),
+    addActionEntry: (reference, body, visibility) =>
+      call(`/requests/${encodeURIComponent(reference)}/actions`, { method: "POST", body: { body, visibility } }),
   };
 }
