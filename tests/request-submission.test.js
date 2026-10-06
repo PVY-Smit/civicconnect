@@ -5,7 +5,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CAPACITY, formatReference, isReference, REFERENCE_PATTERN } from "../src/modules/request-capture/reference.js";
+import { CAPACITY, createReferenceFormatter, feistelPermutation, isReference, REFERENCE_PATTERN } from "../src/modules/request-capture/reference.js";
 import { LIMITS, URGENCY_LEVELS, validateSubmission } from "../src/modules/request-capture/validation.js";
 import { submitRequest } from "../src/modules/request-capture/submit.js";
 import { createSubmissionHandler } from "../src/modules/request-capture/http.js";
@@ -63,7 +63,7 @@ function fakeStore({ ignoreEntryWhere = false } = {}) {
       return { ...r, category: { name: categories[r.categoryId] }, actionEntries };
     },
   };
-  return { requests, categories: { activeIds: async () => ACTIVE }, rows, created, findOneCalls };
+  return { requests, categories: { activeIds: async () => ACTIVE }, formatReference, rows, created, findOneCalls };
 }
 
 function fakeRes() {
@@ -75,25 +75,56 @@ function fakeRes() {
 
 // ---- reference (FR-008, DEC-004) ----
 
-test("FR-008: every sequence value from 1 to 999,999 gets a different reference in the agreed format", () => {
+const KEY = "test-reference-key-that-is-at-least-32-chars";
+const formatReference = createReferenceFormatter(KEY);
+
+test("FR-008: the keyed permutation gives every value in its range a different result, also after cycle-walking", () => {
+  // A small domain, so every input can be checked: 12-bit halves (16,777,216 values) walked down to 5,000,000
+  // would be too slow, so 8-bit halves (65,536) walked down to 60,000 stand in for the real 28 bits and 10^8.
+  const permute = feistelPermutation(KEY, { halfBits: 8, range: 60_000 });
   const seen = new Set();
-  for (let n = 1; n <= CAPACITY; n++) {
+  for (let n = 0; n < 60_000; n++) {
+    const x = permute(n);
+    assert.ok(Number.isInteger(x) && x >= 0 && x < 60_000, `${n} -> ${x}`);
+    seen.add(x);
+  }
+  assert.equal(seen.size, 60_000);
+});
+
+test("FR-008: 100,000 consecutive sequence values get 100,000 different references in the agreed format", () => {
+  const seen = new Set();
+  for (let n = 1; n <= 100_000; n++) {
     const ref = formatReference(n);
     assert.ok(REFERENCE_PATTERN.test(ref), ref);
     seen.add(ref);
   }
-  assert.equal(seen.size, CAPACITY);
+  assert.equal(seen.size, 100_000);
+  assert.ok(REFERENCE_PATTERN.test(formatReference(CAPACITY)), "the last value in the range");
 });
 
-test("DEC-004: consecutive requests do not get consecutive references", () => {
-  const digits = (n) => Number(formatReference(n).slice(3));
-  for (const n of [1, 2, 500, 999_998]) {
-    assert.notEqual(Math.abs(digits(n + 1) - digits(n)), 1, `after ${n}`);
+test("DEC-004: consecutive references are unrelated, so the gap between two does not reveal how many came between", () => {
+  const digits = (n) => Number(formatReference(n).replace(/\D/g, ""));
+  const gaps = new Set();
+  for (let n = 1; n < 1_000; n++) gaps.add(digits(n + 1) - digits(n));
+  assert.ok(gaps.size > 990, `only ${gaps.size} distinct gaps in 999 consecutive pairs`);
+});
+
+test("DEC-004: without the key the mapping cannot be reproduced; another key gives other references", () => {
+  const other = createReferenceFormatter("another-reference-key-of-32-characters!");
+  let same = 0;
+  for (let n = 1; n <= 1_000; n++) if (other(n) === formatReference(n)) same++;
+  assert.ok(same < 5, `${same} of 1,000 references matched under a different key`);
+  assert.equal(createReferenceFormatter(KEY)(42), formatReference(42), "the same key always gives the same reference");
+});
+
+test("a reference key shorter than 32 characters is refused at start-up", () => {
+  for (const bad of ["short", "", undefined, 12345]) {
+    assert.throws(() => createReferenceFormatter(bad), /REFERENCE_KEY must be at least 32 characters/, String(bad));
   }
 });
 
-test("a sequence value outside 1 to 999,999 is refused rather than wrapped into a reused reference", () => {
-  for (const bad of [0, -1, 1_000_000, 1.5, "abc", null]) {
+test("a sequence value outside 1 to 99,999,999 is refused rather than wrapped into a reused reference", () => {
+  for (const bad of [0, -1, 100_000_000, 1.5, "abc", null]) {
     assert.throws(() => formatReference(bad), RangeError, String(bad));
   }
   assert.equal(formatReference("42"), formatReference(42), "a bigint-as-string value from the database");
@@ -101,7 +132,7 @@ test("a sequence value outside 1 to 999,999 is refused rather than wrapped into 
 
 test("only the reference format reaches a lookup", () => {
   assert.equal(isReference(formatReference(7)), true);
-  for (const bad of ["CC-12345", "CC-1234567", "cc-123456", "123456", "CC-12345a", " CC-123456", "1 OR 1=1", undefined]) {
+  for (const bad of ["CC-1234-567", "CC-12345678", "cc-1234-5678", "12345678", "CC-1234-567a", " CC-1234-5678", "CC-482915", "1 OR 1=1", undefined]) {
     assert.equal(isReference(bad), false, String(bad));
   }
 });
@@ -139,7 +170,7 @@ test("FR-007 boundaries: each text field accepts 1 and its maximum, and refuses 
 });
 
 test("FR-006: a category outside the active list is refused, including one that exists but is inactive", () => {
-  for (const categoryId of ["12", "999", "Street lighting", "10 "]) {
+  for (const categoryId of ["12", "999", "Street lighting", "10 ", ["10"], { toString: () => "10" }, Number.NaN, true]) {
     const result = validateSubmission({ ...VALID, categoryId }, { activeCategoryIds: ACTIVE });
     assert.match(result.errors.categoryId, /one of the categories in the list/, JSON.stringify(categoryId));
   }
@@ -249,7 +280,7 @@ test("staff in the request's category see internal entries, the priority and the
 test("FR-012: another requester's reference and a reference that does not exist get the same answer", async () => {
   const { store, b } = await seeded();
   const theirs = await getRequestDetail(requester(1), b, store);
-  const missing = await getRequestDetail(requester(1), "CC-000000", store);
+  const missing = await getRequestDetail(requester(1), "CC-0000-0000", store);
   assert.deepEqual(theirs, { ok: false, code: "not-found" });
   assert.deepEqual(missing, theirs);
 });
@@ -289,8 +320,26 @@ test("FR-012: GET on another requester's reference and on a missing one returns 
   const theirs = fakeRes();
   const missing = fakeRes();
   await detail({ actor: requester(1), params: { reference: b } }, theirs);
-  await detail({ actor: requester(1), params: { reference: "CC-000000" } }, missing);
+  await detail({ actor: requester(1), params: { reference: "CC-0000-0000" } }, missing);
   assert.equal(theirs.statusCode, 404);
   assert.deepEqual(theirs.body, { error: NOT_FOUND });
   assert.deepEqual(missing.body, theirs.body);
+});
+
+test("without a signed-in actor every entry point refuses, and the routes answer 401", async () => {
+  const { store, a } = await seeded();
+  assert.deepEqual(await submitRequest({ actor: undefined, input: VALID }, store), { ok: false, code: "not-signed-in" });
+  assert.deepEqual(await listOwnRequests(undefined, store), { ok: false, code: "not-signed-in" });
+  assert.deepEqual(await getRequestDetail(undefined, a, store), { ok: false, code: "not-signed-in" });
+  const calls = store.findOneCalls.length;
+  for (const run of [
+    (res) => createSubmissionHandler(store)({ body: VALID }, res),
+    (res) => createRequestAccessHandlers(store).listMine({}, res),
+    (res) => createRequestAccessHandlers(store).detail({ params: { reference: a } }, res),
+  ]) {
+    const res = fakeRes();
+    await run(res);
+    assert.equal(res.statusCode, 401);
+  }
+  assert.equal(store.findOneCalls.length, calls, "nothing is loaded without an actor");
 });

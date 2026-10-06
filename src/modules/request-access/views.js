@@ -23,12 +23,14 @@ const listItem = (r) => ({
 });
 
 export async function listOwnRequests(actor, { requests }) {
+  if (!actor) return { ok: false, code: "not-signed-in" };
   if (!permits(actor, "viewOwnRequests")) return { ok: false, code: "not-authorised" };
   const rows = await requests.findMany({ where: ownRequests(actor.id).where, orderBy: { createdAt: "desc" } });
   return { ok: true, requests: rows.map(listItem) };
 }
 
 export async function getRequestDetail(actor, reference, { requests }) {
+  if (!actor) return { ok: false, code: "not-signed-in" };
   if (!isReference(reference)) return { ok: false, code: "not-found" };
   const entries = actionEntryScope(actor);
   const r = await requests.findOne({ where: scopedWhere(actor, { reference }), entryWhere: entries.where });

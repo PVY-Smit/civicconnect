@@ -46,6 +46,9 @@ export function validateSubmission(input, { activeCategoryIds }) {
   let categoryId;
   if (body.categoryId === undefined || body.categoryId === null || body.categoryId === "") {
     errors.categoryId = "Category is required. Choose one from the list.";
+  } else if (!(typeof body.categoryId === "string" || (typeof body.categoryId === "number" && Number.isFinite(body.categoryId)))) {
+    // Only a single id. String() would turn ["10"] or an object with a toString into "10".
+    errors.categoryId = "Category must be one of the categories in the list.";
   } else {
     categoryId = String(body.categoryId);
     if (!activeCategoryIds.map(String).includes(categoryId)) {

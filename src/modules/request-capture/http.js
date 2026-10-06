@@ -3,10 +3,11 @@
 
 import { submitRequest } from "./submit.js";
 
-export function createSubmissionHandler({ categories, requests }) {
+export function createSubmissionHandler({ categories, requests, formatReference }) {
   return async function submit(req, res) {
-    const result = await submitRequest({ actor: req.actor, input: req.body }, { categories, requests });
+    const result = await submitRequest({ actor: req.actor, input: req.body }, { categories, requests, formatReference });
     if (result.ok) return res.status(201).json(result.acknowledgement);
+    if (result.code === "not-signed-in") return res.status(401).json({ error: "Sign in to continue." });
     if (result.code === "invalid") return res.status(400).json({ errors: result.errors });
     return res.status(403).json({ error: "You are not authorised to do this." });
   };
