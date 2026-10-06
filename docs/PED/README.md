@@ -90,8 +90,19 @@ a page.
 
 `tools/ped_to_md.py` converted v1.0 once. `tools/ped_fidelity.py` checks a markdown file against a
 Word document by converting the markdown back to Word and comparing the two paragraph by paragraph
-and cell by cell. At conversion it reported 1504 blocks each, no differences, and an identical
-sequence of 18,169 words.
+and cell by cell. It exits 1 when there is any difference, so it can gate a build.
+
+That result is a record of the conversion commit, `3b2def7`: there it reported 1504 blocks each, no
+differences, and an identical sequence of 18,169 words. Run against any later version, the
+whole-document check fails, because sections 18 onwards are new.
+
+For a later version, `--m1-only` compares sections 1 to 17 alone and lists every difference from
+v1.0. Each difference must be one the version's row in s1 lists; that comparison is made by the
+reviewer from the list the script prints.
+
+```bash
+python tools/ped_fidelity.py CivicConnect_PED_v1.0.docx CivicConnect_PED.md --m1-only
+```
 
 The build was checked the same way. Built from the unchanged markdown, it gave the same text, the
 same 12 sections, and 48 content pages matching v1.0 in orientation and rendered content. It leaves

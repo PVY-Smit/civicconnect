@@ -11,7 +11,7 @@ Project Engineering Document (PED) v2.0
 | **Milestone** | Milestone 2 - Architecture, Technology and Initial Design Baseline |
 | **Document** | PED v2.0, evolved from PED v1.0, which is kept unchanged in the repository as the M1 record. This document evolves through v3.0 and v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v2.0 BASELINED, CONDITIONALLY ACCEPTED on 30 September 2026 (s26.3, #69). The M1 baseline, v1.0, was signed off as conditionally accepted on the same date (s16, #7), after the M1 submission. |
+| **Baseline status** | v2.0 PROPOSED FOR BASELINE. The team signed it off on 30 September 2026 and recommends it as conditionally accepted (s26.3, #69); it becomes the baseline when #95 merges, and the M2 gate decision is the assessor's. The team signed off v1.0 on the same date, after the M1 submission, with the same recommendation (s16, #69); the M1 gate decision is also the assessor's (#7). |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -39,7 +39,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.1 | 3 September 2026 | Jean Smit | Full initial draft: problem and business need, stakeholders, scope baseline, constraints, functional and non-functional requirements with acceptance criteria, RTM, Risk Register, Forward Engineering Considerations, Decision Log and governance. AI-assisted; recorded in s14.2. | Not reviewed. Direct commit, predating the branch controls established on 4 September 2026. | Superseded |
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
-| 2.0 | 30 September 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s13 and s14.2, which show the registers as at M1 and point to the live versions in the workbook. Four references are added to s17, for s20, s24 and s26.2. The M1 sign-off is recorded in s16, after the M1 submission. No other M1 content is changed in this version. | Through the Pull Requests listed in s25 and s26 | Baselined, conditionally accepted (s26.3) |
+| 2.0 | 30 September 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it, as a recorded controlled change (#55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. The M1 template instruction left under this table in v1.0 is removed. The cover is updated for v2.0, a Milestone 2 boundary note is added under the M1 one, and s2 gains a paragraph on how the M1 and M2 sections relate. Reading notes are added to s8.3, for the four Access Matrix cells under #92, and to s9, s10, s13 and s14.2, which show the registers as at M1 and point to the live versions in the workbook. Four references are added to s17, for s20, s24 and s26.2. The team's M1 sign-off is recorded in s16, after the M1 submission, as its recommendation; the assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed in this version: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
 
 # 2. Purpose and How to Read This Document
 
@@ -350,6 +350,8 @@ At M2, column H (Design ref) will hold the architecture or state-diagram referen
 
 Risks are scored on probability and impact from 1 to 5. Exposure is the product, and the band is Critical at 20 or above, High from 12 to 19, Medium from 6 to 11 and Low below 6. Scores are the current assessment with the mitigations described in progress, not an inherent rating. The register is live: it is reviewed at every milestone and updated when a risk materialises into an issue (Master Brief, s12).
 
+*Reading note from v2.0: this register holds the M1 entries, RSK-01 to RSK-15, as at the M1 baseline. The live Risk Register in the registers workbook adds RSK-16 to RSK-29 from the M2 ADRs, including RSK-20 (an untested restore) and RSK-26 (one instance while node-cron schedules), which s24 and s26.2 cite. It also re-scores RSK-05 and RSK-12 (#101, #104, #106).*
+
 | **ID** | **Risk** | **Cause** | **P** | **I** | **Exp** | **Band** | **Mitigation** | **Contingency** | **Owner** | **Status** |
 |----|----|----|----|----|----|----|----|----|----|----|
 | RSK-01 | The team does not reach working competence in the selected stack early enough to build the committed scope, and construction time is consumed by learning. | Technology selection is deferred to M2 (DEC-008) and the team has limited prior exposure to controlled team engineering at this scale (CON-06). | 4 | 5 | 20 | Critical | Make team capability an explicitly weighted criterion in the M2 technology decision. Run a timeboxed proof of concept covering authentication, one persisted entity and one automated test before committing. Prefer a stack in which at least two of three members have prior exposure. | Reduce committed scope to Must-priority requirements only, through a controlled change request, and record the trade-off rather than absorbing it silently. | Tristan Roets | Open |
@@ -554,7 +556,7 @@ PED v1.0 becomes the controlled engineering baseline when this sign-off is compl
 | **Repository and governance controls checked** | YES, noting #37 and #47 |
 | **Forward Engineering Considerations reviewed** | YES |
 | **AI Usage Register current and verified** | YES |
-| **Outcome** | CONDITIONALLY ACCEPTED |
+| **Outcome** | CONDITIONALLY ACCEPTED, as the team's recommendation (30 September 2026, #69). The gate decision is the assessor's, recorded below, and is pending. |
 | **Conditions recorded (if any)** | #27 the Figure 2 label defect; #36 figure sources not held in the repository; #37 branch naming breached on five branches; #47 checks required before any existed; #48 s12.4 narrower than Master Brief s14. Each is carried in s26.2 |
 | **Team approval - Jean Smit** | Approved, 30 September 2026 (#69) |
 | **Team approval - Tristan Roets** | Approved, 30 September 2026 (#69) |
@@ -613,7 +615,7 @@ W3C (2023) *Web Content Accessibility Guidelines (WCAG) 2.2*. W3C Recommendation
 
 # 18. Architecturally Significant Requirements
 
-Milestone 2 turns the M1 baseline into architecture, technology and initial design. The first step was to establish which requirements shape the structure of the system, and why. Six drivers were selected from the M1 baseline. The full record, with the evidence for each driver, the measurable expectation already committed in M1 and the decisions each one constrains, is `docs/architecture/asr-quality-drivers.md` (#56).
+Milestone 2 turns the M1 baseline into architecture, technology and initial design. The first step was to establish which requirements shape the structure of the system, and why. Six drivers were selected from the M1 baseline. The full record, with the evidence for each driver, the measurable expectation already committed in M1 and the decisions each one constrains, is `docs/architecture/asr-quality-drivers.md`, raised under #56 and merged through #71.
 
 | **Driver** | **Statement** | **Comes from** |
 |----|----|----|
@@ -813,7 +815,7 @@ RTM rows TR-011 and TR-016 carry the same links in the M2 columns (#54, #101), a
 
 ## 26.1 What the baseline contains
 
-The baseline is PED v2.0 and the registers workbook as signed off in s26.3, dated 30 September 2026. The status column is as at 30 September 2026 and is updated at the sign-off.
+The baseline is PED v2.0 and the registers workbook as signed off by the team in s26.3, on 30 September 2026. It becomes the baseline when #95 merges. The status column is as at 30 September 2026.
 
 | **Item** | **Record** | **Evidence** | **Status** |
 |----|----|----|----|
@@ -825,7 +827,7 @@ The baseline is PED v2.0 and the registers workbook as signed off in s26.3, date
 | Status transition mechanism | ADR-005, DEC-013 | #93 | Merged |
 | Authorisation enforcement | ADR-006, DEC-014 | #94 | Merged |
 | Deployment direction | DEC-010 | #60, #103 | Merged. The production database is deferred to M3 (s26.2) |
-| This document | PED v2.0 | #95 | Signed off 30 September 2026 (s26.3) |
+| This document | PED v2.0 | #95 | Signed off by the team 30 September 2026 (s26.3); baselined when #95 merges |
 
 ## 26.2 Open decisions and deferred concerns
 
@@ -868,15 +870,16 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 | Project | CivicConnect - Community Service Request Management Platform |
 | Baseline type | Architecture, Technology and Initial Design Baseline |
 | Document | PED v2.0 |
-| Date | 30 September 2026. Answers recorded on #69 |
+| Date | 30 September 2026, the team's sign-off. Answers recorded on #69. Baselined when #95 merges |
 | ASRs and architecture reviewed | YES |
 | Technology selection and deployment direction reviewed | NO. ADR-002 is accepted, but DEC-010's production database is deferred to M3 (s24, s26.2) |
 | Data and persistence model reviewed | YES |
 | Design decisions reviewed against the code | YES |
 | RTM, Risk Register and Forward Considerations updated | YES |
 | AI Usage Register current and verified | YES |
-| Outcome | CONDITIONALLY ACCEPTED |
-| Conditions recorded (if any) | 1. DEC-010: the production database is chosen in M3 on the evidence in s24 and s26.2. 2. #90 merges only after the campus Node check (gate 3) and the RSK-01 proof of concept pass against a database. 3. #65, the end-to-end path, moves to M3. 4. CR-002 is implemented: the four Access Matrix cells are corrected to the requirements (#92) |
+| Outcome | CONDITIONALLY ACCEPTED, as the team's recommendation (30 September 2026, #69). The gate decision is the assessor's, recorded below, and is pending. |
+| Conditions recorded (if any) | 1. DEC-010: the production database is chosen in M3 on the evidence in s24 and s26.2. 2. #90 merges only after the campus Node check (gate 3) and the RSK-01 proof of concept pass against a database; CR-004 (#129, under review) proposes amending this condition. 3. #65, the end-to-end path, moves to M3. 4. CR-002 is implemented: the four Access Matrix cells are corrected to the requirements (#92) |
 | Team approval - Jean Smit | Approved, 30 September 2026 (#69) |
 | Team approval - Tristan Roets | Approved, 30 September 2026 (#69) |
 | Team approval - Darius Mushi | Approved, 30 September 2026 (#69) |
+| Assessor / client gate decision | For the assessor to complete |
