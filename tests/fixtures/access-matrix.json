@@ -1,5 +1,5 @@
 {
-  "source": "Access Matrix sheet, docs/requirements/CivicConnect_M1_Registers.xlsx at 7f5ae05",
+  "source": "Access Matrix sheet, docs/requirements/CivicConnect_M1_Registers.xlsx (sha256 b0d39728c5b0)",
   "roles": [
     "Requester",
     "Staff",
@@ -40,13 +40,13 @@
       "Requester": false,
       "Staff": false,
       "Coordinator": true,
-      "Manager": true
+      "Manager": false
     },
     {
       "function": "Accept an unassigned request in scope",
       "Requester": false,
       "Staff": true,
-      "Coordinator": true,
+      "Coordinator": false,
       "Manager": false
     },
     {
@@ -75,14 +75,14 @@
       "Requester": false,
       "Staff": false,
       "Coordinator": true,
-      "Manager": true
+      "Manager": false
     },
     {
       "function": "Set or change priority",
       "Requester": false,
       "Staff": false,
       "Coordinator": true,
-      "Manager": true
+      "Manager": false
     },
     {
       "function": "View management counts and breakdowns",

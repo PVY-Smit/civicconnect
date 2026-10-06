@@ -131,4 +131,5 @@ Proposed to the Risk Register under #68, where the owner assigns the identifiers
 - **A change to the Status Model** changes the table, the fixture and the tests together, through
   controlled change.
 - **#92** records four cells where the Access Matrix disagrees with the Status Model and FR-021. If it
-  is resolved in favour of the matrix, the roles in this table change.
+  is resolved in favour of the matrix, the roles in this table change. Resolved on 6 October 2026 in
+  favour of the requirements (CR-002): the matrix was corrected, so this table's roles are unchanged.
