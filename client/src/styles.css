@@ -118,3 +118,26 @@ th, td { text-align: left; padding: 0.6rem 0.75rem 0.6rem 0; border-bottom: 1px 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
 }
+
+/* Staff and coordinator screens (#119) */
+.muted { color: var(--text-muted); }
+.notice { border-left: 5px solid var(--success-bg); padding: 0.5rem 1rem; background: #e8f3ee; margin: 0 0 1.5rem; } /* text 14.6:1 */
+.filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0 1.25rem; align-items: end; background: var(--surface); padding: 1rem 1rem 0; margin: 0 0 1.5rem; }
+.filters .field { margin-bottom: 1rem; }
+.filters input[type="date"], .filters input[type="search"] { display: block; width: 100%; font: inherit; padding: 0.5rem; border: 2px solid var(--border); background: #fff; color: var(--text); }
+.filters__actions { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; }
+.filters__error { grid-column: 1 / -1; }
+.button--secondary { background: #fff; color: var(--accent); border: 2px solid var(--accent); }
+.moves { display: flex; flex-direction: column; gap: 0.75rem; margin: 0 0 1.5rem; }
+.move__form { border-left: 4px solid var(--accent); padding: 1rem 0 0.25rem 1rem; margin-top: 0.75rem; max-width: 40rem; }
+.inline-form { display: flex; flex-wrap: wrap; gap: 0 1rem; align-items: end; margin: 0 0 1.5rem; }
+.inline-form .field { margin-bottom: 0.5rem; min-width: 14rem; }
+.inline-form .button { margin-bottom: 0.5rem; }
+.checkbox { display: grid; grid-template-columns: 1.75rem 1fr; align-items: start; }
+.checkbox input { width: 1.5rem; height: 1.5rem; margin: 0.15rem 0 0; accent-color: var(--accent); }
+.checkbox label { font-weight: 400; margin: 0; }
+.tag { display: inline-block; font-size: 0.9rem; font-weight: 700; padding: 0 0.4rem; border: 1px solid currentColor; }
+.entry--internal { border-left-color: var(--internal) !important; }
+.entry--internal .tag { color: var(--internal); }  /* 6.8:1 on white */
+.pager { display: flex; gap: 1.5rem; margin: 1rem 0 0; }
+:root { --internal: #8a4b00; }

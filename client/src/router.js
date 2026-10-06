@@ -7,9 +7,14 @@ export const ROUTES = Object.freeze([
   { name: "detail", pattern: "/requests/:reference", title: "Request" },
   { name: "list", pattern: "/requests", title: "My requests" },
   { name: "notifications", pattern: "/notifications", title: "Notifications" },
+  { name: "queue", pattern: "/queue", title: "Queue", staff: true },
 ]);
 
 export const HOME = "/requests";
+export const STAFF_ROLES = Object.freeze(["Staff", "Coordinator", "Manager"]);
+
+// Where a user lands after signing in with no other page to return to.
+export const homeFor = (user) => (user && STAFF_ROLES.includes(user.role) ? "/queue" : HOME);
 
 function matches(pattern, path) {
   const want = pattern.split("/").filter(Boolean);
