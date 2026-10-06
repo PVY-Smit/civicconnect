@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createApi } from "./api.js";
-import { homeFor, isStaffUser, matchRoute, routeAllowed, safeReturnPath } from "./router.js";
+import { can, homeFor, matchRoute, routeAllowed, safeReturnPath } from "./router.js";
 import { Layout } from "./components/Layout.jsx";
 import { SignIn } from "./screens/SignIn.jsx";
 import { clearDraft, SubmitRequest } from "./screens/SubmitRequest.jsx";
@@ -15,6 +15,10 @@ import { RequestDetail } from "./screens/RequestDetail.jsx";
 import { Notifications } from "./screens/Notifications.jsx";
 import { Queue } from "./screens/Queue.jsx";
 import { StaffRequestDetail } from "./screens/StaffRequestDetail.jsx";
+import { Reports } from "./screens/Reports.jsx";
+import { Users } from "./screens/Users.jsx";
+import { Categories } from "./screens/Categories.jsx";
+import { ResetPassword } from "./screens/ResetPassword.jsx";
 import { NotFound } from "./screens/NotFound.jsx";
 
 const currentPath = () => window.location.pathname + window.location.search;
@@ -51,7 +55,7 @@ export function App() {
 
   const [pathname, search] = path.split("?");
   const route = pathname === "/" ? matchRoute(homeFor(user)) : matchRoute(pathname);
-  const isStaff = isStaffUser(user);
+  const isStaff = can(user, "viewRequestsInScope");
   // Effects depend on these plain values, not on the route object, which is new on every render.
   const routeName = route?.name ?? null;
   const routeIsPublic = Boolean(route?.public);
@@ -73,12 +77,23 @@ export function App() {
     if (user) return null; // the effect above is moving the user on
     return (
       <Layout user={null} navigate={navigate}>
-        <SignIn api={api} onSignedIn={(u) => (setUser(u), navigate(requested ? safeReturnPath(requested) : homeFor(u), { replace: true }))} />
+        <SignIn api={api} navigate={navigate} onSignedIn={(u) => (setUser(u), navigate(requested ? safeReturnPath(requested) : homeFor(u), { replace: true }))} />
+      </Layout>
+    );
+  }
+
+  if (route?.name === "reset") {
+    return (
+      <Layout user={null} navigate={navigate}>
+        <ResetPassword api={api} navigate={navigate} />
       </Layout>
     );
   }
 
   if (!user) return null;
+
+  // A screen the user's permissions do not include is not offered (the server refuses its calls anyway).
+  const allowed = routeAllowed(route, user);
 
   const signOut = async () => {
     await api.signOut().catch(() => {});
@@ -103,7 +118,16 @@ export function App() {
       );
       break;
     case "queue":
-      screen = routeAllowed(route, user) ? <Queue api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
+      screen = allowed ? <Queue api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
+      break;
+    case "reports":
+      screen = allowed ? <Reports api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
+      break;
+    case "users":
+      screen = allowed ? <Users api={api} currentUserId={user.id} /> : <NotFound navigate={navigate} />;
+      break;
+    case "categories":
+      screen = allowed ? <Categories api={api} /> : <NotFound navigate={navigate} />;
       break;
     case "notifications":
       screen = <Notifications api={api} navigate={navigate} />;

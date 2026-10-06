@@ -2,9 +2,10 @@
 // screen never says whether the email exists.
 
 import { useEffect, useRef, useState } from "react";
+import { Link } from "../components/Link.jsx";
 import { Page } from "../components/Page.jsx";
 
-export function SignIn({ api, onSignedIn }) {
+export function SignIn({ api, navigate, onSignedIn }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -51,7 +52,13 @@ export function SignIn({ api, onSignedIn }) {
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
-      <p className="hint">Forgotten your password? Ask a manager for a reset code.</p>
+      <p className="hint">
+        Forgotten your password? Ask a manager for a reset code, then{" "}
+        <Link to="/reset-password" navigate={navigate}>
+          set a new password
+        </Link>
+        .
+      </p>
     </Page>
   );
 }
