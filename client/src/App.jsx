@@ -9,7 +9,7 @@ import { createApi } from "./api.js";
 import { HOME, matchRoute, safeReturnPath } from "./router.js";
 import { Layout } from "./components/Layout.jsx";
 import { SignIn } from "./screens/SignIn.jsx";
-import { SubmitRequest } from "./screens/SubmitRequest.jsx";
+import { clearDraft, SubmitRequest } from "./screens/SubmitRequest.jsx";
 import { MyRequests } from "./screens/MyRequests.jsx";
 import { RequestDetail } from "./screens/RequestDetail.jsx";
 import { Notifications } from "./screens/Notifications.jsx";
@@ -49,19 +49,24 @@ export function App() {
 
   const [pathname, search] = path.split("?");
   const route = pathname === "/" ? matchRoute(HOME) : matchRoute(pathname);
+  // Effects depend on these plain values, not on the route object, which is new on every render.
+  const routeName = route?.name ?? null;
+  const routeIsPublic = Boolean(route?.public);
+  const returnTo = routeName === "signIn" ? safeReturnPath(new URLSearchParams(search ?? "").get("return")) : null;
+
+  // Navigation is a side effect, so it happens in effects after render, never during it.
+  useEffect(() => {
+    if (user === null && routeName && !routeIsPublic) toSignIn();
+  }, [user, routeName, routeIsPublic, toSignIn]);
 
   useEffect(() => {
-    if (user === null && route && !route.public) toSignIn();
-  }, [user, route, toSignIn]);
+    if (user && routeName === "signIn") navigate(returnTo, { replace: true });
+  }, [user, routeName, returnTo, navigate]);
 
   if (user === undefined) return <p className="loading">Loading…</p>;
 
-  if (route?.name === "signIn") {
-    const returnTo = safeReturnPath(new URLSearchParams(search ?? "").get("return"));
-    if (user) {
-      navigate(returnTo, { replace: true });
-      return null;
-    }
+  if (routeName === "signIn") {
+    if (user) return null; // the effect above is moving the user on
     return (
       <Layout user={null} navigate={navigate}>
         <SignIn api={api} onSignedIn={(u) => (setUser(u), navigate(returnTo, { replace: true }))} />
@@ -73,6 +78,7 @@ export function App() {
 
   const signOut = async () => {
     await api.signOut().catch(() => {});
+    clearDraft();
     setUser(null);
     navigate("/sign-in", { replace: true });
   };

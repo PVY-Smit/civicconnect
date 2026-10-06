@@ -59,7 +59,7 @@ test("a 204 answer and a response without JSON are handled", async () => {
 
 test("the router matches each screen, with the submission form ahead of a reference", () => {
   assert.equal(matchRoute("/requests/new").name, "submit");
-  assert.deepEqual(matchRoute("/requests/CC-123456"), { ...matchRoute("/requests/CC-123456"), name: "detail", params: { reference: "CC-123456" } });
+  assert.deepEqual(matchRoute("/requests/CC-1234-5678"), { name: "detail", pattern: "/requests/:reference", title: "Request", params: { reference: "CC-1234-5678" } });
   assert.equal(matchRoute("/requests").name, "list");
   assert.equal(matchRoute("/notifications").name, "notifications");
   assert.equal(matchRoute("/sign-in").public, true);

@@ -18,10 +18,38 @@ const URGENCY = [
 ];
 const EMPTY = { title: "", description: "", categoryId: "", location: "", reportedUrgency: "" };
 
+// What the user has typed is kept in this tab's session storage until the request is submitted, so a
+// session that expires while the form is open (FR-001 sends them to sign in) does not lose it.
+const DRAFT_KEY = "civicconnect.submit-draft";
+function readDraft() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? "null");
+    return saved && typeof saved === "object" ? { ...EMPTY, ...saved } : EMPTY;
+  } catch {
+    return EMPTY;
+  }
+}
+// Signing out on purpose drops the draft, so the next person at a shared computer does not see it.
+export function clearDraft() {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // Storage unavailable: nothing was kept.
+  }
+}
+function writeDraft(values) {
+  try {
+    if (Object.values(values).some((v) => v !== "")) sessionStorage.setItem(DRAFT_KEY, JSON.stringify(values));
+    else sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // Storage unavailable: the form still works, the draft just is not kept.
+  }
+}
+
 export function SubmitRequest({ api, navigate }) {
   const [categories, setCategories] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [values, setValues] = useState(EMPTY);
+  const [values, setValues] = useState(readDraft);
   const [errors, setErrors] = useState({});
   const [failure, setFailure] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -44,6 +72,8 @@ export function SubmitRequest({ api, navigate }) {
     );
   }, [api]);
 
+  useEffect(() => writeDraft(values), [values]);
+
   const set = (field) => (event) => setValues((v) => ({ ...v, [field]: event.target.value }));
 
   const submit = async (event) => {
@@ -53,6 +83,7 @@ export function SubmitRequest({ api, navigate }) {
     try {
       const ack = await api.submitRequest(values);
       setErrors({});
+      setValues(EMPTY); // also clears the kept draft
       setAcknowledgement(ack);
     } catch (e) {
       if (e instanceof ApiError && e.errors) {
@@ -67,7 +98,7 @@ export function SubmitRequest({ api, navigate }) {
 
   if (acknowledgement) {
     return (
-      <Page title="Request submitted">
+      <Page title="Request submitted" focusHeading={false}>
         <div className="panel" role="status" tabIndex={-1} ref={ackRef}>
           <p>Your reference is</p>
           <p className="reference">{acknowledgement.reference}</p>
@@ -81,7 +112,7 @@ export function SubmitRequest({ api, navigate }) {
             </Link>
           </li>
           <li>
-            <button type="button" className="link-button" onClick={() => (setValues(EMPTY), setAcknowledgement(null))}>
+            <button type="button" className="link-button" onClick={() => setAcknowledgement(null)}>
               Submit another request
             </button>
           </li>
