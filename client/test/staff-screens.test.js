@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TRANSITIONS } from "../../src/modules/workflow-status/transition-table.js";
 import { inputsFor, moveBody, moveLabel } from "../src/workflow-ui.js";
-import { DEFAULT_SORT, FILTER_KEYS, filtersFromSearch, rangeProblem, searchFromFilters } from "../src/queue-filters.js";
+import { DEFAULT_SORT, FILTER_KEYS, filtersFromSearch, rangeProblem, searchFromFilters, SORTS } from "../src/queue-filters.js";
 
 test("ADR-005: every move in the status model has its own button label", () => {
   const labels = new Map();
@@ -71,4 +71,14 @@ test("a date range ending before it starts is caught before the request is sent"
   assert.match(rangeProblem({ from: "2026-10-05", to: "2026-10-01" }), /on or after/);
   assert.equal(rangeProblem({ from: "2026-10-05", to: "2026-10-05" }), null);
   assert.equal(rangeProblem({ from: "2026-10-05", to: "" }), null);
+});
+
+test("FR-014: the queue offers each of the three named sorts in both directions, and nothing else", () => {
+  const values = SORTS.map((s) => s.value).sort();
+  assert.deepEqual(values, ["priority_asc", "priority_desc", "submitted_asc", "submitted_desc", "updated_asc", "updated_desc"]);
+  for (const s of SORTS) {
+    assert.ok(s.label && s.label !== s.value, `${s.value} has no wording`);
+    assert.deepEqual(filtersFromSearch(searchFromFilters({ sort: s.value })).sort, s.value, `${s.value} survives the address`);
+  }
+  assert.equal(SORTS[0].value, DEFAULT_SORT, "the default is listed first");
 });

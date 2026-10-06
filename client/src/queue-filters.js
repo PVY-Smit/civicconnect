@@ -5,9 +5,16 @@
 // combines them with the actor's scope (FR-013); the client only carries them.
 
 export const FILTER_KEYS = Object.freeze(["q", "status", "categoryId", "assigneeId", "from", "to", "sort", "page"]);
+// FR-014 names three sorts: submission date, last update and priority. Each runs both ways. For priority,
+// High comes before Medium before Low, and a request whose priority is not set yet comes last either way,
+// because it has not been triaged rather than being low priority (FR-021). The server applies the order.
 export const SORTS = Object.freeze([
-  { value: "submitted_desc", label: "Newest first" },
-  { value: "submitted_asc", label: "Oldest first" },
+  { value: "submitted_desc", label: "Submitted, newest first" },
+  { value: "submitted_asc", label: "Submitted, oldest first" },
+  { value: "updated_desc", label: "Last updated, most recent first" },
+  { value: "updated_asc", label: "Last updated, least recent first" },
+  { value: "priority_desc", label: "Priority, highest first" },
+  { value: "priority_asc", label: "Priority, lowest first" },
 ]);
 export const DEFAULT_SORT = "submitted_desc";
 

@@ -140,6 +140,7 @@ export function Queue({ api, navigate, search }) {
                     <th scope="col">Urgency</th>
                     <th scope="col">Assignee</th>
                     <th scope="col">Submitted</th>
+                    <th scope="col">Last updated</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -159,6 +160,7 @@ export function Queue({ api, navigate, search }) {
                       <td>{r.reportedUrgency}</td>
                       <td>{r.assignee?.name ?? <span className="muted">Unassigned</span>}</td>
                       <td>{formatDate(r.submittedAt)}</td>
+                      <td>{formatDate(r.updatedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
