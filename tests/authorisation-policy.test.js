@@ -66,6 +66,21 @@ test("each recorded conflict is a cell the matrix grants and the policy denies, 
   }
 });
 
+test("CR-002 (#92): the four corrected cells are refusals in the register and in the policy, with no conflict left", () => {
+  assert.deepEqual([...MATRIX_CONFLICTS], []);
+  const cells = [
+    ["assignRequest", "Manager", "FR-015, FR-016: only the Coordinator assigns"],
+    ["acceptRequest", "Coordinator", "FR-015, FR-016: only Staff accept an unassigned request"],
+    ["rejectRequest", "Manager", "FR-016, FR-020: only the Coordinator rejects"],
+    ["setPriority", "Manager", "FR-021: only a Coordinator sets priority"],
+  ];
+  for (const [fn, role, rule] of cells) {
+    const row = matrix.functions.find((f) => f.function === FUNCTIONS[fn]);
+    assert.equal(row[role], false, `register: ${rule}`);
+    assert.equal(permits(actor(role), fn), false, `policy: ${rule}`);
+  }
+});
+
 test("nobody may edit or delete an audit entry (FR-026)", () => {
   for (const role of ROLES) assert.equal(permits(actor(role), "editAuditEntry"), false);
 });

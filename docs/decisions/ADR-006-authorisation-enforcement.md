@@ -141,3 +141,5 @@ Proposed to the Risk Register under #68, where the owner assigns the identifiers
   is measured.
 - **When FEC-01 is answered**, only `requestScope` changes.
 - **When #92 is resolved**, `MATRIX_CONFLICTS` is emptied or the transition table's roles change.
+  Resolved on 6 October 2026 (CR-002): the Access Matrix sheet was corrected to the requirements, the
+  fixture was re-exported with `tools/export_register_fixtures.py`, and `MATRIX_CONFLICTS` is empty.
