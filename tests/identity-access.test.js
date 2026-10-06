@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createIdentityAccess, NOT_PERMITTED, NOT_SIGNED_IN } from "../src/modules/identity-access/http.js";
+import { FUNCTIONS, permits } from "../src/modules/authorisation-policy/policy.js";
 import { GENERIC_FAILURE, signIn } from "../src/modules/identity-access/sign-in.js";
 import {
   COOKIE_NAME,
@@ -153,7 +154,7 @@ test("FR-001: signing in sets the session cookie and returns the user without th
   const res = fakeRes();
   await ia.signIn({ body: { email: "rea@example.org", password: "correct horse" } }, res);
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, { user: { id: 1, name: "Rea Requester", role: "Requester" } });
+  assert.deepEqual(res.body, { user: { id: 1, name: "Rea Requester", role: "Requester", permissions: ["submitRequest", "viewOwnRequests"] } });
   assert.match(res.headers["set-cookie"], /^cc_session=[^;]+; Path=\/; HttpOnly; SameSite=Lax; Max-Age=\d+; Secure$/);
 });
 
@@ -251,4 +252,18 @@ test("signing out clears the session cookie", () => {
   ia.signOut({}, res);
   assert.equal(res.statusCode, 204);
   assert.match(res.headers["set-cookie"], /^cc_session=; Path=\/; HttpOnly; SameSite=Lax; Max-Age=0; Secure$/);
+});
+
+test("ADR-006: the signed-in user's permissions are exactly what the policy permits for their role", async () => {
+  const { ia } = module_();
+  const signInRes = fakeRes();
+  await ia.signIn({ body: { email: "max@example.org", password: "manager pass" } }, signInRes);
+  const expected = Object.keys(FUNCTIONS).filter((fn) => permits({ role: "Manager" }, fn));
+  assert.deepEqual(signInRes.body.user.permissions, expected);
+  assert.ok(expected.includes("manageUsers") && !expected.includes("setPriority") && !expected.includes("editAuditEntry"));
+
+  const meRes = fakeRes();
+  await ia.currentUser({ actor: { id: 2, role: "Manager", categoryIds: [10] } }, meRes);
+  assert.deepEqual(meRes.body.user.permissions, expected);
+  assert.equal("passwordHash" in meRes.body.user, false);
 });
