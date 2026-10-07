@@ -1,8 +1,8 @@
 # ADR-002: Technology stack
 
 - **Status:** Accepted, conditional on the two conditions under Decision. Approved by Tristan Roets and
-  Darius Mushi on #91, merged 30 September 2026. The conditions are amended by CR-004 (5 October 2026,
-  #107, DEC-016); see Amendment.
+  Darius Mushi on #91, merged 30 September 2026. CR-004 (5 October 2026, #107, DEC-016) proposes amended
+  conditions; see Amendment. They apply once CR-004's approvals are recorded on #129.
 - **Date:** Drafted 19 September 2026 by Darius Mushi (three drafts). Finalised 23 September 2026 by
   Jean Smit at Darius's request. Amended 28 September 2026 after review on #91.
 - **Decision Log entry:** DEC-008, recorded in M1 as deferred to M2, and recorded as decided in M2 with
@@ -19,7 +19,7 @@ DEC-008 was deferred to M2 with eight stated evidence conditions. Each is answer
 |---|---|
 | Requirement and architecture fit | Hard gates 2 and 4, and the driver comparison |
 | Realistic learning curve for these three members | Team capability, applied through RSK-01 |
-| Availability and compatibility on the BC Desktop platform | Gate 3. Still open, and a condition of this decision |
+| Availability and compatibility on the BC Desktop platform | Gate 3. Still open, and a condition of this decision. CR-004 proposes replacing it as a merge condition and carrying it as RSK-30 (see Amendment) |
 | Dependency ecosystem maturity | The dependency comparison |
 | Testing and automation support | The ASR-04 row and gate 1 |
 | Deployment compatibility | DEC-010 (#60). The runtime the host must provide is stated under Later consequences |
@@ -100,7 +100,9 @@ candidates fail gate 3.
 3. **Runs on the machines all three members actually have (CON-07).** **Open for both.** Documentation
    cannot close it. Someone has to install and run the stack on a BC Desktop machine. For A, Node also
    publishes a Windows zip archive that runs without installation, which is the fallback if the campus
-   image lacks Node. That fallback is itself untested on campus.
+   image lacks Node. That fallback is itself untested on campus. CR-004 (see Amendment) proposes that
+   gate 3 stop being a merge condition for the bootstrap: a reproducible check replaces it, and the
+   campus check is carried as RSK-30 until it is run.
 4. **Enforces authorisation on the server (NFR-005, FR-002).** Both pass. Express middleware and
    Django's view pipeline each support a single enforcement point, which ADR-001 rules 1 and 2
    require.
@@ -108,7 +110,8 @@ candidates fail gate 3.
    MIT and PSF, with one exception: psycopg is LGPL-3.0-only. The LGPL permits use of the library
    unmodified, which is how this project would use it.
 
-No candidate is disqualified. Gate 3 remains a condition of the decision below.
+No candidate is disqualified. Gate 3 remains a condition of the decision below, as set; CR-004 proposes
+to replace it as a merge condition (see Amendment).
 
 ## Comparison against the drivers
 
@@ -185,7 +188,7 @@ node-cron. Tests run on Node's built-in `node:test`. The bootstrap (#90) install
 React, React DOM and Vite are added with the first client work, each justified in the pull request
 that adds it.
 
-The decision is conditional. Two things must happen before the bootstrap for #64 (#90) merges, and if either fails,
+The decision is conditional. Two things must happen before the bootstrap (#90) merges, and if either fails,
 this record is revisited through controlled change:
 
 1. **Gate 3 closes.** The stack is installed and run on a BC Desktop machine, or the Node zip archive is
@@ -202,6 +205,10 @@ Prisma is pinned exactly at 7.10.0 for all three packages, the CLI included. Upg
 separate decision, taken after Prisma 8 is released as stable.
 
 ## Amendment, 5 October 2026 (CR-004, DEC-016)
+
+**Status:** proposed. It takes effect when Darius Mushi and Tristan Roets record their approval of CR-004
+on #129. The Change Requests row then cites those approvals and their dates, and this line is updated to
+match, before #129 merges.
 
 The two conditions above stay in this record as they were set. CR-004 replaces them as the conditions
 for merging the bootstrap (#90, under #108).
@@ -275,6 +282,9 @@ part of the evidence for the final choice.
   `prisma migrate deploy` in CI and production, at the pinned 7.x line.
 - **B's smaller dependency surface is given up.** That is the direct cost of weighting RSK-01 above
   RSK-12, and it is recorded here so the choice can be revisited if RSK-12 materialises.
+- **No verified campus run before construction (CR-004).** Under the amendment the bootstrap merges on
+  a check a second member repeats and CI then runs on every pull request, not on a run on a BC Desktop
+  machine. RSK-30 records the risk that the campus environment differs.
 
 ## Risks created
 
@@ -295,6 +305,12 @@ Updates proposed to existing risks under #68:
   request inherits, and the overrides for deepmerge-ts and mysql2 as a workaround for Prisma issue
   #30295, to be removed when a Prisma 7 release fixes it. Owner: Darius Mushi.
 - **RSK-02:** unchanged by this decision. It is decided under DEC-010.
+
+Added by the amendment (CR-004, #107):
+
+- **RSK-30:** the BC Desktop campus environment differs from the Node 24 and PostgreSQL 16 environment
+  the stack is verified on. Scored 3 by 3, Medium. Owner: Darius Mushi. Mitigation and contingency are
+  in the Risk Register; the campus check is run when lab access allows and recorded on #64.
 
 ## Evidence
 
@@ -328,14 +344,16 @@ Updates proposed to existing risks under #68:
   using a hand-edited SQL migration where the schema language cannot express them.
 - **DEC-010 (#60)** must choose a host that runs Node 24 and one PostgreSQL database inside a free tier,
   and must allow exactly one always-on instance if scheduling is used (FEC-03).
-- **#64 (bootstrap)** fixes JavaScript or TypeScript and any frontend test tooling, each justified in
-  its pull request under RSK-12. It cannot merge until both conditions under Decision are met. From 5
-  October 2026 those are the amended conditions under Amendment (CR-004).
+- **The bootstrap (#90)** fixes JavaScript or TypeScript and any frontend test tooling, each justified
+  in its pull request under RSK-12. It merges under #108 once the amended conditions under Amendment
+  (CR-004) are shown on it. Until CR-004 is approved, the original conditions under Decision apply.
 - **#67 (checks)** runs `npm ci` against the lockfile and `node --test` on every pull request, which is
   NFR-012's evidence.
 - **Node 24** enters maintenance on 20 October 2026 and remains supported until 30 April 2028, which
   covers the project.
-- **If gate 3 or the proof of concept fails**, this record is revisited through controlled change. B
+- **If the environment check or the proof of concept fails**, under the original conditions or the
+  amended ones, this record is revisited through controlled change. A failed campus check is handled
+  under RSK-30's contingency first. B
   remains the evaluated alternative and its evidence stays in this record. RSK-01's contingency, which
   reduces committed scope to Must-priority requirements through a change request, applies whichever
   stack is chosen.
