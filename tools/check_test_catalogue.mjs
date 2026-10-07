@@ -95,7 +95,7 @@ function testsIn(file) {
 
 const listDir = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.js")).map((f) => `${dir}/${f}`) : []);
 const listSpecs = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".spec.js")).map((f) => `${dir}/${f}`) : []);
-const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...listSpecs("e2e/journeys"), ...records.flatMap((r) => r.refs.map((x) => x.file))])].filter((f) =>
+const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...listDir("perf/test"), ...listSpecs("e2e/journeys"), ...records.flatMap((r) => r.refs.map((x) => x.file))])].filter((f) =>
   existsSync(join(".", f)),
 );
 const journeyFiles = files.filter((f) => f.startsWith("e2e/"));

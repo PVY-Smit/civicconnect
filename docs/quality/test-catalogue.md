@@ -38,7 +38,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24 |
 | High-priority requirement or risk | 5 | TC-01 and TC-22 (NFR-005, Must), TC-05 and TC-24 (FR-016, Must), TC-09 to TC-11 (FR-001, Must), TC-12 (FR-008, Must; DEC-004), TC-18 (FR-025, Must; ADR-001 rule 3) |
 | Black-box techniques | 2 | Decision table (TC-01, TC-22), state transition (TC-05, TC-24), boundary values (TC-13, TC-25), equivalence partitions (TC-13, TC-26) |
-| Performance | 1 scenario | TC-35 (Not yet built, #124) |
+| Performance | 1 scenario | TC-35 (scripts in #139; Blocked until staging, #122) |
 
 ## Where the tests are
 
@@ -52,6 +52,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
 | #138 (#123) | `e2e/journeys/*.spec.js` | f90d154 |
+| #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 62da9fb |
 
 The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
@@ -838,21 +839,26 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 - `e2e/journeys/staff-new-to-closed.spec.js`: TC-34: a request goes from New to Closed through the Coordinator and Staff, and the requester sees the outcome [#138]
 
-### TC-35 Performance: the staff queue
+### TC-35 Performance: the staff queue and request submission
 
 | Field | Value |
 |---|---|
-| Test basis | NFR-001 |
-| Why selected | The queue reads the most data and is used all day; NFR-001 sets its target at 5,000 requests |
-| Technique and level | Performance, one scenario |
-| Input or precondition | 5,000 seeded requests on staging; the first queue page retrieved 20 times |
-| Expected result | The 95th percentile under 2.0 seconds across 20 timed retrievals, with the distribution recorded, not the mean (NFR-001) |
-| Actual result | Not run |
-| Status | Not yet built (#124) |
-| Evidence | None yet |
-| Traceability | #124, NFR-001, ASR-02 |
-| Interpretation | Not yet available |
+| Test basis | NFR-001, NFR-002; ASR-02; M3 brief s13 |
+| Why selected | The queue reads the most data and is used all day, and the Coordinator's queue is every request (FR-013). A slow acknowledgement makes requesters submit twice (STK-01) |
+| Technique and level | Performance against staging: two timed scenarios with the requirements' own methods, and one small concurrent run |
+| Input or precondition | Staging (#122) with 5,000 requests seeded through the API by `perf/seed.mjs`, a tenth rejected and three tenths assigned; the Requester and Coordinator accounts (#109); the paged queue endpoint (#114) |
+| Expected result | NFR-001: the 95th percentile of 20 retrievals of the first queue page under 2.0 s, the distribution recorded. NFR-002: the 95th percentile of 20 submissions under 3.0 s. Concurrent run (10 clients, 30 s): no target set; latency, throughput and errors recorded |
+| Actual result | Not run against staging. The statistics are tested; a trial against the API stand-in completed and NFR-001 marked it invalid, because the stand-in returns the whole queue rather than one page |
+| Status | Blocked: needs staging (#122), the seed data (#109) and the queue endpoint (#114) |
+| Evidence | The scripts and method are #139 (`docs/quality/performance/README.md`). The statistics: local run, 7 October 2026, #139 at 62da9fb, 6 of 6 tests. Results from staging go to `docs/quality/performance/results/` |
+| Traceability | #124, #139, NFR-001, NFR-002, ASR-02 |
+| Interpretation | Not yet available. The README records what a result will not show: production scale, dates spread over months, writes during reads, screen drawing time, and other hosts |
 
 **Automated by**
 
-(none yet)
+- `perf/test/lib.test.js`: the 95th percentile of 20 samples is the 19th smallest, as the nearest-rank method gives [#139]
+- `perf/test/lib.test.js`: a reported percentile is always a value that was measured, never an interpolation [#139]
+- `perf/test/lib.test.js`: one slow sample in 20 does not move the 95th percentile, and two do [#139]
+- `perf/test/lib.test.js`: no samples, or a percentile outside 0 to 100, is an error rather than a number [#139]
+- `perf/test/lib.test.js`: the summary reports the distribution, with the mean beside it, not instead of it [#139]
+- `perf/test/lib.test.js`: a result meets its target only when it is under it, as NFR-001 and NFR-002 say [#139]
