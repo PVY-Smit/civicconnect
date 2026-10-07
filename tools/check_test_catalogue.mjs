@@ -14,6 +14,8 @@
 // that matches no test; and every test that no record lists. A file missing from this checkout, or a tagged
 // test missing from it, is reported as "not on this branch", not as a failure, because records cover open
 // pull requests.
+// The browser journeys in e2e/ need a deployed instance, so they are listed with Playwright's --list rather
+// than run, and counted as listed. Their results come from the run against staging (#122, #123).
 // With --strict it exits 1 on a failed test, a line that matches nothing, or an uncatalogued test.
 
 import { execFileSync } from "node:child_process";
@@ -51,6 +53,29 @@ for (const line of readFileSync(catalogue, "utf-8").split(/\r?\n/)) {
 }
 
 // ---- the tests, by running each referenced file and every test file in the usual places ----
+// Playwright's list: "  [chromium] › file.spec.js:10:1 › name", paths relative to the journeys folder.
+function journeysIn(files) {
+  if (files.length === 0 || !existsSync("e2e/node_modules/@playwright/test/cli.js")) return {};
+  let out = "";
+  try {
+    out = execFileSync(process.execPath, ["node_modules/@playwright/test/cli.js", "test", "--list"], {
+      cwd: "e2e",
+      encoding: "utf-8",
+      env: { ...process.env, E2E_BASE_URL: process.env.E2E_BASE_URL || "http://localhost" }, // listing opens no page
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    out = error.stdout ?? "";
+  }
+  const found = Object.fromEntries(files.map((f) => [f, []]));
+  for (const l of out.split(/\r?\n/)) {
+    const m = l.match(/^\s+\[[^\]]+\] › (.+?):\d+:\d+ › (.+)$/);
+    const file = m && `e2e/journeys/${m[1].split("\\").join("/")}`;
+    if (m && found[file]) found[file].push({ name: m[2], result: "listed" });
+  }
+  return found;
+}
+
 function testsIn(file) {
   const cwd = file.startsWith("client/") ? "client" : ".";
   const rel = file.startsWith("client/") ? file.slice("client/".length) : file;
@@ -69,10 +94,15 @@ function testsIn(file) {
 }
 
 const listDir = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".test.js")).map((f) => `${dir}/${f}`) : []);
-const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...records.flatMap((r) => r.refs.map((x) => x.file))])].filter((f) =>
+const listSpecs = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".spec.js")).map((f) => `${dir}/${f}`) : []);
+const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...listSpecs("e2e/journeys"), ...records.flatMap((r) => r.refs.map((x) => x.file))])].filter((f) =>
   existsSync(join(".", f)),
 );
-const results = Object.fromEntries(files.map((f) => [f, testsIn(f)]));
+const journeyFiles = files.filter((f) => f.startsWith("e2e/"));
+const results = {
+  ...Object.fromEntries(files.filter((f) => !f.startsWith("e2e/")).map((f) => [f, testsIn(f)])),
+  ...journeysIn(journeyFiles),
+};
 
 // ---- match ----
 const matches = (pattern, name) => (pattern.endsWith("*") ? name.startsWith(pattern.slice(0, -1)) : name === pattern);
@@ -80,9 +110,9 @@ const listed = new Set();
 const problems = [];
 let failed = 0;
 
-console.log("record   pass  fail  todo  absent");
+console.log("record   pass  fail  todo  listed  absent");
 for (const r of records) {
-  const count = { pass: 0, fail: 0, todo: 0, skip: 0, absent: 0 };
+  const count = { pass: 0, fail: 0, todo: 0, skip: 0, listed: 0, absent: 0 };
   for (const ref of r.refs) {
     if (!results[ref.file]) {
       count.absent += 1;
@@ -100,7 +130,7 @@ for (const r of records) {
     }
   }
   failed += count.fail;
-  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${count.absent ? `${count.absent} line(s) not on this branch` : ""}`);
+  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.listed).padStart(6)}  ${count.absent ? `${count.absent} line(s) not on this branch` : ""}`);
 }
 
 for (const [file, tests] of Object.entries(results)) {

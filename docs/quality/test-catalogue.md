@@ -12,7 +12,8 @@ to Withdrawn and the reason.
 ## How the records stay true
 
 `node tools/check_test_catalogue.mjs` runs every test file it finds and reports, for each record, how many
-of its listed tests pass, fail or are todo; every listed test that does not exist; and every test that no
+of its listed tests pass, fail or are todo, and how many browser journeys are listed (they need a deployed
+instance, so the tool lists them with Playwright rather than running them); every listed test that does not exist; and every test that no
 record lists. A listed file that is not on the current branch, or a listed test tagged with its open pull
 request, such as `[#136]`, that is not on it, is reported as not on this branch, because records cover open
 pull requests. A name ending in `*` matches every test whose name starts with the rest. With `--strict` it fails on any of those, which CI (#110) runs once every listed pull
@@ -33,7 +34,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31 |
 | Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24, TC-25, TC-26 |
 | API or integration | 3 | At the handler boundary: TC-21 to TC-26. Against PostgreSQL: TC-32 (Blocked) |
-| End to end | 2 | TC-33, TC-34 (Not yet built, #123) |
+| End to end | 2 | TC-33, TC-34 (written in #138; Blocked until staging, #122) |
 | Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24 |
 | High-priority requirement or risk | 5 | TC-01 and TC-22 (NFR-005, Must), TC-05 and TC-24 (FR-016, Must), TC-09 to TC-11 (FR-001, Must), TC-12 (FR-008, Must; DEC-004), TC-18 (FR-025, Must; ADR-001 rule 3) |
 | Black-box techniques | 2 | Decision table (TC-01, TC-22), state transition (TC-05, TC-24), boundary values (TC-13, TC-25), equivalence partitions (TC-13, TC-26) |
@@ -50,6 +51,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #133 to #135 (#118 to #120) | `client/test/*.test.js` | 7948369 (the top of the stack) |
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
+| #138 (#123) | `e2e/journeys/*.spec.js` | f90d154 |
 
 The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
@@ -802,39 +804,39 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 | Field | Value |
 |---|---|
-| Test basis | FR-001, FR-005 to FR-012 |
+| Test basis | FR-001, FR-005 to FR-011 |
 | Why selected | The most common journey, across the client, the server and the database |
 | Technique and level | End to end in the browser (Playwright) against staging |
-| Input or precondition | Staging (#122) with seed data; a requester account |
-| Expected result | Sign in, submit, see the reference, find it in the list, open it, see its status and only requester-visible entries |
-| Actual result | Not run |
-| Status | Not yet built (#123) |
-| Evidence | None yet |
-| Traceability | #123, #122 |
-| Interpretation | Not yet available |
+| Input or precondition | Staging (#122) with seed data (#109): a requester account and an active category, named in the environment (`e2e/README.md`) |
+| Expected result | The requester signs in and lands on their requests; an empty form is refused with all five fields named; a complete submission gets a reference in the agreed format; the detail shows what was typed, the status New and its first history entry; the list holds the request once, with its title and status |
+| Actual result | Not run against staging. Against a local stand-in of the API contract: as expected |
+| Status | Blocked: needs staging (#122) and the seed data (#109) |
+| Evidence | The journey is #138. Local run against the stand-in, 7 October 2026, client at 7948369: passed. Removing the form's error summary failed it |
+| Traceability | #123, #138, #122, #109 |
+| Interpretation | The journey is ready and its steps match the client; it shows nothing about the real server until it runs on staging |
 
 **Automated by**
 
-(none yet)
+- `e2e/journeys/requester-submits-and-follows.spec.js`: TC-33: a requester submits a request, gets its reference, and finds it in their list and its detail [#138]
 
 ### TC-34 Journey: staff take a request from New to Closed
 
 | Field | Value |
 |---|---|
-| Test basis | FR-013 to FR-021, FR-025 |
-| Why selected | The workflow journey, with two roles acting on one request |
-| Technique and level | End to end in the browser (Playwright) against staging |
-| Input or precondition | Staging (#122) with seed data; Coordinator and Staff accounts |
-| Expected result | The Coordinator assigns; Staff start work and resolve with a summary; the Coordinator closes with confirmation; the history shows each step |
-| Actual result | Not run |
-| Status | Not yet built (#123) |
-| Evidence | None yet |
-| Traceability | #123, #122 |
-| Interpretation | Not yet available |
+| Test basis | FR-011, FR-013 to FR-021, FR-025 |
+| Why selected | The workflow journey, with three users acting on one request, each with their own session |
+| Technique and level | End to end in the browser (Playwright) against staging, with three browser contexts |
+| Input or precondition | Staging (#122) with seed data (#109): Requester, Coordinator and Staff accounts, and an active category the Staff member is authorised for |
+| Expected result | The Coordinator finds the request in the queue, sets the priority and assigns it, with Assign disabled until a staff member is chosen; the Staff member starts work, adds an internal note and a visible update, and resolves it with a summary; the Coordinator closes it, with Close disabled until confirmed, and no moves remain; the history shows each step and who made it; the requester sees Closed, the resolution and the visible update, and not the internal note |
+| Actual result | Not run against staging. Against a local stand-in of the API contract: as expected |
+| Status | Blocked: needs staging (#122) and the seed data (#109) |
+| Evidence | The journey is #138. Local run against the stand-in, 7 October 2026, client at 7948369: passed. Enabling Assign before a choice, and sending internal notes to the requester, each failed it |
+| Traceability | #123, #138, #122, #109 |
+| Interpretation | The journey is ready and its steps match the client; it shows nothing about the real server until it runs on staging |
 
 **Automated by**
 
-(none yet)
+- `e2e/journeys/staff-new-to-closed.spec.js`: TC-34: a request goes from New to Closed through the Coordinator and Staff, and the requester sees the outcome [#138]
 
 ### TC-35 Performance: the staff queue
 
