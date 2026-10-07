@@ -48,6 +48,35 @@ export function inputsFor(move, from) {
   });
 }
 
+// A form id for one input of one move, unique across the whole transition table: built from the from and to
+// statuses, so two moves that need the same field never share an id.
+const slug = (status) => status.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+export function moveFieldId(from, to, field) {
+  return `move-${slug(from)}-to-${slug(to)}-${field}`;
+}
+
+// Whether a move's form can be sent: every choice it needs has been made. A staff member must be chosen
+// before Assign, and the closing confirmation ticked before Close. Text the server must check (a reason, a
+// summary) is left to the server, which names what is missing.
+export function readyToSend(move, values) {
+  return move.requires.every((field) => {
+    if (field === "assigneeId") return values.assigneeId != null && values.assigneeId !== "";
+    if (field === "confirmed") return values.confirmed === true;
+    return true;
+  });
+}
+
+// Which controls the staff detail screen shows, from what the server sent with the request: the moves the
+// actor may make now, and whether they may set the priority or record an entry. Nothing here is worked out
+// from the role.
+export function detailControls(request) {
+  return {
+    moves: request?.moves ?? [],
+    priority: Boolean(request?.capabilities?.setPriority),
+    entry: Boolean(request?.capabilities?.recordActionEntry),
+  };
+}
+
 // The body for POST /status: the target status plus only the inputs this move asked for.
 export function moveBody(move, values) {
   const body = { to: move.to };

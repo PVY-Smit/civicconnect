@@ -5,7 +5,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TRANSITIONS } from "../../src/modules/workflow-status/transition-table.js";
-import { inputsFor, moveBody, moveLabel } from "../src/workflow-ui.js";
+import { detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../src/workflow-ui.js";
+import { matchRoute, navFor, routeAllowed } from "../src/router.js";
 import { DEFAULT_SORT, FILTER_KEYS, filtersFromSearch, rangeProblem, searchFromFilters, SORTS } from "../src/queue-filters.js";
 
 test("ADR-005: every move in the status model has its own button label", () => {
@@ -34,7 +35,7 @@ test("every input a guard requires gets a labelled form input of the right kind"
   assert.deepEqual(kinds("In Progress", "Resolved"), ["text"]);
 });
 
-test("FR-020: only the rejection reason tells the user that the requester will see it", () => {
+test("FR-020: of the reason inputs, only the rejection reason's hint says the requester will see it", () => {
   const reasonHint = (from, to) => inputsFor({ to, requires: ["reason"] }, from)[0].hint;
   assert.match(reasonHint("New", "Rejected"), /requester will see/);
   for (const [from, to] of [["In Progress", "On Hold"], ["On Hold", "In Progress"], ["Resolved", "In Progress"]]) {
@@ -81,4 +82,45 @@ test("FR-014: the queue offers each of the three named sorts in both directions,
     assert.deepEqual(filtersFromSearch(searchFromFilters({ sort: s.value })).sort, s.value, `${s.value} survives the address`);
   }
   assert.equal(SORTS[0].value, DEFAULT_SORT, "the default is listed first");
+});
+
+const requester = { id: 1, name: "Rea", role: "Requester" };
+
+test("FR-013: a Requester's navigation has no Queue link, and the queue screen is not offered to them", () => {
+  assert.deepEqual(navFor(requester).map((i) => i.label), ["Submit a request", "My requests", "Notifications"]);
+  assert.equal(routeAllowed(matchRoute("/queue"), requester), false);
+  for (const role of ["Staff", "Coordinator", "Manager"]) {
+    const user = { id: 9, role };
+    assert.equal(navFor(user)[0].label, "Queue", role);
+    assert.equal(routeAllowed(matchRoute("/queue"), user), true, role);
+  }
+  assert.deepEqual(navFor(null), []);
+  assert.equal(routeAllowed(matchRoute("/requests"), requester), true, "routes not marked for staff are open to everyone signed in");
+});
+
+test("each move input gets an id unique across the whole transition table", () => {
+  const ids = TRANSITIONS.flatMap((t) => t.guard.requires.map((field) => moveFieldId(t.from, t.to, field)));
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(moveFieldId("In Progress", "On Hold", "reason"), "move-in-progress-to-on-hold-reason");
+  for (const id of ids) assert.match(id, /^[a-z0-9-]+[A-Za-z]+$/, id);
+});
+
+test("Assign cannot be sent until a staff member is chosen, nor Close until it is confirmed", () => {
+  const assign = { to: "Assigned", requires: ["assigneeId"] };
+  assert.equal(readyToSend(assign, {}), false);
+  assert.equal(readyToSend(assign, { assigneeId: "" }), false);
+  assert.equal(readyToSend(assign, { assigneeId: "5" }), true);
+  const close = { to: "Closed", requires: ["confirmed"] };
+  assert.equal(readyToSend(close, { confirmed: false }), false);
+  assert.equal(readyToSend(close, { confirmed: true }), true);
+  assert.equal(readyToSend({ to: "Rejected", requires: ["reason"] }, {}), true, "text is checked by the server, which names what is missing");
+  assert.equal(readyToSend({ to: "In Progress", requires: [] }, {}), true);
+});
+
+test("FR-021: the priority form and the entry form appear only when the server's capabilities allow them", () => {
+  const moves = [{ to: "Assigned", requires: ["assigneeId"] }];
+  assert.deepEqual(detailControls({ moves, capabilities: { setPriority: true, recordActionEntry: true } }), { moves, priority: true, entry: true });
+  assert.deepEqual(detailControls({ moves, capabilities: { setPriority: false, recordActionEntry: true } }), { moves, priority: false, entry: true });
+  assert.deepEqual(detailControls({ moves: [] }), { moves: [], priority: false, entry: false }, "no capabilities sent means no forms");
+  assert.deepEqual(detailControls(null), { moves: [], priority: false, entry: false });
 });

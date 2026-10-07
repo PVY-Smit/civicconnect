@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createApi } from "./api.js";
-import { homeFor, matchRoute, safeReturnPath, STAFF_ROLES } from "./router.js";
+import { homeFor, isStaffUser, matchRoute, routeAllowed, safeReturnPath } from "./router.js";
 import { Layout } from "./components/Layout.jsx";
 import { SignIn } from "./screens/SignIn.jsx";
 import { clearDraft, SubmitRequest } from "./screens/SubmitRequest.jsx";
@@ -51,7 +51,7 @@ export function App() {
 
   const [pathname, search] = path.split("?");
   const route = pathname === "/" ? matchRoute(homeFor(user)) : matchRoute(pathname);
-  const isStaff = Boolean(user && STAFF_ROLES.includes(user.role));
+  const isStaff = isStaffUser(user);
   // Effects depend on these plain values, not on the route object, which is new on every render.
   const routeName = route?.name ?? null;
   const routeIsPublic = Boolean(route?.public);
@@ -103,8 +103,7 @@ export function App() {
       );
       break;
     case "queue":
-      // The server refuses the queue to a Requester (FR-013); the screen is not offered to them either.
-      screen = isStaff ? <Queue api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
+      screen = routeAllowed(route, user) ? <Queue api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
       break;
     case "notifications":
       screen = <Notifications api={api} navigate={navigate} />;
