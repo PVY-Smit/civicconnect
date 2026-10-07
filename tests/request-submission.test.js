@@ -177,6 +177,23 @@ test("FR-006: a category outside the active list is refused, including one that 
   assert.equal(validateSubmission({ ...VALID, categoryId: 11 }, { activeCategoryIds: ACTIVE }).ok, true, "a numeric id");
 });
 
+test("FR-007 boundaries: length is counted in characters as the schema counts them, so an emoji counts once", () => {
+  const check = (title) => validateSubmission({ ...VALID, title }, { activeCategoryIds: ACTIVE });
+  assert.equal(check("x".repeat(199) + "\u{1F600}").ok, true, "199 letters and an emoji are 200 characters");
+  assert.equal(check("\u{1F600}".repeat(200)).ok, true, "200 emoji");
+  assert.match(check("\u{1F600}".repeat(201)).errors.title, /at most 200 characters; it is 201\./);
+  assert.match(check("x".repeat(200) + "\u{1F600}").errors.title, /it is 201\./);
+  assert.equal(check("é".repeat(200)).ok, true, "200 accented letters");
+});
+
+test("FR-006: the category id kept is the active category's own id, as the store holds it, not the text sent", () => {
+  const numeric = [10, 11];
+  assert.equal(validateSubmission({ ...VALID, categoryId: "10" }, { activeCategoryIds: numeric }).value.categoryId, 10);
+  assert.equal(validateSubmission({ ...VALID, categoryId: 11 }, { activeCategoryIds: numeric }).value.categoryId, 11);
+  assert.equal(validateSubmission({ ...VALID, categoryId: 10 }, { activeCategoryIds: ACTIVE }).value.categoryId, "10");
+  assert.match(validateSubmission({ ...VALID, categoryId: "12" }, { activeCategoryIds: numeric }).errors.categoryId, /one of the categories/);
+});
+
 test("FR-021: reported urgency must be one of the proposed levels, matched exactly", () => {
   for (const level of URGENCY_LEVELS) {
     assert.equal(validateSubmission({ ...VALID, reportedUrgency: level }, { activeCategoryIds: ACTIVE }).ok, true, level);

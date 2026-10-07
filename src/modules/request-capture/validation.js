@@ -7,6 +7,8 @@
 // Limits. The title limit is the schema's VARCHAR(200) (docs/data/initial-schema.sql). The M1 baseline
 // gives no limit for description or location and no urgency scale, so the values below are proposed in
 // #112 for the team to agree and are held here, in one place, so the tests and the interface follow them.
+// Lengths are counted in characters (Unicode code points), as PostgreSQL counts VARCHAR, so an emoji or an
+// accented letter counts once. String length in JavaScript counts UTF-16 units, where an emoji counts twice.
 
 export const LIMITS = Object.freeze({
   title: { min: 1, max: 200 },
@@ -17,6 +19,8 @@ export const LIMITS = Object.freeze({
 export const URGENCY_LEVELS = Object.freeze(["Low", "Medium", "High"]);
 
 const LABELS = { title: "Title", description: "Description", location: "Location" };
+
+const characters = (value) => [...value].length;
 
 function text(field, raw, errors) {
   const { min, max } = LIMITS[field];
@@ -29,8 +33,9 @@ function text(field, raw, errors) {
     return undefined;
   }
   const value = raw.trim();
-  if (value.length < min) errors[field] = `${LABELS[field]} must be at least ${min} characters.`;
-  else if (value.length > max) errors[field] = `${LABELS[field]} must be at most ${max} characters; it is ${value.length}.`;
+  const length = characters(value);
+  if (length < min) errors[field] = `${LABELS[field]} must be at least ${min} characters.`;
+  else if (length > max) errors[field] = `${LABELS[field]} must be at most ${max} characters; it is ${length}.`;
   return value;
 }
 
@@ -50,8 +55,9 @@ export function validateSubmission(input, { activeCategoryIds }) {
     // Only a single id. String() would turn ["10"] or an object with a toString into "10".
     errors.categoryId = "Category must be one of the categories in the list.";
   } else {
-    categoryId = String(body.categoryId);
-    if (!activeCategoryIds.map(String).includes(categoryId)) {
+    // The id kept is the active category's own id, as the store holds it, never the text the client sent.
+    categoryId = activeCategoryIds.find((id) => String(id) === String(body.categoryId));
+    if (categoryId === undefined) {
       errors.categoryId = "Category must be one of the categories in the list.";
     }
   }
