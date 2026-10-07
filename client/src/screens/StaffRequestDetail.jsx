@@ -10,7 +10,7 @@ import { ApiError } from "../api.js";
 import { Link } from "../components/Link.jsx";
 import { Page } from "../components/Page.jsx";
 import { formatDateTime } from "../format.js";
-import { inputsFor, moveBody, moveLabel } from "../workflow-ui.js";
+import { detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../workflow-ui.js";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 
@@ -24,13 +24,16 @@ function Feedback({ message }) {
 }
 
 // One status change: its button opens the inputs the move needs, and Confirm sends it.
-function MoveForm({ move, from, reference, api, onDone, staffOptions }) {
+// A 409 means the request changed on the server after this screen read it (a conflict, or a move that is no
+// longer in the model). The parent reloads the request and shows the reason, so the moves on offer are the
+// ones that apply now and the same move cannot simply be sent again.
+function MoveForm({ move, from, reference, api, onDone, onConflict, staffOptions }) {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState({});
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const inputs = inputsFor(move, from);
-  const id = (field) => `move-${move.to.replace(/\s/g, "")}-${field}`;
+  const id = (field) => moveFieldId(from, move.to, field);
 
   const send = async (event) => {
     event?.preventDefault();
@@ -40,7 +43,8 @@ function MoveForm({ move, from, reference, api, onDone, staffOptions }) {
       await api.changeStatus(reference, moveBody(move, values));
       onDone(`${moveLabel(from, move.to)}: done. The request is now ${move.to}.`);
     } catch (e) {
-      setError(e.status === 409 ? `${e.message}` : e.errors ? Object.values(e.errors).join(" ") : e.message);
+      if (e.status === 409) return onConflict(e.message);
+      setError(e.errors ? Object.values(e.errors).join(" ") : e.message);
     } finally {
       setBusy(false);
     }
@@ -111,7 +115,7 @@ function MoveForm({ move, from, reference, api, onDone, staffOptions }) {
               {error}
             </p>
           )}
-          <button type="submit" className="button" disabled={busy}>
+          <button type="submit" className="button" disabled={busy || !readyToSend(move, values)}>
             Confirm: {moveLabel(from, move.to).toLowerCase()}
           </button>
         </form>
@@ -120,7 +124,7 @@ function MoveForm({ move, from, reference, api, onDone, staffOptions }) {
   );
 }
 
-function PriorityForm({ request, api, onDone }) {
+function PriorityForm({ request, api, onDone, onConflict }) {
   const [value, setValue] = useState(request.priority ?? "");
   const [error, setError] = useState(null);
   const send = async (event) => {
@@ -130,6 +134,7 @@ function PriorityForm({ request, api, onDone }) {
       await api.setPriority(request.reference, value);
       onDone(`Priority set to ${value}.`);
     } catch (e) {
+      if (e.status === 409) return onConflict(e.message);
       setError(e.errors ? Object.values(e.errors).join(" ") : e.message);
     }
   };
@@ -236,6 +241,11 @@ export function StaffRequestDetail({ api, navigate, reference }) {
     setMessage({ ok: true, text });
     load();
   };
+  const conflicted = (text) => {
+    setMessage({ ok: false, text: `${text} The request has been reloaded with its current state.` });
+    load();
+  };
+  const controls = detailControls(request);
 
   if (error === "notFound") {
     return (
@@ -288,16 +298,16 @@ export function StaffRequestDetail({ api, navigate, reference }) {
           </dl>
 
           <h2>Actions</h2>
-          {(request.moves ?? []).length === 0 ? (
+          {controls.moves.length === 0 ? (
             <p>There are no status changes you can make on this request now.</p>
           ) : (
             <div className="moves">
-              {request.moves.map((m) => (
-                <MoveForm key={m.to} move={m} from={request.status} reference={request.reference} api={api} onDone={done} staffOptions={staffOptions} />
+              {controls.moves.map((m) => (
+                <MoveForm key={`${request.status}-${m.to}`} move={m} from={request.status} reference={request.reference} api={api} onDone={done} onConflict={conflicted} staffOptions={staffOptions} />
               ))}
             </div>
           )}
-          {request.capabilities?.setPriority && <PriorityForm request={request} api={api} onDone={done} />}
+          {controls.priority && <PriorityForm request={request} api={api} onDone={done} onConflict={conflicted} />}
 
           <h2>Status history</h2>
           <ol className="timeline">
@@ -325,7 +335,7 @@ export function StaffRequestDetail({ api, navigate, reference }) {
               ))}
             </ol>
           )}
-          {request.capabilities?.recordActionEntry && (
+          {controls.entry && (
             <>
               <h3>Add an entry</h3>
               <EntryForm reference={request.reference} api={api} onDone={done} />

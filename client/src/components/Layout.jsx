@@ -1,15 +1,8 @@
 // Page frame (NFR-010): a skip link to the main content, a labelled navigation landmark, and the current
 // page marked with aria-current so a screen reader announces where the user is.
 
-import { STAFF_ROLES } from "../router.js";
+import { navFor } from "../router.js";
 import { Link } from "./Link.jsx";
-
-const NAV = [
-  { to: "/queue", label: "Queue", staff: true },
-  { to: "/requests/new", label: "Submit a request" },
-  { to: "/requests", label: "My requests" },
-  { to: "/notifications", label: "Notifications" },
-];
 
 export function Layout({ user, navigate, current, onSignOut, children }) {
   return (
@@ -23,7 +16,7 @@ export function Layout({ user, navigate, current, onSignOut, children }) {
           {user && (
             <nav aria-label="Main">
               <ul className="nav">
-                {NAV.filter((item) => !item.staff || STAFF_ROLES.includes(user.role)).map((item) => (
+                {navFor(user).map((item) => (
                   <li key={item.to}>
                     <Link to={item.to} navigate={navigate} aria-current={current === item.to ? "page" : undefined}>
                       {item.label}

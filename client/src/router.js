@@ -14,7 +14,21 @@ export const HOME = "/requests";
 export const STAFF_ROLES = Object.freeze(["Staff", "Coordinator", "Manager"]);
 
 // Where a user lands after signing in with no other page to return to.
-export const homeFor = (user) => (user && STAFF_ROLES.includes(user.role) ? "/queue" : HOME);
+export const isStaffUser = (user) => Boolean(user && STAFF_ROLES.includes(user.role));
+export const homeFor = (user) => (isStaffUser(user) ? "/queue" : HOME);
+
+// Whether the signed-in user is offered a route's screen. The server refuses the queue to a Requester
+// (FR-013) whatever the client does; this only keeps the screen from being offered.
+export const routeAllowed = (route, user) => !route?.staff || isStaffUser(user);
+
+// The main navigation, and the items a given user sees.
+export const NAV = Object.freeze([
+  { to: "/queue", label: "Queue", staff: true },
+  { to: "/requests/new", label: "Submit a request" },
+  { to: "/requests", label: "My requests" },
+  { to: "/notifications", label: "Notifications" },
+]);
+export const navFor = (user) => (user ? NAV.filter((item) => !item.staff || isStaffUser(user)) : []);
 
 function matches(pattern, path) {
   const want = pattern.split("/").filter(Boolean);
