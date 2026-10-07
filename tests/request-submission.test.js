@@ -79,8 +79,8 @@ const KEY = "test-reference-key-that-is-at-least-32-chars";
 const formatReference = createReferenceFormatter(KEY);
 
 test("FR-008: the keyed permutation gives every value in its range a different result, also after cycle-walking", () => {
-  // A small domain, so every input can be checked: 12-bit halves (16,777,216 values) walked down to 5,000,000
-  // would be too slow, so 8-bit halves (65,536) walked down to 60,000 stand in for the real 28 bits and 10^8.
+  // Every input of the real permutation (28 bits walked down to 10^8) is too many to check, so the same code
+  // runs on a small domain where every input can be: 8-bit halves (65,536 values) walked down to 60,000.
   const permute = feistelPermutation(KEY, { halfBits: 8, range: 60_000 });
   const seen = new Set();
   for (let n = 0; n < 60_000; n++) {
