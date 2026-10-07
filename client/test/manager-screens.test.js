@@ -5,8 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FUNCTIONS, permits, ROLES } from "../../src/modules/authorisation-policy/policy.js";
-import { can, homeFor, matchRoute, ROUTES } from "../src/router.js";
-import { ageText, defaultPeriod, periodProblem, pivot, STATUS_ORDER } from "../src/reports.js";
+import { assignableCategories, refusalText } from "../src/admin.js";
+import { can, homeFor, matchRoute, needsSignIn, onwardsFor, ROUTES } from "../src/router.js";
+import { ageText, breakdownNote, defaultPeriod, EMPTY_BREAKDOWN, overdueHint, periodProblem, pivot, STATUS_ORDER } from "../src/reports.js";
 
 // What the server sends at sign-in: the functions the policy permits for the user's role.
 const userWith = (role) => ({ id: 1, name: role, role, permissions: Object.keys(FUNCTIONS).filter((fn) => permits({ role }, fn)) });
@@ -87,4 +88,49 @@ test("FR-024: ages read as whole days", () => {
   assert.equal(ageText(1), "1 day");
   assert.equal(ageText(0), "0 days");
   assert.equal(ageText(12), "12 days");
+});
+
+test("FR-004: the reset screen stays open to a signed-in user, and to a signed-out one", () => {
+  const reset = matchRoute("/reset-password");
+  for (const role of ROLES) {
+    assert.equal(needsSignIn(reset, userWith(role)), false, role);
+    assert.equal(onwardsFor(reset, userWith(role), null), null, `${role} is not moved on from the reset screen`);
+  }
+  assert.equal(needsSignIn(reset, null), false);
+  assert.equal(onwardsFor(reset, null, null), null);
+  // The rules around it: sign-in moves a signed-in user on, and a protected screen sends a signed-out one to sign in.
+  assert.equal(onwardsFor(matchRoute("/sign-in"), userWith("Staff"), null), "/queue");
+  assert.equal(onwardsFor(matchRoute("/sign-in"), userWith("Requester"), "/requests/new"), "/requests/new");
+  assert.equal(onwardsFor(matchRoute("/sign-in"), userWith("Requester"), "https://example.org"), "/requests");
+  assert.equal(needsSignIn(matchRoute("/admin/users"), null), true);
+  assert.equal(needsSignIn(matchRoute("/sign-in"), null), false);
+  assert.equal(needsSignIn(matchRoute("/admin/users"), undefined), false, "not while the session is still being checked");
+});
+
+test("FR-006: the account form offers only active categories", () => {
+  const sent = [
+    { id: 10, name: "Street lighting" },
+    { id: 11, name: "Water and sanitation", active: true },
+    { id: 12, name: "Old roads", active: false },
+  ];
+  assert.deepEqual(assignableCategories(sent).map((c) => c.id), [10, 11]);
+  assert.deepEqual(assignableCategories(undefined), []);
+});
+
+test("FR-028: a refused action keeps the account's name in the message", () => {
+  const sam = { id: 5, name: "Sam Staff" };
+  assert.equal(refusalText("deactivate", sam, "The last Manager cannot be deactivated."), "Could not deactivate Sam Staff. The last Manager cannot be deactivated.");
+  assert.equal(refusalText("issue a reset code for", sam, "Try again."), "Could not issue a reset code for Sam Staff. Try again.");
+});
+
+test("FR-023: an empty breakdown, or one of zeros, shows the no-requests message instead of a table", () => {
+  assert.equal(breakdownNote(pivot([])), EMPTY_BREAKDOWN);
+  assert.equal(breakdownNote(pivot([{ category: "Water", status: "New", count: 0 }])), EMPTY_BREAKDOWN);
+  assert.equal(breakdownNote(pivot([{ category: "Water", status: "New", count: 1 }])), null);
+});
+
+test("FR-022: the overdue target is stated exactly as the server sends it", () => {
+  assert.equal(overdueHint(7), "Overdue means still open more than 7 days after it was submitted.");
+  assert.equal(overdueHint(1), "Overdue means still open more than 1 day after it was submitted.");
+  assert.match(overdueHint(14), / 14 days /);
 });

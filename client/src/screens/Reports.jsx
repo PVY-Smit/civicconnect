@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "../components/Link.jsx";
 import { Page } from "../components/Page.jsx";
-import { ageText, defaultPeriod, periodProblem, pivot } from "../reports.js";
+import { ageText, breakdownNote, defaultPeriod, overdueHint, periodProblem, pivot } from "../reports.js";
 
 export function Reports({ api, navigate, search }) {
   const params = new URLSearchParams(search ?? "");
@@ -80,11 +80,11 @@ export function Reports({ api, navigate, search }) {
               </div>
             ))}
           </dl>
-          <p className="hint">Overdue means still open more than {summary.overdueTargetDays} days after it was submitted.</p>
+          <p className="hint">{overdueHint(summary.overdueTargetDays)}</p>
 
           <h2>By category and status</h2>
-          {table.rows.length === 0 ? (
-            <p>No requests were submitted in this period.</p>
+          {breakdownNote(table) ? (
+            <p>{breakdownNote(table)}</p>
           ) : (
             <div className="table-wrap">
               <table className="numbers">

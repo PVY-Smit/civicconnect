@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createApi } from "./api.js";
-import { can, homeFor, matchRoute, routeAllowed, safeReturnPath } from "./router.js";
+import { can, homeFor, matchRoute, needsSignIn, onwardsFor, routeAllowed } from "./router.js";
 import { Layout } from "./components/Layout.jsx";
 import { SignIn } from "./screens/SignIn.jsx";
 import { clearDraft, SubmitRequest } from "./screens/SubmitRequest.jsx";
@@ -58,18 +58,18 @@ export function App() {
   const isStaff = can(user, "viewRequestsInScope");
   // Effects depend on these plain values, not on the route object, which is new on every render.
   const routeName = route?.name ?? null;
-  const routeIsPublic = Boolean(route?.public);
   const requested = routeName === "signIn" ? new URLSearchParams(search ?? "").get("return") : null;
+  const mustSignIn = needsSignIn(route, user);
+  const onwards = onwardsFor(route, user, requested);
 
   // Navigation is a side effect, so it happens in effects after render, never during it.
   useEffect(() => {
-    if (user === null && routeName && !routeIsPublic) toSignIn();
-  }, [user, routeName, routeIsPublic, toSignIn]);
+    if (mustSignIn) toSignIn();
+  }, [mustSignIn, toSignIn]);
 
-  // A signed-in user on the sign-in page goes to the safe return address, or to their home screen.
   useEffect(() => {
-    if (user && routeName === "signIn") navigate(requested ? safeReturnPath(requested) : homeFor(user), { replace: true });
-  }, [user, routeName, requested, navigate]);
+    if (onwards) navigate(onwards, { replace: true });
+  }, [onwards, navigate]);
 
   if (user === undefined) return <p className="loading">Loading…</p>;
 
@@ -77,7 +77,7 @@ export function App() {
     if (user) return null; // the effect above is moving the user on
     return (
       <Layout user={null} navigate={navigate}>
-        <SignIn api={api} navigate={navigate} onSignedIn={(u) => (setUser(u), navigate(requested ? safeReturnPath(requested) : homeFor(u), { replace: true }))} />
+        <SignIn api={api} navigate={navigate} onSignedIn={(u) => (setUser(u), navigate(onwardsFor(route, u, requested), { replace: true }))} />
       </Layout>
     );
   }

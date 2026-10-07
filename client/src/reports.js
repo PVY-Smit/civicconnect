@@ -45,3 +45,12 @@ function cellValue(r) {
 
 // FR-024 shows each overdue request's age. Whole days, with the word, so it reads aloud correctly.
 export const ageText = (days) => `${days} day${days === 1 ? "" : "s"}`;
+
+// FR-022: the screen states the response target exactly as the server sends it, never rounded or assumed,
+// because the server compares against that same value (SC-D-03, one organisation-wide target).
+export const overdueHint = (targetDays) => `Overdue means still open more than ${ageText(targetDays)} after it was submitted.`;
+
+// FR-023: what the breakdown says when the period holds no requests, instead of a table of zeros. A
+// breakdown whose rows all count zero holds no requests either.
+export const EMPTY_BREAKDOWN = "No requests were submitted in this period.";
+export const breakdownNote = (table) => (table.total === 0 ? EMPTY_BREAKDOWN : null);

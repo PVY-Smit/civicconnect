@@ -28,6 +28,16 @@ export const homeFor = (user) => (can(user, "viewRequestsInScope") ? "/queue" : 
 // the user's permissions from the server decide. The server refuses the calls behind it either way.
 export const routeAllowed = (route, user) => !route?.permission || can(user, route.permission);
 
+// FR-001: a signed-out user on a protected screen is sent to sign in. A public screen never sends anyone.
+export const needsSignIn = (route, user) => user === null && Boolean(route) && !route.public;
+
+// The only screen that moves a signed-in user on is sign-in itself: to the safe return address, or to their
+// home screen. Every other screen, the public reset screen included, stays where it is.
+export function onwardsFor(route, user, requested) {
+  if (!user || route?.name !== "signIn") return null;
+  return requested ? safeReturnPath(requested) : homeFor(user);
+}
+
 // The main navigation, and the items a given user sees, by the same permissions.
 export const NAV = Object.freeze([
   { to: "/queue", label: "Queue", permission: "viewRequestsInScope" },

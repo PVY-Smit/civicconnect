@@ -6,6 +6,7 @@
 // screen. The server stores only the code's hash and an expiry (#109), so the code is shown here once.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { assignableCategories, refusalText } from "../admin.js";
 import { ApiError } from "../api.js";
 import { ErrorSummary, Field } from "../components/Field.jsx";
 import { Page } from "../components/Page.jsx";
@@ -52,7 +53,7 @@ export function Users({ api, currentUserId }) {
   }, [api]);
   useEffect(() => {
     load();
-    api.categories().then((d) => setCategories(d.categories), () => {});
+    api.categories().then((d) => setCategories(assignableCategories(d.categories)), () => {});
   }, [api, load]);
 
   const set = (field) => (event) => setValues((v) => ({ ...v, [field]: event.target.value }));
@@ -81,7 +82,7 @@ export function Users({ api, currentUserId }) {
       setNotice(`${user.name} is deactivated and can no longer sign in. Their history is kept.`);
       load();
     } catch (e) {
-      setNotice(e.message);
+      setNotice(refusalText("deactivate", user, e.message));
     }
   };
 
@@ -90,7 +91,7 @@ export function Users({ api, currentUserId }) {
       const result = await api.issueResetCode(user.id);
       setCode({ purpose: "reset", name: user.name, code: result.code, expiresAt: result.expiresAt });
     } catch (e) {
-      setNotice(e.message);
+      setNotice(refusalText("issue a reset code for", user, e.message));
     }
   };
 
