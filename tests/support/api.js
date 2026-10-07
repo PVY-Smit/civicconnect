@@ -72,8 +72,6 @@ function memoryStore() {
       priority: null,
       resolutionSummary: null,
       ...data,
-      // The column is an integer; the adapter converts the id the validator returns as a string (#108).
-      categoryId: Number(data.categoryId),
       createdAt: created,
       updatedAt: created,
       statusHistory: [{ fromStatus: null, toStatus: "New", createdAt: created }],

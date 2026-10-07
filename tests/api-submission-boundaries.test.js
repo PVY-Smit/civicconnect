@@ -83,9 +83,18 @@ for (const field of ["title", "description", "location"]) {
   });
 }
 
-test("FR-006 category partitions: an active category is accepted by number or by string", async () => {
-  assert.equal((await accepted({ categoryId: 10 }, "number 10")).categoryId, 10);
-  assert.equal((await accepted({ categoryId: "11" }, "string 11")).categoryId, 11);
+test("FR-007 title boundary in characters, as the schema counts them: an emoji or an accented letter counts once", async () => {
+  assert.equal([...(await accepted({ title: "a".repeat(199) + "\u{1F600}" }, "199 letters and an emoji")).title].length, 200);
+  await accepted({ title: "\u{1F600}".repeat(200) }, "200 emoji");
+  await accepted({ title: "é".repeat(200) }, "200 accented letters");
+  await refused("title", { title: "\u{1F600}".repeat(201) }, "201 emoji");
+  const { res } = await submit({ title: "a".repeat(200) + "\u{1F600}" });
+  assert.match(res.body.errors.title, /it is 201\./, "the message counts characters too");
+});
+
+test("FR-006 category partitions: an active category is accepted by number or by string, and saved as the store's id", async () => {
+  assert.strictEqual((await accepted({ categoryId: 10 }, "number 10")).categoryId, 10);
+  assert.strictEqual((await accepted({ categoryId: "11" }, "string 11")).categoryId, 11);
 });
 
 test("FR-006 category partitions: inactive, unknown, blank and anything but a single id are refused", async () => {
