@@ -3,10 +3,135 @@ datasource db {
 }
 
 generator client {
-  provider            = "prisma-client"
-  output              = "../src/generated/client"
-  runtime             = "nodejs"
-  moduleFormat        = "esm"
+  provider               = "prisma-client"
+  output                 = "../src/generated/client"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
   generatedFileExtension = "ts"
-  importFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+model User {
+  id                 BigInt    @id @default(autoincrement())
+  name               String    @db.VarChar(200)
+  email              String    @unique @db.VarChar(320)
+  role               String    @db.VarChar(30)
+  active             Boolean   @default(true)
+  passwordHash       String    @map("password_hash")
+  resetCodeHash      String?   @map("reset_code_hash")
+  resetCodeExpiresAt DateTime? @map("reset_code_expires_at") @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  submittedRequests Request[]              @relation("Requester")
+  assignedRequests  Request[]              @relation("Assignee")
+  actionEntries     ActionEntry[]
+  statusHistory     RequestStatusHistory[]
+  auditEntries      AuditEntry[]
+  categories        UserCategory[]
+
+  @@map("users")
+}
+
+model Category {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @unique @db.VarChar(200)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  requests Request[]
+  users    UserCategory[]
+
+  @@map("categories")
+}
+
+model UserCategory {
+  userId     BigInt @map("user_id")
+  categoryId BigInt @map("category_id")
+
+  user     User     @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([userId, categoryId])
+  @@map("user_categories")
+}
+
+model Request {
+  id                BigInt   @id @default(autoincrement())
+  reference         String   @unique @db.VarChar(40)
+  requesterId       BigInt   @map("requester_id")
+  categoryId        BigInt   @map("category_id")
+  assigneeId        BigInt?  @map("assignee_id")
+  title             String   @db.VarChar(200)
+  description       String
+  location          String
+  reportedUrgency   String   @map("reported_urgency") @db.VarChar(30)
+  status            String   @default("New") @db.VarChar(30)
+  priority          String?  @db.VarChar(30)
+  resolutionSummary String?  @map("resolution_summary")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  requester User     @relation("Requester", fields: [requesterId], references: [id])
+  category  Category @relation(fields: [categoryId], references: [id])
+  assignee  User?    @relation("Assignee", fields: [assigneeId], references: [id])
+
+  actionEntries ActionEntry[]
+  statusHistory RequestStatusHistory[]
+  auditEntries  AuditEntry[]
+
+  @@index([requesterId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([assigneeId])
+  @@index([createdAt])
+  @@map("requests")
+}
+
+model ActionEntry {
+  id         BigInt   @id @default(autoincrement())
+  requestId  BigInt   @map("request_id")
+  authorId   BigInt   @map("author_id")
+  body       String
+  visibility String   @db.VarChar(30)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  request Request @relation(fields: [requestId], references: [id])
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([requestId, createdAt])
+  @@map("action_entries")
+}
+
+model RequestStatusHistory {
+  id         BigInt   @id @default(autoincrement())
+  requestId  BigInt   @map("request_id")
+  fromStatus String?  @map("from_status") @db.VarChar(30)
+  toStatus   String   @map("to_status") @db.VarChar(30)
+  actorId    BigInt   @map("actor_id")
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  request Request @relation(fields: [requestId], references: [id])
+  actor   User    @relation(fields: [actorId], references: [id])
+
+  @@index([requestId, createdAt])
+  @@map("request_status_history")
+}
+
+model AuditEntry {
+  id            BigInt   @id @default(autoincrement())
+  requestId     BigInt?  @map("request_id")
+  actorId       BigInt   @map("actor_id")
+  fieldChanged  String   @map("field_changed") @db.VarChar(100)
+  previousValue String?  @map("previous_value")
+  newValue      String?  @map("new_value")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  request Request? @relation(fields: [requestId], references: [id])
+  actor   User     @relation(fields: [actorId], references: [id])
+
+  @@index([requestId, createdAt])
+  @@map("audit_entries")
 }
