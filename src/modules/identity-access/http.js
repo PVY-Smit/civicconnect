@@ -1,11 +1,13 @@
-// The identity and access module's HTTP boundary: sign-in, sign-out, the authentication middleware
-// and the permission check every protected route uses (FR-001, FR-002, NFR-005, ADR-006).
+// The identity and access module's HTTP boundary: sign-in, sign-out, the authentication middleware,
+// the permission check every protected route uses (FR-001, FR-002, NFR-005, ADR-006), and the
+// Manager-assisted password reset (FR-004).
 //
 // The handlers take Express-style (req, res, next) arguments but do not import Express, so they are
 // tested with plain objects and the server wires them in. Authorisation decisions stay in the policy
 // module (ADR-001 rule 2): requirePermission only asks it.
 
 import { FUNCTIONS, permits } from "../authorisation-policy/policy.js";
+import { issueResetCode, resetPassword } from "./reset.js";
 import { signIn } from "./sign-in.js";
 import { clearedCookie, issueToken, readToken, sessionCookie, tokenFromCookieHeader } from "./session.js";
 
@@ -25,7 +27,10 @@ const profile = (user) => ({
   permissions: Object.keys(FUNCTIONS).filter((fn) => permits(toActor(user), fn)),
 });
 
-export function createIdentityAccess({ users, verifyPassword, dummyHash, secret, secure, now = () => Date.now() }) {
+// hashPassword and verifyPassword wrap argon2 (ADR-002, NFR-004); the reset codes are hashed the same way.
+export function createIdentityAccess({ users, verifyPassword, hashPassword, dummyHash, secret, secure, now = () => Date.now(), random }) {
+  const resetDeps = { users, hashSecret: hashPassword, verifySecret: verifyPassword, dummyHash, now, random };
+
   async function signInHandler(req, res) {
     const result = await signIn(req.body ?? {}, { users, verifyPassword, dummyHash });
     if (!result.ok) {
@@ -68,5 +73,34 @@ export function createIdentityAccess({ users, verifyPassword, dummyHash, secret,
     return res.status(200).json({ user: profile(user) });
   }
 
-  return { signIn: signInHandler, signOut: signOutHandler, authenticate, requirePermission, currentUser };
+  // FR-004: POST /api/users/:id/reset-code, behind authenticate and requirePermission("manageUsers").
+  // The code is in the answer once; only its hash is stored.
+  async function issueResetCodeHandler(req, res) {
+    const result = await issueResetCode({ actor: req.actor, userId: req.params?.id }, resetDeps);
+    if (result.ok) return res.status(200).json({ code: result.code, expiresAt: result.expiresAt });
+    if (result.code === "not-signed-in") return res.status(401).json({ error: NOT_SIGNED_IN });
+    if (result.code === "not-authorised") return res.status(403).json({ error: NOT_PERMITTED });
+    if (result.code === "not-found") return res.status(404).json({ error: "No user with that id was found." });
+    return res.status(409).json({ error: result.message });
+  }
+
+  // FR-004: POST /api/auth/reset, public. 204 when the password is set. A password that breaks the length
+  // rule gets its own message, checked before any lookup; every other failure gets the one generic answer.
+  async function resetPasswordHandler(req, res) {
+    const { email, code, newPassword } = req.body ?? {};
+    const result = await resetPassword({ email, code, newPassword }, resetDeps);
+    if (result.ok) return res.status(204).end();
+    if (result.errors) return res.status(400).json({ errors: result.errors });
+    return res.status(400).json({ error: result.message });
+  }
+
+  return {
+    signIn: signInHandler,
+    signOut: signOutHandler,
+    authenticate,
+    requirePermission,
+    currentUser,
+    issueResetCode: issueResetCodeHandler,
+    resetPassword: resetPasswordHandler,
+  };
 }
