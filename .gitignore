@@ -17,6 +17,7 @@ out/
 node_modules/
 *.dll
 *.exe
+src/generated/
 
 # Test and coverage output
 coverage/
@@ -35,5 +36,3 @@ Thumbs.db
 ~$*.docx
 ~$*.xlsx
 ~$*.pptx
-
-src/generated/
