@@ -31,11 +31,11 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 
 | Category | Minimum | Records |
 |---|---|---|
-| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31 |
+| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36 |
 | Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24, TC-25, TC-26 |
 | API or integration | 3 | At the handler boundary: TC-21 to TC-26. Against PostgreSQL: TC-32 (Blocked) |
 | End to end | 2 | TC-33, TC-34 (written in #138; Blocked until staging, #122) |
-| Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24 |
+| Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24, TC-36 |
 | High-priority requirement or risk | 5 | TC-01 and TC-22 (NFR-005, Must), TC-05 and TC-24 (FR-016, Must), TC-09 to TC-11 (FR-001, Must), TC-12 (FR-008, Must; DEC-004), TC-18 (FR-025, Must; ADR-001 rule 3) |
 | Black-box techniques | 2 | Decision table (TC-01, TC-22), state transition (TC-05, TC-24), boundary values (TC-13, TC-25), equivalence partitions (TC-13, TC-26) |
 | Performance | 1 scenario | TC-35 (scripts in #139; Blocked until staging, #122) |
@@ -53,6 +53,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
 | #138 (#123) | `e2e/journeys/*.spec.js` | f90d154 |
 | #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 62da9fb |
+| #146 (#111) | `tests/password-reset.test.js` | 7c8ae5d |
 
 The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
@@ -779,6 +780,40 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 - `client/test/manager-screens.test.js`: FR-006: the account form offers only active categories
 - `client/test/manager-screens.test.js`: FR-028: a refused action keeps the account's name in the message
+
+## Password reset (#111)
+
+### TC-36 Password reset through a Manager-issued code
+
+| Field | Value |
+|---|---|
+| Test basis | FR-004, NFR-004, FR-001, FR-028; the reset fields agreed on #109 |
+| Why selected | A reset path is a second way into an account. If its failures can be told apart, or a code works twice or for ever, it undoes what FR-001 and NFR-004 protect |
+| Technique and level | Equivalence partitions of failure, boundary values (expiry, password length), negative tests, a concurrent-use case; component, and the two routes at the handler boundary |
+| Input or precondition | Active and deactivated accounts; codes issued, replaced, expired and used; codes typed in other forms; new passwords at 7, 8, 128 and 129 characters |
+| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account; the code is stored only as a hash; it sets a new password that then signs in, works once, expires after 24 hours and is replaced by a new one; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup; a code replaced between check and write is refused |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 8 October 2026, #146 at 7c8ae5d: 14 of 14 tests. Nine deliberate faults each failed a test |
+| Traceability | FR-004, NFR-004, FR-001, FR-028, #111, #146 |
+| Interpretation | The rules hold in the service and at the routes. Against PostgreSQL the conditional write is checked in TC-32. A reset does not end sessions already open elsewhere, which #146 records as a limitation |
+
+**Automated by**
+
+- `tests/password-reset.test.js`: FR-004: a Manager gets a one-time code in the agreed form, and only its hash is stored [#146]
+- `tests/password-reset.test.js`: FR-002, FR-004: only a role with manageUsers can issue a code, and a refusal stores nothing [#146]
+- `tests/password-reset.test.js`: a code is not issued for an account that does not exist or is deactivated (FR-028) [#146]
+- `tests/password-reset.test.js`: codes come only from the alphabet without look-alikes, and do not repeat [#146]
+- `tests/password-reset.test.js`: FR-004: the code sets the new password, which then signs in, and the code is cleared [#146]
+- `tests/password-reset.test.js`: FR-004: a code works once [#146]
+- `tests/password-reset.test.js`: FR-004: a code expires after its lifetime, and works until then [#146]
+- `tests/password-reset.test.js`: FR-004: issuing a new code replaces the old one [#146]
+- `tests/password-reset.test.js`: the code is accepted however the user types it: lower case, spaces, with or without the hyphen [#146]
+- `tests/password-reset.test.js`: FR-004: every failure gets the same answer, and the code is checked even when there is no usable account [#146]
+- `tests/password-reset.test.js`: the new password's length is checked first, before any lookup, so its message reveals nothing [#146]
+- `tests/password-reset.test.js`: a code replaced between the check and the write is refused, so it cannot be used twice at once [#146]
+- `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409 [#146]
+- `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message [#146]
 
 ## Not yet runnable
 
