@@ -8,16 +8,14 @@
 export const AUDITED_FIELDS = Object.freeze(["status", "assigneeId", "priority"]);
 
 // One entry for one changed field, with the value before and after (ADR-007's AuditEntry).
+// A missing value is recorded as null, and the comparison is made after that, so undefined to null is
+// no change.
 export function auditEntry({ requestId, actorId, field, previousValue, newValue }) {
   if (!AUDITED_FIELDS.includes(field)) throw new Error(`Not an audited field: ${field}`);
-  if (previousValue === newValue) throw new Error(`No change to audit on ${field}`);
-  return Object.freeze({
-    requestId,
-    actorId,
-    fieldChanged: field,
-    previousValue: previousValue ?? null,
-    newValue: newValue ?? null,
-  });
+  const from = previousValue ?? null;
+  const to = newValue ?? null;
+  if (from === to) throw new Error(`No change to audit on ${field}`);
+  return Object.freeze({ requestId, actorId, fieldChanged: field, previousValue: from, newValue: to });
 }
 
 // The entries for a change: exactly one per audited field whose value differs, none for the rest.

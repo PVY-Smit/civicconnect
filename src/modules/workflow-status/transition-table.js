@@ -48,7 +48,8 @@ export const guards = Object.freeze({
   differentAssignee: Object.freeze({
     requires: Object.freeze(["assigneeId"]),
     check: (request, change) =>
-      change.assigneeId && change.assigneeId !== request.assigneeId
+      // Compared as text, so "5" sent for an assignee stored as 5 is the same assignee, not a change.
+      change.assigneeId && String(change.assigneeId) !== String(request.assigneeId)
         ? null
         : "Reassignment needs a different assignee.",
   }),
