@@ -10,6 +10,7 @@ import { LIMITS, URGENCY_LEVELS, validateSubmission } from "../src/modules/reque
 import { submitRequest } from "../src/modules/request-capture/submit.js";
 import { createSubmissionHandler } from "../src/modules/request-capture/http.js";
 import { getRequestDetail, listOwnRequests } from "../src/modules/request-access/views.js";
+import { requestScope, scopedWhere } from "../src/modules/authorisation-policy/policy.js";
 import { createRequestAccessHandlers, NOT_FOUND } from "../src/modules/request-access/http.js";
 
 const ACTIVE = ["10", "11"]; // category 12 exists but is inactive
@@ -35,12 +36,14 @@ function evaluate(where, record) {
   });
 }
 
-function fakeStore({ ignoreEntryWhere = false } = {}) {
+function fakeStore({ ignoreEntryWhere = false, reversed = false } = {}) {
   let seq = 0;
   const rows = [];
   const categories = { 10: "Street lighting", 11: "Water", 12: "Retired category" };
   const created = [];
   const findOneCalls = [];
+  const findManyCalls = [];
+  const order = (list) => (reversed ? [...list].reverse() : list);
   const requests = {
     async create(data, { formatReference }) {
       seq += 1;
@@ -53,6 +56,7 @@ function fakeStore({ ignoreEntryWhere = false } = {}) {
       return { reference: row.reference, createdAt: row.createdAt };
     },
     async findMany({ where }) {
+      findManyCalls.push(where);
       return rows.filter((r) => evaluate(where, r)).map((r) => ({ ...r, category: { name: categories[r.categoryId] } }));
     },
     async findOne({ where, entryWhere }) {
@@ -60,10 +64,10 @@ function fakeStore({ ignoreEntryWhere = false } = {}) {
       const r = rows.find((row) => evaluate(where, row));
       if (!r) return null;
       const actionEntries = ignoreEntryWhere ? r.actionEntries : r.actionEntries.filter((e) => evaluate(entryWhere, e));
-      return { ...r, category: { name: categories[r.categoryId] }, actionEntries };
+      return { ...r, category: { name: categories[r.categoryId] }, statusHistory: order(r.statusHistory), actionEntries: order(actionEntries) };
     },
   };
-  return { requests, categories: { activeIds: async () => ACTIVE }, formatReference, rows, created, findOneCalls };
+  return { requests, categories: { activeIds: async () => ACTIVE }, formatReference, rows, created, findOneCalls, findManyCalls };
 }
 
 function fakeRes() {
@@ -186,6 +190,28 @@ test("FR-007 boundaries: length is counted in characters as the schema counts th
   assert.equal(check("é".repeat(200)).ok, true, "200 accented letters");
 });
 
+test("text containing NUL or another control character is refused with a field error, before the store refuses it", () => {
+  const check = (field, value) => validateSubmission({ ...VALID, [field]: value }, { activeCategoryIds: ACTIVE });
+  for (const field of ["title", "description", "location"]) {
+    for (const bad of ["Street\u0000light", "\u0000", "Street\u0007light", "Street\u001Blight", "Street\u007Flight"]) {
+      const result = check(field, bad);
+      assert.equal(result.ok, false, `${field}: ${JSON.stringify(bad)}`);
+      assert.match(result.errors[field], /control characters/, `${field}: ${JSON.stringify(bad)}`);
+      assert.deepEqual(Object.keys(result.errors), [field], "only the field with the character is reported");
+    }
+  }
+  assert.equal(check("description", "Line one\nLine two\r\n\tindented").ok, true, "a description keeps line breaks and tabs");
+  assert.match(check("title", "Street\nlight").errors.title, /must be one line/);
+  assert.match(check("location", "14\tOak Street").errors.location, /must be one line/);
+});
+
+test("an invalid character in a submission means nothing is saved", async () => {
+  const store = fakeStore();
+  const result = await submitRequest({ actor: requester(1), input: { ...VALID, title: "Street\u0000light" } }, store);
+  assert.equal(result.code, "invalid");
+  assert.equal(store.created.length, 0);
+});
+
 test("FR-006: the category id kept is the active category's own id, as the store holds it, not the text sent", () => {
   const numeric = [10, 11];
   assert.equal(validateSubmission({ ...VALID, categoryId: "10" }, { activeCategoryIds: numeric }).value.categoryId, 10);
@@ -280,6 +306,16 @@ test("FR-005, FR-011: the detail shows the submitted fields unchanged, the statu
   assert.equal("priority" in request, false, "the Requester sees the urgency they reported, not the priority");
 });
 
+test("FR-011: the status history and the entries are in time order even when the store returns them in reverse", async () => {
+  const { store, a } = await seeded({ reversed: true });
+  store.rows[0].actionEntries.push({ body: "Crew on site.", visibility: "requester-visible", createdAt: new Date(Date.UTC(2026, 9, 6, 13)) });
+  const { request } = await getRequestDetail(staff, a, store);
+  assert.deepEqual(request.statusHistory.map((h) => [h.from, h.to]), [[null, "New"], ["New", "Assigned"]]);
+  assert.deepEqual(request.actionEntries.map((e) => e.body), ["Crew booked for Thursday.", "Requester was rude on the phone.", "Crew on site."]);
+  const times = request.statusHistory.map((h) => h.at.getTime());
+  assert.deepEqual(times, [...times].sort((x, y) => x - y));
+});
+
 test("FR-011: an internal entry is still withheld if the store ignores the entry condition", async () => {
   const { store, a } = await seeded({ ignoreEntryWhere: true });
   const { request } = await getRequestDetail(requester(1), a, store);
@@ -306,6 +342,21 @@ test("FR-012: the lookup is made with the policy's scope, so another requester's
   const { store, b } = await seeded();
   await getRequestDetail(requester(1), b, store);
   assert.deepEqual(store.findOneCalls.at(-1), { AND: [{ reference: b }, { requesterId: 1 }] });
+});
+
+test("NFR-005: an actor with an unknown role sees nothing, and nothing is loaded", async () => {
+  const { store, a } = await seeded();
+  const visitor = { id: 1, role: "Visitor", categoryIds: ["10", "11"] };
+  const one = store.findOneCalls.length;
+  const many = store.findManyCalls.length;
+  assert.deepEqual(await getRequestDetail(visitor, a, store), { ok: false, code: "not-found" });
+  assert.deepEqual(await listOwnRequests(visitor, store), { ok: false, code: "not-authorised" });
+  assert.equal(store.findOneCalls.length, one, "the detail is refused before any query");
+  assert.equal(store.findManyCalls.length, many, "the list is refused before any query");
+  // Underneath, the policy's scope for an unknown role matches nothing, so a query made with it would
+  // load nothing either, even for the visitor's own id and categories.
+  assert.equal(requestScope(visitor).matches(store.rows[0]), false);
+  assert.equal(await store.requests.findOne({ where: scopedWhere(visitor, { reference: a }), entryWhere: {} }), null);
 });
 
 test("a malformed reference is refused without querying the store", async () => {

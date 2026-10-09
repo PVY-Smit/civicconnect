@@ -6,6 +6,10 @@
 // inserts the request with its first status history row (null to New), as ADR-007's request creation
 // transaction lists, so the reference is never computed from the current maximum. It resolves to the
 // saved reference and createdAt.
+//
+// The category is checked against the active list before the transaction, so a category deactivated in
+// between (FR-027) would pass that check. requests.create must therefore also check, inside the
+// transaction, that the category is still active, as ADR-007 lists for referenced records (#109).
 
 import { permits } from "../authorisation-policy/policy.js";
 import { validateSubmission } from "./validation.js";

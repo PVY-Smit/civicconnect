@@ -5,12 +5,19 @@
 // not see get the same answer, so nothing about another person's request is disclosed (FR-012).
 //
 // requests.findMany and requests.findOne are the persistence module's queries (ADR-007). findOne loads
-// the request with its category, its status history in time order and the action entries that match
-// entryWhere; the entries are filtered again here, so an adapter that ignored entryWhere would still not
-// leak an internal entry (FR-011).
+// the request with its category, its status history and the action entries that match entryWhere. Both
+// lists are put in time order here, and the entries are filtered again here, so an adapter that returned
+// them in another order, or ignored entryWhere, would still give FR-011's ordered history and would not
+// leak an internal entry.
+//
+// An actor whose role grants neither view is refused before any query (NFR-005, deny by default). The
+// policy's scope for an unknown role also matches nothing, so the query would load nothing either.
 
 import { actionEntryScope, ownRequests, permits, scopedWhere } from "../authorisation-policy/policy.js";
 import { isReference } from "../request-capture/reference.js";
+
+// Oldest first. Array sort is stable, so entries with the same time keep the store's order.
+const inTimeOrder = (rows) => [...rows].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
 // FR-010: the six fields of the requester's list.
 const listItem = (r) => ({
@@ -31,6 +38,7 @@ export async function listOwnRequests(actor, { requests }) {
 
 export async function getRequestDetail(actor, reference, { requests }) {
   if (!actor) return { ok: false, code: "not-signed-in" };
+  if (!permits(actor, "viewOwnRequests") && !permits(actor, "viewRequestsInScope")) return { ok: false, code: "not-found" };
   if (!isReference(reference)) return { ok: false, code: "not-found" };
   const entries = actionEntryScope(actor);
   const r = await requests.findOne({ where: scopedWhere(actor, { reference }), entryWhere: entries.where });
@@ -47,8 +55,8 @@ export async function getRequestDetail(actor, reference, { requests }) {
     resolutionSummary: r.resolutionSummary ?? null,
     submittedAt: r.createdAt,
     updatedAt: r.updatedAt,
-    statusHistory: r.statusHistory.map((h) => ({ from: h.fromStatus ?? null, to: h.toStatus, at: h.createdAt })),
-    actionEntries: r.actionEntries
+    statusHistory: inTimeOrder(r.statusHistory).map((h) => ({ from: h.fromStatus ?? null, to: h.toStatus, at: h.createdAt })),
+    actionEntries: inTimeOrder(r.actionEntries)
       .filter((e) => entries.matches(e))
       .map((e) => ({ body: e.body, at: e.createdAt, ...(e.visibility === "internal" ? { visibility: "internal" } : {}) })),
   };

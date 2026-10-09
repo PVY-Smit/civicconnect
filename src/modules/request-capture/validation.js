@@ -7,8 +7,10 @@
 // Limits. The title limit is the schema's VARCHAR(200) (docs/data/initial-schema.sql). The M1 baseline
 // gives no limit for description or location and no urgency scale, so the values below are proposed in
 // #112 for the team to agree and are held here, in one place, so the tests and the interface follow them.
-// Lengths are counted in characters (Unicode code points), as PostgreSQL counts VARCHAR, so an emoji or an
-// accented letter counts once. String length in JavaScript counts UTF-16 units, where an emoji counts twice.
+// Lengths are counted in characters, and control characters are refused, by the shared text rules
+// (src/shared/text.js): title and location are one line; description keeps its line breaks and tabs.
+
+import { characters, hasControlCharacter } from "../../shared/text.js";
 
 export const LIMITS = Object.freeze({
   title: { min: 1, max: 200 },
@@ -19,8 +21,7 @@ export const LIMITS = Object.freeze({
 export const URGENCY_LEVELS = Object.freeze(["Low", "Medium", "High"]);
 
 const LABELS = { title: "Title", description: "Description", location: "Location" };
-
-const characters = (value) => [...value].length;
+const MULTILINE = new Set(["description"]);
 
 function text(field, raw, errors) {
   const { min, max } = LIMITS[field];
@@ -34,7 +35,11 @@ function text(field, raw, errors) {
   }
   const value = raw.trim();
   const length = characters(value);
-  if (length < min) errors[field] = `${LABELS[field]} must be at least ${min} characters.`;
+  if (hasControlCharacter(value, { multiline: MULTILINE.has(field) })) {
+    errors[field] = MULTILINE.has(field)
+      ? `${LABELS[field]} cannot contain control characters other than line breaks and tabs.`
+      : `${LABELS[field]} must be one line, without tabs or other control characters.`;
+  } else if (length < min) errors[field] = `${LABELS[field]} must be at least ${min} characters.`;
   else if (length > max) errors[field] = `${LABELS[field]} must be at most ${max} characters; it is ${length}.`;
   return value;
 }
