@@ -48,7 +48,8 @@ export const guards = Object.freeze({
   differentAssignee: Object.freeze({
     requires: Object.freeze(["assigneeId"]),
     check: (request, change) =>
-      change.assigneeId && change.assigneeId !== request.assigneeId
+      // Compared as text, so "5" sent for an assignee stored as 5 is the same assignee, not a change.
+      change.assigneeId && String(change.assigneeId) !== String(request.assigneeId)
         ? null
         : "Reassignment needs a different assignee.",
   }),
@@ -57,6 +58,8 @@ export const guards = Object.freeze({
   blockerCleared: requiresText("reason", "Record how the blocking condition was cleared."),
   reopenReason: requiresText("reason", "A reason for reopening is required."),
   resolutionSummary: requiresText("resolutionSummary", "A resolution summary is required (FR-018)."),
+  // A prompt the interface asks for, not a safeguard: any caller can send confirmed: true. The control on
+  // closing is the role check, Coordinator or Manager only (FR-019), made by the authorisation policy.
   closureConfirmed: Object.freeze({
     requires: Object.freeze(["confirmed"]),
     check: (request, change) => (change.confirmed === true ? null : "Closure must be confirmed (FR-019)."),
