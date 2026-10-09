@@ -17,6 +17,7 @@ out/
 node_modules/
 *.dll
 *.exe
+src/generated/
 
 # Test and coverage output
 coverage/
