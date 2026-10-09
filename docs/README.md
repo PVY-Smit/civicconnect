@@ -5,7 +5,7 @@ Master Project Brief, Appendix C.
 
 | Folder | Holds | From |
 |---|---|---|
-| `PED/` | The Project Engineering Document and its figures | M1 |
+| `PED/` | The Project Engineering Document: its markdown source, its figures and the build that generates the Word copy | M1, markdown from M2 |
 | `requirements/` | The registers workbook: requirements, RTM, risk, decisions, forward considerations, AI usage, change requests | M1 |
 | `architecture/` | Architecture description, diagrams, data and interface design | M2 |
 | `decisions/` | Architecture Decision Records | M2 |
