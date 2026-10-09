@@ -46,8 +46,8 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 |---|---|---|
 | main | `tests/authorisation-policy.test.js`, `tests/workflow-status.test.js` | b10c3e0 |
 | #130 (#111) | `tests/identity-access.test.js` | 3581885 |
-| #131 (#112) | `tests/request-submission.test.js` | 968a44f |
-| #132 (#113) | `tests/workflow-service.test.js` | cd05304 |
+| #131 (#112) | `tests/request-submission.test.js`, and `src/shared/text.js` | 0efac6a |
+| #132 (#113), stacked on #131 | `tests/workflow-service.test.js` | c84b7c1 |
 | #133 to #135 (#118 to #120) | `client/test/*.test.js` | 7948369 (the top of the stack) |
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
@@ -119,7 +119,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The requester sees only the requester-visible entry, even when the store returns both; Staff in the category see both, with priority and assignee |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026: main at b10c3e0, 1 test; #131 at 968a44f, 3 tests |
+| Evidence | Local run, 9 October 2026: main at b10c3e0, 1 test; #131 at 0efac6a, 3 tests |
 | Traceability | FR-011, FR-017, DEC-003, ADR-006 |
 | Interpretation | The entry filter holds at two layers, so one fault does not leak an entry |
 
@@ -141,7 +141,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The policy permits nobody to edit or delete an audit entry; the audit module offers no edit or delete, and refuses an entry that records no change |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026: main at b10c3e0, 1 test; #132 at cd05304, 1 test |
+| Evidence | Local run, 9 October 2026: main at b10c3e0, 1 test; #132 at c84b7c1, 1 test |
 | Traceability | FR-026, NFR-011, ADR-007 |
 | Interpretation | The application offers no path to change an entry. The database privilege that adds the same restriction underneath is checked against PostgreSQL in TC-32 |
 
@@ -327,7 +327,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | Every value in range maps to a different reference in the format CC-NNNN-NNNN; consecutive values get unrelated references; another key gives other references; a short key is refused at start-up; a value outside 1 to 99,999,999 is refused, never wrapped; only the reference format reaches a lookup, so a malformed one is refused without a query |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #131 at 968a44f: 8 of 8 tests |
+| Evidence | Local run, 9 October 2026, #131 at 0efac6a: 8 of 8 tests |
 | Traceability | FR-008, DEC-004, DEC-017, ADR-007, #112 |
 | Interpretation | Uniqueness also rests on ADR-007's sequence and unique constraint, which TC-32 checks against PostgreSQL |
 
@@ -349,11 +349,11 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Test basis | FR-005, FR-006, FR-007, FR-021; schema VARCHAR(200) for the title; DEC-017 (proposed) for the other limits and the urgency scale |
 | Why selected | Validation decides what reaches the database and what the requester is told; a missed limit fails at the database with no useful message |
 | Technique and level | Boundary values and equivalence partitions; unit |
-| Input or precondition | Each text field at 1, its maximum and maximum plus one, blank and non-text; titles counted in characters including emoji and accented letters; categories active, inactive, unknown and malformed; urgency levels and near misses |
-| Expected result | Every failing field is reported at once, by name; values are trimmed before measuring; lengths are counted in characters as the schema counts them; only active categories are accepted, and the id kept is the store's own; urgency matches a level exactly; only the five supplied fields are kept |
+| Input or precondition | Each text field at 1, its maximum and maximum plus one, blank and non-text; titles counted in characters including emoji and accented letters; categories active, inactive, unknown and malformed; urgency levels and near misses; NUL and other control characters in each text field, and line breaks and tabs in the description |
+| Expected result | Every failing field is reported at once, by name; values are trimmed before measuring; lengths are counted in characters as the schema counts them; only active categories are accepted, and the id kept is the store's own; urgency matches a level exactly; only the five supplied fields are kept; a control character gets a field error, so PostgreSQL never refuses the text after validation, and only the description keeps line breaks and tabs |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #131 at 968a44f: 7 of 7 tests |
+| Evidence | Local run, 9 October 2026, #131 at 0efac6a: 8 of 8 tests |
 | Traceability | FR-005, FR-006, FR-007, FR-021, DEC-017, #112 |
 | Interpretation | The description and location limits and the urgency scale are proposals until DEC-017 is agreed; the tests follow them and change with it. TC-25 and TC-26 repeat the cases through the endpoint |
 
@@ -366,6 +366,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/request-submission.test.js`: FR-006: a category outside the active list is refused, including one that exists but is inactive
 - `tests/request-submission.test.js`: FR-006: the category id kept is the active category's own id, as the store holds it, not the text sent
 - `tests/request-submission.test.js`: FR-021: reported urgency must be one of the proposed levels, matched exactly
+- `tests/request-submission.test.js`: text containing NUL or another control character is refused with a field error, before the store refuses it [#131]
 
 ### TC-14 Saving a submission
 
@@ -378,7 +379,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | Saved as New with no priority and the signed-in user as requester, whatever the body says; the acknowledgement carries the reference and the stored time; an invalid submission is not saved; a role that may not submit is refused before validation; the route answers 201 or 400 with an error per field |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #131 at 968a44f: 5 of 5 tests |
+| Evidence | Local run, 9 October 2026, #131 at 0efac6a: 6 of 6 tests |
 | Traceability | FR-005, FR-007, FR-009, FR-021, #112 |
 | Interpretation | The server owns the fields it sets. Persistence in one transaction with the first history row is checked in TC-32 |
 
@@ -389,20 +390,21 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/request-submission.test.js`: FR-007: an invalid submission is not saved
 - `tests/request-submission.test.js`: a submission from an actor whose role may not submit is refused before validation
 - `tests/request-submission.test.js`: POST answers 201 with the acknowledgement, or 400 with an error per failing field
+- `tests/request-submission.test.js`: an invalid character in a submission means nothing is saved [#131]
 
 ### TC-15 The requester's list and detail
 
 | Field | Value |
 |---|---|
-| Test basis | FR-010, FR-012 |
+| Test basis | FR-010, FR-011, FR-012, NFR-005 |
 | Why selected | The answer for another person's reference must not differ from the answer for a reference that does not exist, or references can be probed |
 | Technique and level | Negative tests and equivalence partitions (own, another's, missing, no actor); component |
-| Input or precondition | Requests from two requesters; the first requester signed in, and no actor |
-| Expected result | The list holds every request the requester submitted, once, with six fields, and nobody else's. Another's reference and a missing one get the same 404 and body. The lookup is made with the policy's scope, so another's request is never loaded. Without an actor every entry point refuses with 401 |
+| Input or precondition | Requests from two requesters; the first requester signed in, no actor, and an actor with an unknown role; a store that returns the history and entries in reverse |
+| Expected result | The list holds every request the requester submitted, once, with six fields, and nobody else's. Another's reference and a missing one get the same 404 and body. The lookup is made with the policy's scope, so another's request is never loaded. Without an actor every entry point refuses with 401. The status history and the entries are in time order whatever order the store returns them in. An unknown role sees nothing and nothing is loaded, and the policy's scope for it matches nothing |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #131 at 968a44f: 5 of 5 tests |
-| Traceability | FR-010, FR-012, ADR-006, #112 |
+| Evidence | Local run, 9 October 2026, #131 at 0efac6a: 7 of 7 tests |
+| Traceability | FR-010, FR-011, FR-012, NFR-005, ADR-006, #112 |
 | Interpretation | Not found and not permitted cannot be told apart, at the service and at the route |
 
 **Automated by**
@@ -412,6 +414,8 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/request-submission.test.js`: FR-012: the lookup is made with the policy's scope, so another requester's request is never loaded
 - `tests/request-submission.test.js`: FR-012: GET on another requester's reference and on a missing one returns the same 404 and body
 - `tests/request-submission.test.js`: without a signed-in actor every entry point refuses, and the routes answer 401
+- `tests/request-submission.test.js`: FR-011: the status history and the entries are in time order even when the store returns them in reverse [#131]
+- `tests/request-submission.test.js`: NFR-005: an actor with an unknown role sees nothing, and nothing is loaded [#131]
 
 ## Workflow (#113)
 
@@ -422,11 +426,11 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Test basis | FR-015, FR-025 |
 | Why selected | Assigning to someone outside the category puts the request where nobody can work on it; accepting outside one's categories takes work one may not see |
 | Technique and level | Equivalence partitions of assignee (active Staff in category, other category, inactive, not Staff); negative tests; component |
-| Input or precondition | A New request in category 10; Staff in 10 and 11, an inactive Staff member, a Coordinator |
-| Expected result | Assigning writes the status, one history row and one audit entry per changed field. Staff accepting an unassigned request in their category become its assignee. The assignee must be active Staff authorised for the category. Reassigning changes only the assignee, with no history row. Accepting outside one's categories is refused by the policy alone, and still refused if the scope load were bypassed |
+| Input or precondition | A New request in category 10; Staff in 10 and 11, an inactive Staff member, a Coordinator; assignee ids sent as an array, an object, true and Infinity, and "5" for an assignee stored as 5 |
+| Expected result | Assigning writes the status, one history row and one audit entry per changed field. Staff accepting an unassigned request in their category become its assignee. The assignee must be active Staff authorised for the category. Reassigning changes only the assignee, with no history row. Accepting outside one's categories is refused by the policy alone, and still refused if the scope load were bypassed. An assignee id that is not a single id is refused before any lookup. The id written is the store's own, and "5" for an assignee stored as 5 is no change, with no audit entry |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #132 at cd05304: 6 of 6 tests |
+| Evidence | Local run, 9 October 2026, #132 at c84b7c1: 9 of 9 tests |
 | Traceability | FR-015, FR-025, ADR-006, #113 |
 | Interpretation | The category rule holds at two layers |
 
@@ -438,6 +442,9 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/workflow-service.test.js`: FR-015, FR-025: reassigning changes only the assignee, with one audit entry and no status history row
 - `tests/workflow-service.test.js`: FR-015: the policy alone refuses Staff accepting a New request outside their categories
 - `tests/workflow-service.test.js`: FR-015: if the scope load were bypassed, the accept is still refused and nothing is written
+- `tests/workflow-service.test.js`: FR-015: an assignee id that is not a single id is refused before any lookup, and nothing is written [#132]
+- `tests/workflow-service.test.js`: FR-015: the assignee written is the store's own id, not the text sent [#132]
+- `tests/workflow-service.test.js`: FR-015, FR-025: reassigning to "5" when the assignee is 5 is no change: refused, with no audit entry [#132]
 
 ### TC-17 Resolving, closing and rejecting
 
@@ -447,10 +454,10 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Why selected | These are the outcomes the requester sees; a missing summary or reason, or the wrong role closing, is visible to the public |
 | Technique and level | Positive and negative tests per outcome and role; component |
 | Input or precondition | Requests In Progress, Resolved and New; Staff, Coordinator, Manager |
-| Expected result | Resolving needs a summary, stored trimmed; without one nothing is written. Only a Coordinator or Manager closes, and only when confirmed. A Coordinator rejects with the reason kept on the history row; without a reason, or as a Manager, it is refused |
+| Expected result | Resolving needs a summary, stored trimmed; without one nothing is written. Only a Coordinator or Manager closes, and only when confirmed. A Coordinator rejects with the reason kept on the history row; without a reason, or as a Manager, it is refused. A reason or summary over 4,000 characters, or with a control character, is refused and nothing is written; 4,000 emoji are accepted, and line breaks and tabs are kept |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #132 at cd05304: 3 of 3 tests |
+| Evidence | Local run, 9 October 2026, #132 at c84b7c1: 4 of 4 tests |
 | Traceability | FR-018, FR-019, FR-020, #113 |
 | Interpretation | The confirmation for closing is a prompt, not a safeguard; the control is the role check |
 
@@ -459,6 +466,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/workflow-service.test.js`: FR-018: resolving needs a summary; without one nothing is written, with one it is stored trimmed
 - `tests/workflow-service.test.js`: FR-019: only a Coordinator or Manager closes a resolved request, and only when confirmed
 - `tests/workflow-service.test.js`: FR-020: a Coordinator rejects with a reason kept on the history row; no reason, or a Manager, is refused
+- `tests/workflow-service.test.js`: FR-018, FR-020: a reason or resolution summary is at most 4,000 characters and has no control characters [#132]
 
 ### TC-18 A change and its audit entry are written together or not at all
 
@@ -471,7 +479,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | When the audit write fails, the status change and its history row are rolled back. A change made by someone else in between is refused and nothing is written. Exactly one audit entry is written per audited field that changed, and none for unchanged or unaudited fields |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #132 at cd05304: 3 of 3 tests |
+| Evidence | Local run, 9 October 2026, #132 at c84b7c1: 3 of 3 tests |
 | Traceability | FR-025, ADR-001, ADR-007, #113 |
 | Interpretation | Shown with a store that rolls back the way PostgreSQL does. The same cases against PostgreSQL are TC-32 |
 
@@ -492,7 +500,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | A Coordinator sets the priority with one audit entry and the reported urgency untouched; Staff, a Manager and the Requester are refused; a value outside the scale is refused; setting the same value again writes no audit entry |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #132 at cd05304: 3 of 3 tests |
+| Evidence | Local run, 9 October 2026, #132 at c84b7c1: 3 of 3 tests |
 | Traceability | FR-021, FR-025, DEC-002, DEC-017, #113 |
 | Interpretation | The Manager refusal follows CR-002 |
 
@@ -508,12 +516,12 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 |---|---|
 | Test basis | FR-017; DEC-003 |
 | Why selected | An entry saved with a guessed visibility can expose an internal note; DEC-003 says there is no default |
-| Technique and level | Equivalence partitions of visibility (internal, requester-visible, missing, other) and text (empty, normal, over 4,000); component |
+| Technique and level | Equivalence partitions of visibility (internal, requester-visible, missing, other) and text (empty, normal, over 4,000 counted in characters, with control characters); component |
 | Input or precondition | A request in scope; Staff and the Requester |
-| Expected result | An entry without an explicit visibility is refused; Staff record either visibility with author and text, and entries are not audit entries; a Requester is refused; an empty or oversized entry is refused |
+| Expected result | An entry without an explicit visibility is refused; Staff record either visibility with author and text, and entries are not audit entries; a Requester is refused; an empty or oversized entry is refused; 4,000 emoji are accepted and 4,001 refused; a control character is refused, and line breaks and tabs are kept |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #132 at cd05304: 3 of 3 tests |
+| Evidence | Local run, 9 October 2026, #132 at c84b7c1: 4 of 4 tests |
 | Traceability | FR-017, DEC-003, #113 |
 | Interpretation | No path saves an entry without a deliberate visibility |
 
@@ -522,6 +530,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/workflow-service.test.js`: FR-017, DEC-003: an action entry without an explicit visibility is refused; there is no default
 - `tests/workflow-service.test.js`: FR-017: Staff record entries of either visibility with the author and text; entries are not audit entries
 - `tests/workflow-service.test.js`: a Requester cannot record an action entry, and an empty or oversized entry is refused
+- `tests/workflow-service.test.js`: FR-017: an action entry's length is counted in characters, so an emoji counts once, and control characters are refused [#132]
 
 ### TC-21 Workflow routes answer with the right status code
 
@@ -530,19 +539,23 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Test basis | FR-012, FR-016; the route contract in #132 |
 | Why selected | The client decides what to show from the status code; a 404 where a 403 belongs discloses nothing, but a 403 where a 404 belongs confirms the request exists |
 | Technique and level | API at the handler boundary; negative tests |
-| Input or precondition | One request; actors outside scope, without the permission, making a move outside the model, a move whose guard fails, and a valid move |
-| Expected result | 404 out of scope (same body as missing), 403 not permitted, 409 outside the model or changed underneath, 422 guard failed, 200 done. A Requester cannot move their own request, and another's request is not found. A move outside the model writes nothing |
+| Input or precondition | One request; actors outside scope, without the permission, making a move outside the model, a move whose guard fails, and a valid move, through each of the three routes; no actor; malformed references |
+| Expected result | 404 out of scope (same body as missing), 403 not permitted, 409 outside the model or changed underneath, 422 guard failed, 200 done. A Requester cannot move their own request, and another's request is not found. A move outside the model writes nothing. The priority route answers 200, 403, 404 and 400, and the action entry route 201, 403, 404 and 400, each with its body; the 404 body is the request detail's. Without an actor every operation refuses before loading anything, and the routes answer 401. A malformed reference is refused without a query |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #132 at cd05304: 3 of 3 tests |
+| Evidence | Local run, 9 October 2026, #132 at c84b7c1: 7 of 7 tests |
 | Traceability | FR-012, FR-016, #113 |
-| Interpretation | One case per code. TC-22 and TC-24 cover every role and every status pair |
+| Interpretation | One case per code on each route. TC-22 and TC-24 cover every role and every status pair |
 
 **Automated by**
 
 - `tests/workflow-service.test.js`: the workflow routes answer 200, 403, 404, 409 and 422 for the matching outcomes
 - `tests/workflow-service.test.js`: FR-012, FR-016: a Requester cannot move their own request, and another requester's request is not found
 - `tests/workflow-service.test.js`: FR-016: a move outside the status model is refused and nothing is written
+- `tests/workflow-service.test.js`: without a signed-in actor every operation refuses before loading anything, and the routes answer 401 [#132]
+- `tests/workflow-service.test.js`: a malformed reference is refused without querying the store [#132]
+- `tests/workflow-service.test.js`: the priority route answers 200, 403, 404 and 400 with an error for the field [#132]
+- `tests/workflow-service.test.js`: the action entry route answers 201, 403, 404 and 400 with an error for each field [#132]
 
 ## API suites at the handler boundary (#121)
 
