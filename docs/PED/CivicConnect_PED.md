@@ -939,7 +939,17 @@ The M3 brief, s5.3, asks for this block so that the assessor can find the submit
 
 # 35. Defects and Quality Interpretation
 
-[To be completed under #127 by Tristan Roets: the important defects and findings, their status, fixes and regression evidence, and what they mean for quality, from the Defect and Technical Debt Registers (#125). M3 brief s6, item 9, and s12]
+The Defect Register records the main defects found during Milestone 3 and links each one to the requirement or evidence it affected, its impact, its fix and any regression evidence.
+
+Several defects were found in the controlled project artefacts rather than only in the running software. These included an incomplete User model in ADR-007 and incorrect permissions in the Access Matrix. The permission defects affected actions such as assigning requests, accepting unassigned requests, rejecting requests and setting priority. These findings were corrected through the controlled change process and are recorded in the Defect Register under #125.
+
+The project also records technical debt separately from defects. Current technical debt includes the controlled fixture re-export, the deferred production database, temporary Prisma advisory overrides and the Manager-assisted password-reset limitations. These items are not treated as completed defects because they are known limitations or work that has deliberately been deferred.
+
+The quality evidence shows that review and testing are finding real problems before release. A passing build or unit test result is therefore not treated as enough evidence by itself. Integration, security, performance and review findings are also considered before a change is accepted.
+
+Where a defect has been fixed, the related test or review evidence should be used to show that the problem has not returned. Any open defect or technical-debt item that can still affect release readiness must remain visible in the registers and be considered again in the final release decision in s36.
+
+Evidence: Technical Debt Register and Defect Register under #125, controlled Access Matrix correction under #136, and the related review and test evidence in the repository.
 
 # 36. Release Readiness
 
