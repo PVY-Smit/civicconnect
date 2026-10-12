@@ -206,9 +206,9 @@ separate decision, taken after Prisma 8 is released as stable.
 
 ## Amendment, 5 October 2026 (CR-004, DEC-016)
 
-**Status:** proposed. It takes effect when Darius Mushi and Tristan Roets record their approval of CR-004
-on #129. The Change Requests row then cites those approvals and their dates, and this line is updated to
-match, before #129 merges.
+**Status:** proposed. Darius Mushi approved CR-004 on #129 on 8 October 2026. It takes effect when Tristan
+Roets records his approval there. The Change Requests row then cites both approvals and their dates, and
+this line is updated to match, before #129 merges.
 
 The two conditions above stay in this record as they were set. CR-004 replaces them as the conditions
 for merging the bootstrap (#90, under #108).
@@ -223,14 +223,25 @@ depends on the bootstrap.
 **The amended conditions:**
 
 1. **A reproducible environment check replaces gate 3 as a merge condition.** A member other than the
-   author runs `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test` on Node 24
-   against PostgreSQL 16 and posts the output, with `node -v`, on #90. Once the CI workflow (#110)
-   merges, it repeats the same check on every pull request. Gate 3 itself is not closed: the campus
-   check is carried as RSK-30 and run when lab access allows, with the Node version recorded on #64.
+   author runs `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test` from a fresh
+   clone with no `node_modules`, on Node 24 against PostgreSQL 16. They post the output on #90 with the
+   operating system, `node -v` and where PostgreSQL ran. Once the CI workflow (#110) merges, it repeats
+   the same check on every pull request. CI runs on Node 24 by definition, so it never tests the BC
+   Desktop image: gate 3 itself is not closed, and the campus check is carried as RSK-30 and run when lab
+   access allows, with the Node version recorded on #64.
+
+   PostgreSQL 16 is the version the first check on #90 ran on (5 October 2026). No earlier decision fixes
+   a version: ADR-007 names none, and DEC-010 records the host's version when it chooses the host. A run
+   on another major version is posted with its version and does not count as this check.
 2. **The RSK-01 proof of concept persists an entity from the data model.** The test creates a `User`
    from the ADR-007 model through Prisma, reads it back, verifies the right password and rejects a wrong
    one with argon2, and removes it, with no table created or dropped by the test. The timebox is #108's
    due date, 7 October 2026.
+
+   **What happened (12 October 2026).** The proof of concept on the `User` model was pushed to #90 on
+   11 October 2026 (e162f28), with the first migration, four days after the timebox. The date is not
+   moved: the delay is recorded here and in CR-004. The second member's environment check under
+   condition 1 is still to be posted.
 
 **Alternatives considered.** Waiting for a verified campus run holds all of M3 on lab access the team
 does not control. Removing the conditions drops the evidence this record asked for. A check that a
@@ -283,8 +294,8 @@ part of the evidence for the final choice.
 - **B's smaller dependency surface is given up.** That is the direct cost of weighting RSK-01 above
   RSK-12, and it is recorded here so the choice can be revisited if RSK-12 materialises.
 - **No verified campus run before construction (CR-004).** Under the amendment the bootstrap merges on
-  a check a second member repeats and CI then runs on every pull request, not on a run on a BC Desktop
-  machine. RSK-30 records the risk that the campus environment differs.
+  a check a second member repeats, and that CI repeats on every pull request once #110 merges, not on a
+  run on a BC Desktop machine. RSK-30 records the risk that the campus environment differs.
 
 ## Risks created
 
@@ -309,7 +320,8 @@ Updates proposed to existing risks under #68:
 Added by the amendment (CR-004, #107):
 
 - **RSK-30:** the BC Desktop campus environment differs from the Node 24 and PostgreSQL 16 environment
-  the stack is verified on. Scored 3 by 3, Medium. Owner: Darius Mushi. Mitigation and contingency are
+  the stack is verified on. Proposed at 3 by 3, Medium, with the owner's score asked for on #129. Owner:
+  Darius Mushi. Mitigation and contingency are
   in the Risk Register; the campus check is run when lab access allows and recorded on #64.
 
 ## Evidence
