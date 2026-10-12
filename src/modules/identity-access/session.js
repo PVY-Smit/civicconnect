@@ -1,12 +1,14 @@
 // Signed session tokens for the identity and access module (FR-001, ADR-001).
 //
-// The token carries only the user's id and its lifetime. Role, category scope and the active flag are
-// read from the store on every request, so a deactivation or a role change takes effect at once
-// (FR-028) instead of when the token expires. The token is signed with HMAC-SHA256 under a secret
+// The token carries only the user's id, its lifetime and the account's session version when it was made.
+// Role, category scope, the active flag and the current session version are read from the store on every
+// request, so a deactivation or a role change takes effect at once (FR-028) instead of when the token
+// expires, and a password reset, which adds one to the session version, ends every earlier session (FR-004). The token is signed with HMAC-SHA256 under a secret
 // from the environment, so a client cannot forge or alter one.
 //
 // There is no server-side session table in the ADR-007 model. Signing out clears the cookie; a token
-// copied before sign-out stays valid until it expires, which is why the lifetime is short.
+// copied before sign-out stays valid until it expires or the password is reset, which is why the lifetime
+// is short.
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -26,15 +28,16 @@ function sign(body, secret) {
   return createHmac("sha256", secret).update(body).digest();
 }
 
-export function issueToken(userId, { secret, now = Date.now(), lifetimeSeconds = DEFAULT_LIFETIME_SECONDS }) {
+export function issueToken(userId, { secret, now = Date.now(), lifetimeSeconds = DEFAULT_LIFETIME_SECONDS, version = 0 }) {
   assertSecret(secret);
   const iat = Math.floor(now / 1000);
-  const body = b64url(JSON.stringify({ sub: String(userId), iat, exp: iat + lifetimeSeconds }));
+  const body = b64url(JSON.stringify({ sub: String(userId), ver: version, iat, exp: iat + lifetimeSeconds }));
   return `${body}.${b64url(sign(body, secret))}`;
 }
 
-// Returns the user id, or null for anything that is not a valid, unexpired token from this server.
-export function readToken(token, { secret, now = Date.now() }) {
+// Returns { userId, version }, or null for anything that is not a valid, unexpired token from this server.
+// A token made before session versions existed has none, and counts as version 0.
+export function readSession(token, { secret, now = Date.now() }) {
   assertSecret(secret);
   if (typeof token !== "string") return null;
   const parts = token.split(".");
@@ -51,7 +54,14 @@ export function readToken(token, { secret, now = Date.now() }) {
   }
   if (typeof claims?.sub !== "string" || !Number.isInteger(claims.exp)) return null;
   if (Math.floor(now / 1000) >= claims.exp) return null;
-  return claims.sub;
+  const version = claims.ver ?? 0;
+  if (!Number.isInteger(version)) return null;
+  return { userId: claims.sub, version };
+}
+
+// Returns the user id, or null for anything that is not a valid, unexpired token from this server.
+export function readToken(token, options) {
+  return readSession(token, options)?.userId ?? null;
 }
 
 // HttpOnly keeps the token away from page scripts; SameSite=Lax stops it being sent on cross-site form

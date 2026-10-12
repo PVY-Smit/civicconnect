@@ -9,7 +9,7 @@
 import { FUNCTIONS, permits } from "../authorisation-policy/policy.js";
 import { issueResetCode, resetPassword } from "./reset.js";
 import { signIn } from "./sign-in.js";
-import { clearedCookie, issueToken, readToken, sessionCookie, tokenFromCookieHeader } from "./session.js";
+import { clearedCookie, issueToken, readSession, sessionCookie, tokenFromCookieHeader } from "./session.js";
 
 export const NOT_SIGNED_IN = "Sign in to continue.";
 export const NOT_PERMITTED = "You are not authorised to do this.";
@@ -37,7 +37,7 @@ export function createIdentityAccess({ users, verifyPassword, hashPassword, dumm
       const status = result.code === "missing-credentials" ? 400 : 401;
       return res.status(status).json({ error: result.message });
     }
-    const token = issueToken(result.user.id, { secret, now: now() });
+    const token = issueToken(result.user.id, { secret, now: now(), version: result.user.sessionVersion ?? 0 });
     res.setHeader("Set-Cookie", sessionCookie(token, { secure }));
     return res.status(200).json({ user: profile(result.user) });
   }
@@ -48,11 +48,12 @@ export function createIdentityAccess({ users, verifyPassword, hashPassword, dumm
   }
 
   // FR-001: a protected route answers 401 with no data unless the session is valid and its user is
-  // still active. A deactivated user's session stops working on their next request (FR-028).
+  // still active. A deactivated user's session stops working on their next request (FR-028), and so does
+  // every session made before the account's password was reset (FR-004).
   async function authenticate(req, res, next) {
-    const userId = readToken(tokenFromCookieHeader(req.headers?.cookie), { secret, now: now() });
-    const user = userId ? await users.findById(userId) : null;
-    if (!user || !user.active) {
+    const session = readSession(tokenFromCookieHeader(req.headers?.cookie), { secret, now: now() });
+    const user = session ? await users.findById(session.userId) : null;
+    if (!user || !user.active || (user.sessionVersion ?? 0) !== session.version) {
       return res.status(401).json({ error: NOT_SIGNED_IN });
     }
     req.actor = toActor(user);
@@ -85,7 +86,8 @@ export function createIdentityAccess({ users, verifyPassword, hashPassword, dumm
   }
 
   // FR-004: POST /api/auth/reset, public. 204 when the password is set. A password that breaks the length
-  // rule gets its own message, checked before any lookup; every other failure gets the one generic answer.
+  // rule gets its own message, checked before any lookup, and so does a new password equal to the current
+  // one, checked only once the code is right; every other failure gets the one generic answer.
   async function resetPasswordHandler(req, res) {
     const { email, code, newPassword } = req.body ?? {};
     const result = await resetPassword({ email, code, newPassword }, resetDeps);
