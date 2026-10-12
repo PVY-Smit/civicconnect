@@ -38,6 +38,8 @@ export async function listOwnRequests(actor, { requests }) {
 
 export async function getRequestDetail(actor, reference, { requests }) {
   if (!actor) return { ok: false, code: "not-signed-in" };
+  // Today every known role has viewOwnRequests, so the second check never changes the outcome. It names
+  // the other way the detail can be reached, so a role given only viewRequestsInScope is not refused here.
   if (!permits(actor, "viewOwnRequests") && !permits(actor, "viewRequestsInScope")) return { ok: false, code: "not-found" };
   if (!isReference(reference)) return { ok: false, code: "not-found" };
   const entries = actionEntryScope(actor);
