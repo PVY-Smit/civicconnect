@@ -23,21 +23,39 @@ operations and the distribution, not the mean.
 - **Dataset:** 5,000 requests, submitted through the API as the seeded Requester (`perf/seed.mjs`). Each
   gets its reference from the sequence and its first history row, as real requests do (ADR-007). They are
   spread evenly across the active categories and the three urgency levels. The Coordinator then rejects one
-  in ten and assigns three in ten, so the queue holds New, Assigned and Rejected requests. A second run
-  adds nothing if the queue already holds 5,000.
+  in ten of the saved requests and assigns three in ten, rotating through the Staff members authorised for
+  each category, so the queue holds New, Assigned and Rejected requests and no one Staff member holds all
+  the assigned ones. The proportions are taken over the requests that were saved, so a failed submission
+  does not shift them, and the result file records how many each Staff member received.
+- **Seeding twice:** the guard is by count only. If the queue already holds 5,000 requests, whatever they
+  are, a second run adds nothing. On a target holding other requests (earlier NFR-002 runs, manual
+  testing), seed a fresh database, or use `--force` and check the total afterwards.
 - **NFR-001:** one untimed warm-up retrieval, recorded separately so a cold start is visible, then 20
-  sequential timed retrievals. A run against fewer than 5,000 requests is refused. A run whose answer holds
-  more rows than one page is marked invalid, because NFR-001 times the first page, not the whole queue.
+  sequential timed retrievals. A run against fewer than 5,000 requests is refused. A run is marked invalid
+  if any answer is not exactly the first page: it must hold as many rows as the queue has, up to one page,
+  so an empty or error-shaped answer, or the whole queue, does not count.
 - **NFR-002:** 20 sequential timed submissions of complete, valid requests. They stay on staging, titled
   as performance runs.
 - **Concurrent run:** 10 clients sharing the Coordinator's session, each waiting for an answer before asking
-  again, for 30 s. It records the latency distribution, throughput, and every non-200 answer and network
-  error. Ten clients is a small workload chosen to show behaviour under concurrent reads; it is not derived
+  again, for 30 s. The first 5 s are a warm-up, counted by status but left out of the latencies and the
+  throughput, so a cold start does not inflate them. It records the latency distribution, throughput, and
+  every non-200 answer and network error. The 99th percentile is given with the number of samples it rests
+  on, and only from 100 samples up. Ten clients is a small workload chosen to show behaviour under concurrent reads; it is not derived
   from municipal usage data, which the project does not have.
 
 **How a time is taken.** From just before the request is sent until the whole response body has been read,
-with Node's high-resolution timer. That is the server's time plus the network between the measuring
-machine and staging. It is not the browser's time to draw the screen.
+with Node's high-resolution timer. The JSON is parsed after the timer stops. That is the server's time plus
+the network between the measuring machine and staging. It is not the browser's time to draw the screen.
+
+**When a run is invalid.** A run is reported, but its outcome says "invalid" and no verdict is given, if
+any operation failed, if an NFR-001 answer was not exactly the first page, or if it took fewer than the 20
+operations NFR-001 and NFR-002 state. Otherwise the unrounded 95th percentile is compared with the target:
+a run at 1,999.96 ms meets a 2.0 s target even though the summary rounds it to 2000.0.
+
+**Answers that are not JSON, and ended sessions.** An answer that is not JSON, such as a proxy's error page
+or a host still starting, is recorded with its status and the start of its text, and does not end the run.
+If the session ends during a long run, the client signs in again once, repeats the call and times only the
+repeat. Each result file records how often that happened (`sessionRenewals`).
 
 **How the percentile is calculated.** The nearest-rank method: with 20 samples, the 95th percentile is the
 19th smallest. It is always a value that was actually measured. `perf/test/lib.test.js` pins this,
@@ -48,7 +66,8 @@ including that one slow sample in 20 does not move the 95th percentile and two d
 Every result file records:
 - the target URL;
 - the measuring machine's operating system, processor, cores and memory;
-- the Node version and the scripts' commit;
+- the Node version and the scripts' commit, and whether `perf/` had uncommitted changes at the time
+  (`scriptsChanged`), so a result from uncommitted code is flagged;
 - the server's release identification from `/api/health`, once staging provides it (#122).
 
 The staging host, its database and their sizes are recorded here when the run is made.
@@ -71,7 +90,11 @@ node queue-load.mjs
 
 `seed.mjs` takes `--count`, `--concurrency`, `--no-mix` and `--force`. `nfr-001-queue.mjs` takes
 `--samples` and `--min-total`, `nfr-002-submission.mjs` takes `--samples`, and `queue-load.mjs` takes
-`--connections` and `--duration`. The defaults are the workload above. A run against anything but staging
+`--connections`, `--duration` and `--warmup`. Each must be a whole number, and a run stops with a message
+naming the option otherwise. The defaults are the workload above.
+
+**Reproducing a committed result.** Check out the result's `scriptsCommit`, confirm `scriptsChanged` is
+`false`, and run the same script with the options in its `method` against the target it records. A run against anything but staging
 should set `PERF_RESULTS_DIR` to a folder outside the repository, so its result is never mistaken for
 evidence.
 
@@ -99,3 +122,13 @@ written outside the repository and are not evidence:
 
 NFR-001 marked its own run invalid, because the stand-in answers with the whole queue rather than one page.
 That is the check above working as intended.
+
+On 12 October 2026, after the review of #139, the changed scripts were run against the stand-in again, with
+the same aim and the results again outside the repository:
+- the seed added 60 requests and the mix, rejecting 6 and assigning 18 across 2 Staff members;
+- NFR-001 marked its run invalid with the reason "an answer held 62 rows, where the first page of 62 holds
+  25";
+- NFR-002 completed;
+- the concurrent run left its 1 s warm-up out and gave its 99th percentile with the number of samples;
+- `--samples abc` stopped with a message naming the option;
+- every result file recorded `scriptsChanged: true`, since the changes were not yet committed.
