@@ -1,0 +1,120 @@
+/* NFR-010: legible to users with low vision and operable without a mouse.
+   Text colours meet WCAG 2.2 AA contrast on their backgrounds (4.5:1 for body text); every interactive
+   element has a visible focus outline of at least 3:1 against the page; text scales with the browser's
+   font size because sizes are in rem. */
+
+:root {
+  --text: #1b1f23;          /* 16.6:1 on white */
+  --text-muted: #4a5560;    /* 7.6:1 on white */
+  --page: #ffffff;
+  --surface: #f3f5f7;
+  --border: #6b7681;        /* 4.6:1, so input borders are visible */
+  --link: #1d4ed8;          /* 6.7:1 on white */
+  --link-visited: #5b21b6;
+  --accent: #0b3d91;
+  --focus: #0b3d91;         /* 10.0:1 on white */
+  --focus-ring: #ffbf47;
+  --error: #b91c1c;         /* 6.5:1 on white */
+  --success-bg: #0f5132;
+  --success-text: #ffffff;  /* 9.4:1 on the success background */
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--page);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-size: 1.125rem; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2rem 0 1rem; }
+h1:focus { outline: none; }
+
+a { color: var(--link); text-underline-offset: 0.15em; }
+a:visited { color: var(--link-visited); }
+
+/* One focus style for everything that can be focused: a yellow ring with a dark outline, which shows on
+   both light and dark backgrounds. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
+[tabindex="-1"]:focus-visible:not(h1):not(main) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--focus-ring);
+}
+
+.skip-link { position: absolute; left: -9999px; top: 0; padding: 0.75rem 1rem; background: var(--focus-ring); color: var(--text); z-index: 10; }
+.skip-link:focus { left: 1rem; }
+
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.site-header { background: var(--accent); color: #fff; }
+.site-header__inner { max-width: 60rem; margin: 0 auto; padding: 0.75rem 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+.site-name { font-weight: 700; font-size: 1.25rem; }
+.site-header a, .site-header a:visited, .site-header .link-button { color: #fff; }
+.site-header a[aria-current="page"] { font-weight: 700; text-decoration-thickness: 3px; }
+.signed-in { max-width: 60rem; margin: 0 auto; padding: 0 1rem 0.5rem; font-size: 1rem; }
+.nav { list-style: none; display: flex; flex-wrap: wrap; gap: 1.25rem; margin: 0; padding: 0; }
+
+.main { display: block; max-width: 60rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.main:focus { outline: none; }
+
+.form { max-width: 40rem; }
+.form--narrow { max-width: 24rem; }
+.field { margin: 0 0 1.5rem; border: 0; padding: 0; }
+.field label, .field legend { display: block; font-weight: 700; margin-bottom: 0.25rem; }
+.field--error { border-left: 5px solid var(--error); padding-left: 1rem; }
+.hint { color: var(--text-muted); margin: 0 0 0.5rem; font-size: 1rem; }
+.error-message { color: var(--error); font-weight: 700; margin: 0 0 0.5rem; }
+
+input[type="text"], input[type="email"], input[type="password"], select, textarea {
+  display: block; width: 100%; font: inherit; padding: 0.5rem; border: 2px solid var(--border); border-radius: 0; background: #fff; color: var(--text);
+}
+[aria-invalid="true"] { border-color: var(--error); }
+textarea { resize: vertical; }
+
+.radio { display: grid; grid-template-columns: 1.75rem 1fr; align-items: start; margin: 0.5rem 0; }
+.radio input { width: 1.5rem; height: 1.5rem; margin: 0.15rem 0 0; accent-color: var(--accent); }
+.radio label { font-weight: 400; margin: 0; }
+.hint--radio { grid-column: 2; margin: 0; }
+
+.button { font: inherit; font-weight: 700; padding: 0.6rem 1.25rem; background: var(--accent); color: #fff; border: 2px solid transparent; cursor: pointer; }
+.button:disabled { opacity: 0.7; cursor: progress; }
+.link-button { font: inherit; background: none; border: 0; padding: 0; color: var(--link); text-decoration: underline; cursor: pointer; }
+
+.error-summary { border: 4px solid var(--error); padding: 1rem 1.25rem; margin: 0 0 2rem; }
+.error-summary h2 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+.error-summary ul { margin: 0; padding-left: 1.25rem; }
+.error-summary a { color: var(--error); font-weight: 700; }
+.error-summary p { margin: 0; font-weight: 700; }
+
+.panel { background: var(--success-bg); color: var(--success-text); padding: 1.5rem; margin: 0 0 1.5rem; text-align: center; }
+.panel p { margin: 0.25rem 0; }
+.reference { font-size: 2.25rem; font-weight: 700; letter-spacing: 0.05em; }
+.actions { list-style: none; padding: 0; display: flex; gap: 1.5rem; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 1rem; }
+th, td { text-align: left; padding: 0.6rem 0.75rem 0.6rem 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.status { display: inline-block; padding: 0.1rem 0.5rem; border: 2px solid var(--text); font-weight: 700; font-size: 0.95rem; }
+.status--large { font-size: 1.1rem; }
+
+.summary-list { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.5rem 1.5rem; margin: 0 0 1rem; }
+.summary-list dt { font-weight: 700; }
+.summary-list dd { margin: 0; }
+.prewrap { white-space: pre-wrap; }
+
+.timeline, .entries { list-style: none; padding: 0; margin: 0 0 1rem; }
+.timeline li, .entries li { border-left: 4px solid var(--border); padding: 0.25rem 0 0.75rem 1rem; }
+.timeline__status { font-weight: 700; }
+.timeline__reason { margin: 0.25rem 0 0; }
+.entries time, .timeline time { color: var(--text-muted); font-size: 1rem; }
+.entries p { margin: 0.25rem 0 0; }
+.loading { color: var(--text-muted); }
+
+@media (max-width: 40rem) {
+  .summary-list { grid-template-columns: 1fr; }
+  .summary-list dd { margin-bottom: 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
