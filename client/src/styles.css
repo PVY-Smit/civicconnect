@@ -141,3 +141,18 @@ th, td { text-align: left; padding: 0.6rem 0.75rem 0.6rem 0; border-bottom: 1px 
 .entry--internal .tag { color: var(--internal); }  /* 6.8:1 on white */
 .pager { display: flex; gap: 1.5rem; margin: 1rem 0 0; }
 :root { --internal: #8a4b00; }
+
+/* Manager and administration screens (#120) */
+.counts { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 1rem; margin: 0 0 0.75rem; }
+.count { border: 2px solid var(--border); padding: 0.75rem 1rem; }
+.count dt { font-weight: 700; }
+.count dd { margin: 0; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+table.numbers td { text-align: right; font-variant-numeric: tabular-nums; }
+table.numbers tfoot th, table.numbers tfoot td { font-weight: 700; border-top: 2px solid var(--text); }
+.row-actions { white-space: nowrap; }
+.row-actions .link-button + .link-button { margin-left: 1rem; }
+.link-button--danger { color: var(--error); font-weight: 700; }
+.panel--code { text-align: left; }
+.button--on-dark { background: #fff; color: var(--success-bg); border: 2px solid #fff; margin-top: 0.75rem; } /* 9.4:1 */
+.inline-form--tight { margin: 0; }
+.inline-form--tight .field { min-width: 12rem; }

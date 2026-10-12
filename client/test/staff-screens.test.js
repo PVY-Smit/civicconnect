@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { TRANSITIONS } from "../../src/modules/workflow-status/transition-table.js";
 import { detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../src/workflow-ui.js";
 import { matchRoute, navFor, routeAllowed } from "../src/router.js";
+import { FUNCTIONS, permits } from "../../src/modules/authorisation-policy/policy.js";
 import { DEFAULT_SORT, FILTER_KEYS, filtersFromSearch, rangeProblem, searchFromFilters, SORTS } from "../src/queue-filters.js";
 
 test("ADR-005: every move in the status model has its own button label", () => {
@@ -84,18 +85,20 @@ test("FR-014: the queue offers each of the three named sorts in both directions,
   assert.equal(SORTS[0].value, DEFAULT_SORT, "the default is listed first");
 });
 
-const requester = { id: 1, name: "Rea", role: "Requester" };
+// What the server sends at sign-in (#130): the functions the policy permits for the user's role.
+const withPermissions = (role) => ({ id: 1, name: role, role, permissions: Object.keys(FUNCTIONS).filter((fn) => permits({ role }, fn)) });
 
-test("FR-013: a Requester's navigation has no Queue link, and the queue screen is not offered to them", () => {
-  assert.deepEqual(navFor(requester).map((i) => i.label), ["Submit a request", "My requests", "Notifications"]);
-  assert.equal(routeAllowed(matchRoute("/queue"), requester), false);
-  for (const role of ["Staff", "Coordinator", "Manager"]) {
-    const user = { id: 9, role };
-    assert.equal(navFor(user)[0].label, "Queue", role);
-    assert.equal(routeAllowed(matchRoute("/queue"), user), true, role);
-  }
+test("FR-013, FR-002: each role's navigation and screens follow the server's permissions; a Requester gets no Queue", () => {
+  const menu = (role) => navFor(withPermissions(role)).map((i) => i.label);
+  assert.deepEqual(menu("Requester"), ["Submit a request", "My requests", "Notifications"]);
+  assert.deepEqual(menu("Staff"), ["Queue", "Submit a request", "My requests", "Notifications"]);
+  assert.deepEqual(menu("Coordinator"), ["Queue", "Submit a request", "My requests", "Notifications", "Reports"]);
+  assert.deepEqual(menu("Manager"), ["Queue", "Submit a request", "My requests", "Notifications", "Reports", "Users", "Categories"]);
+  assert.equal(routeAllowed(matchRoute("/queue"), withPermissions("Requester")), false);
+  for (const role of ["Staff", "Coordinator", "Manager"]) assert.equal(routeAllowed(matchRoute("/queue"), withPermissions(role)), true, role);
   assert.deepEqual(navFor(null), []);
-  assert.equal(routeAllowed(matchRoute("/requests"), requester), true, "routes not marked for staff are open to everyone signed in");
+  assert.deepEqual(navFor({ id: 2, role: "Manager" }).map((i) => i.label), ["Submit a request", "My requests", "Notifications"], "no permissions sent, no extra links");
+  assert.equal(routeAllowed(matchRoute("/requests"), withPermissions("Requester")), true, "routes without a permission are open to everyone signed in");
 });
 
 test("each move input gets an id unique across the whole transition table", () => {
