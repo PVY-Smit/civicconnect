@@ -11,7 +11,7 @@ Project Engineering Document (PED) v3.0
 | **Milestone** | Milestone 3 - Controlled Construction, Integration, Quality and Release Readiness |
 | **Document** | PED v3.0, continued from PED v2.0, which evolved from PED v1.0. PED v1.0 is kept unchanged in the repository as the M1 record. This document evolves through v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v3.0 IN PROGRESS for the M3 submission on 14 October 2026 (#127); its submission information is in s27. v2.0 PROPOSED FOR BASELINE. The team signed it off on 30 September 2026 and recommends it as conditionally accepted (s26.3, #69); it becomes the baseline when #95 merges, and the M2 gate decision is the assessor's. The team signed off v1.0 on the same date, after the M1 submission, with the same recommendation (s16, #69); the M1 gate decision is also the assessor's (#7). |
+| **Baseline status** | v3.0 IN PROGRESS, due for the M3 submission on 14 October 2026 (#127); its submission information is in s27. v2.0 is the team's M2 baseline, merged on 9 October 2026 (#95). The M1 and M2 gate decisions are the assessor's, and the team's sign-off of v1.0 and v2.0 is recorded in s16 and s26.3. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -40,7 +40,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
-| 3.0 | In progress | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). Sections 1 to 26 are otherwise unchanged. | | In progress |
+| 3.0 | Due 14 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). Sections 1 to 26 are otherwise unchanged. | | In progress |
 
 # 2. Purpose and How to Read This Document
 
@@ -899,7 +899,7 @@ The M3 brief, s5.3, asks for this block so that the assessor can find the submit
 | Repository | https://github.com/PVY-Smit/civicconnect |
 | Release candidate | [To be completed under #128: the tag, its commit and the version] |
 | PED version | v3.0 |
-| RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM, with the M3 columns of CR-006 |
+| RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM, with the M3 columns CR-006 adds (#126). The workbook keeps its M1 file name, which the registers, the PED and the pull requests cite, and holds the registers for every milestone |
 | Test catalogue | `docs/quality/test-catalogue.md` (#126) |
 | CI and test evidence | [To be completed under #110 and #128: the CI run for the release candidate] |
 | Staging or demonstration | [To be completed under #122: the staging address, or the instructions to run the simulated staging environment] |
@@ -911,11 +911,11 @@ The M3 brief, s5.3, asks for this block so that the assessor can find the submit
 
 # 28. M2 Baseline Conformance
 
-[To be completed under #127 by Jean Smit: what was built as the M2 baseline planned it, module by module against ADR-001 to ADR-008, and each important deviation with its reference. M3 brief s6, item 2, and s7]
+[To be completed under #127 by Jean Smit: what was built as the M2 baseline planned it, module by module against ADR-001 to ADR-008, and each important deviation with its reference. It also gives the current position where M3 has overtaken a statement in sections 1 to 26 that is kept as it was written, such as #90's state in s20 and s25.1 and #65's in s26.2. M3 brief s6, item 2, and s7]
 
 # 29. Controlled Changes
 
-[To be completed under #127 by Jean Smit: each significant change made in M3, its reason, its impact and its reference: CR-002 (#92, #136), CR-004 and DEC-016 (#107, #129), CR-005 (#95), CR-006 (#126) and DEC-017 (#131). M3 brief s6, item 3]
+[To be completed under #127 by Jean Smit: each significant change made in M3, its reason, its impact and its reference: CR-002 (#92, #136), CR-004 and DEC-016 (#107, #129), CR-005 (#95), CR-006 (#126) and DEC-017 (#131). Each is cited only once it is in the Change Requests sheet or the Decision Log: CR-004 and DEC-016 arrive with #129, and CR-005, CR-006 and DEC-017 with the registers update after it. Where s16, s26.2 or s26.3 describe one of them as it stood in M2, for example CR-004 as under review or CR-002 as M3 work, this section gives its outcome. M3 brief s6, item 3]
 
 # 30. Construction and Configuration
 
