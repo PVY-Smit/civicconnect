@@ -53,7 +53,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
 | #138 (#123) | `e2e/journeys/*.spec.js` | f90d154 |
 | #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 62da9fb |
-| #146 (#111) | `tests/password-reset.test.js` | 7c8ae5d |
+| #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
 
 The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
@@ -800,31 +800,44 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 | Field | Value |
 |---|---|
-| Test basis | FR-004, NFR-004, FR-001, FR-028; the reset fields agreed on #109 |
-| Why selected | A reset path is a second way into an account. If its failures can be told apart, or a code works twice or for ever, it undoes what FR-001 and NFR-004 protect |
-| Technique and level | Equivalence partitions of failure, boundary values (expiry, password length), negative tests, a concurrent-use case; component, and the two routes at the handler boundary |
-| Input or precondition | Active and deactivated accounts; codes issued, replaced, expired and used; codes typed in other forms; new passwords at 7, 8, 128 and 129 characters |
-| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account; the code is stored only as a hash; it sets a new password that then signs in, works once, expires after 24 hours and is replaced by a new one; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup; a code replaced between check and write is refused |
+| Test basis | FR-004, NFR-004, FR-001, FR-003, FR-028; the reset fields agreed on #109; the review of #146 |
+| Why selected | A reset path is a second way into an account. If its failures can be told apart, a code can be guessed, works twice or for ever, or an attacker's session survives the reset, it undoes what FR-001 and NFR-004 protect |
+| Technique and level | Equivalence partitions of failure, boundary values (expiry, password length, the fifth wrong try), negative tests, concurrent cases (two uses of one code, five wrong tries at once); component, and the routes at the handler boundary |
+| Input or precondition | Active and deactivated accounts; codes issued, replaced, expired, withdrawn and used; codes typed in other forms; new passwords at 7, 8, 128 and 129 characters and equal to the current one; sessions made before and after a reset, and a token from before session versions |
+| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account, with a lifetime of 24 hours unless the caller chooses up to 7 days; issuing is recorded with who, for whom and when, never the code; the code is stored only as a hash; it sets a new password that then signs in, works once even when used twice at once, expires, and is replaced by a new one; five wrong tries withdraw it, four do not, and wrong tries at once all count; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup, and a password equal to the current one is refused without spending the code; a reset ends every earlier session; the reset succeeds only when exactly one row is written |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 8 October 2026, #146 at 7c8ae5d: 14 of 14 tests. Nine deliberate faults each failed a test |
-| Traceability | FR-004, NFR-004, FR-001, FR-028, #111, #146 |
-| Interpretation | The rules hold in the service and at the routes. Against PostgreSQL the conditional write is checked in TC-32. A reset does not end sessions already open elsewhere, which #146 records as a limitation |
+| Evidence | Local run, 12 October 2026, #146 at 6fa5e85: 27 of 27 tests. Nine deliberate faults each failed a test |
+| Traceability | FR-004, NFR-004, FR-001, FR-003, FR-028, #111, #146 |
+| Interpretation | The rules hold in the service and at the routes. Against PostgreSQL the conditional writes and the counted tries are checked in TC-32, once #109 adds the session version, the failure count and the account events to the schema. Rate limiting by address is not tested here; it is recorded as debt (#125) |
 
 **Automated by**
 
 - `tests/password-reset.test.js`: FR-004: a Manager gets a one-time code in the agreed form, and only its hash is stored [#146]
+- `tests/password-reset.test.js`: issuing a code is recorded with who issued it, for whom and when, and the record holds no code [#146]
 - `tests/password-reset.test.js`: FR-002, FR-004: only a role with manageUsers can issue a code, and a refusal stores nothing [#146]
 - `tests/password-reset.test.js`: a code is not issued for an account that does not exist or is deactivated (FR-028) [#146]
+- `tests/password-reset.test.js`: a code issued before the account was deactivated cannot be used, and no new one can be issued [#146]
+- `tests/password-reset.test.js`: a caller can choose the code's lifetime, up to the maximum, for a new account's first password (FR-003) [#146]
 - `tests/password-reset.test.js`: codes come only from the alphabet without look-alikes, and do not repeat [#146]
 - `tests/password-reset.test.js`: FR-004: the code sets the new password, which then signs in, and the code is cleared [#146]
 - `tests/password-reset.test.js`: FR-004: a code works once [#146]
+- `tests/password-reset.test.js`: FR-004: two uses of one code at the same moment: exactly one succeeds [#146]
 - `tests/password-reset.test.js`: FR-004: a code expires after its lifetime, and works until then [#146]
 - `tests/password-reset.test.js`: FR-004: issuing a new code replaces the old one [#146]
 - `tests/password-reset.test.js`: the code is accepted however the user types it: lower case, spaces, with or without the hyphen [#146]
 - `tests/password-reset.test.js`: FR-004: every failure gets the same answer, and the code is checked even when there is no usable account [#146]
-- `tests/password-reset.test.js`: the new password's length is checked first, before any lookup, so its message reveals nothing [#146]
+- `tests/password-reset.test.js`: a code is withdrawn after 5 wrong tries, and the right code then fails too [#146]
+- `tests/password-reset.test.js`: 4 wrong tries leave the code usable, and a new code starts the count again [#146]
+- `tests/password-reset.test.js`: 5 wrong tries at the same moment all count, and withdraw the code [#146]
+- `tests/password-reset.test.js`: wrong tries for an account with no live code are not counted against it [#146]
+- `tests/password-reset.test.js`: a new password that breaks the length rule is refused before any lookup, so its message reveals nothing [#146]
+- `tests/password-reset.test.js`: a new password of 8 and of 128 characters is accepted [#146]
+- `tests/password-reset.test.js`: a new password equal to the current one is refused once the code is right, and the code stays usable [#146]
 - `tests/password-reset.test.js`: a code replaced between the check and the write is refused, so it cannot be used twice at once [#146]
+- `tests/password-reset.test.js`: the reset succeeds only when the store reports exactly one row written [#146]
+- `tests/password-reset.test.js`: FR-004: a reset ends every session made before it, and a sign-in after it works [#146]
+- `tests/password-reset.test.js`: a session token from before session versions counts as version 0, and any other version is refused [#146]
 - `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409 [#146]
 - `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message [#146]
 
