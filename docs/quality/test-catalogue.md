@@ -52,7 +52,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
 | #138 (#123) | `e2e/journeys/*.spec.js` | f90d154 |
-| #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 62da9fb |
+| #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 3ccee48 |
 | #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
 
 The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
@@ -909,9 +909,9 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Technique and level | Performance against staging: two timed scenarios with the requirements' own methods, and one small concurrent run |
 | Input or precondition | Staging (#122) with 5,000 requests seeded through the API by `perf/seed.mjs`, a tenth rejected and three tenths assigned; the Requester and Coordinator accounts (#109); the paged queue endpoint (#114) |
 | Expected result | NFR-001: the 95th percentile of 20 retrievals of the first queue page under 2.0 s, the distribution recorded. NFR-002: the 95th percentile of 20 submissions under 3.0 s. Concurrent run (10 clients, 30 s): no target set; latency, throughput and errors recorded |
-| Actual result | Not run against staging. The statistics are tested; a trial against the API stand-in completed and NFR-001 marked it invalid, because the stand-in returns the whole queue rather than one page |
+| Actual result | Not run against staging. The statistics, the outcome rules and the client are tested; trials against the API stand-in on 7 and 12 October completed, and NFR-001 marked them invalid, with the reason, because the stand-in returns the whole queue rather than one page |
 | Status | Blocked: needs staging (#122), the seed data (#109) and the queue endpoint (#114) |
-| Evidence | The scripts and method are #139 (`docs/quality/performance/README.md`). The statistics: local run, 7 October 2026, #139 at 62da9fb, 6 of 6 tests. Results from staging go to `docs/quality/performance/results/` |
+| Evidence | The scripts and method are #139 (`docs/quality/performance/README.md`). The statistics, the outcome rules (exactly the first page, at least 20 samples, the unrounded verdict) and the client (non-JSON answers, ended sessions): local run, 12 October 2026, #139 at 3ccee48, 13 of 13 tests. Results from staging go to `docs/quality/performance/results/` |
 | Traceability | #124, #139, NFR-001, NFR-002, ASR-02 |
 | Interpretation | Not yet available. The README records what a result will not show: production scale, dates spread over months, writes during reads, screen drawing time, and other hosts |
 
@@ -923,3 +923,10 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `perf/test/lib.test.js`: no samples, or a percentile outside 0 to 100, is an error rather than a number [#139]
 - `perf/test/lib.test.js`: the summary reports the distribution, with the mean beside it, not instead of it [#139]
 - `perf/test/lib.test.js`: a result meets its target only when it is under it, as NFR-001 and NFR-002 say [#139]
+- `perf/test/lib.test.js`: the verdict is taken on the unrounded 95th percentile, so 1999.96 ms meets a 2,000 ms target [#139]
+- `perf/test/lib.test.js`: a run with fewer than 20 samples, a failed call or a failed check is invalid, whatever its times [#139]
+- `perf/test/lib.test.js`: NFR-001: only an answer holding exactly the first page counts; an empty page or the whole queue does not [#139]
+- `perf/test/lib.test.js`: a command-line number that is not a whole number at its minimum is refused, naming the option [#139]
+- `perf/test/lib.test.js`: a response body that is not JSON is kept as text rather than ending the run [#139]
+- `perf/test/lib.test.js`: the seed's mix rejects one in ten and assigns three in ten of the saved requests [#139]
+- `perf/test/lib.test.js`: the client signs in again once when the session ends, repeats the call, and keeps a non-JSON answer [#139]
