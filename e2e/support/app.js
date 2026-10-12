@@ -7,8 +7,8 @@ export const REFERENCE = /^CC-\d{4}-\d{4}$/; // FR-008, DEC-017
 
 export async function signIn(page, account) {
   await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill(account.email);
-  await page.getByLabel("Password").fill(account.password);
+  await page.getByLabel("Email address", { exact: true }).fill(account.email);
+  await page.getByLabel("Password", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
 }
@@ -24,16 +24,29 @@ export const statusOf = (page) => page.locator(".status--large");
 // Opens a request from the queue by searching for its reference (FR-013, FR-014).
 export async function openFromQueue(page, reference) {
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Queue" }).click();
-  await page.getByLabel("Reference or keyword").fill(reference);
+  await page.getByLabel("Reference or keyword", { exact: true }).fill(reference);
   await page.getByRole("button", { name: "Apply" }).click();
   await page.getByRole("link", { name: reference }).click();
   await expect(page.getByRole("heading", { level: 1, name: `Request ${reference}` })).toBeVisible();
 }
 
-// Makes a status change on the staff detail screen: opens the move, fills its inputs, and confirms.
-export async function move(page, label, fill = async () => {}) {
+// Status changes on the staff detail screen come in two kinds, and each journey step says which it makes:
+// - a move with no inputs, such as Start work, is sent by its own button, with no confirm step (move);
+// - a move with inputs, such as Assign, Resolve or Close, opens a form; the step fills it and presses its
+//   "Confirm: <move>" button (moveWithInputs).
+// Playwright's click waits for the Confirm button to be visible and enabled, so a form that renders a moment
+// late, or a Confirm still disabled because an input is missing, fails the step after the timeout instead
+// of skipping it.
+export async function move(page, label) {
+  await page.getByRole("button", { name: label, exact: true }).click();
+}
+
+export async function moveWithInputs(page, label, fill) {
   await page.getByRole("button", { name: label, exact: true }).click();
   await fill();
-  const confirm = page.getByRole("button", { name: `Confirm: ${label.toLowerCase()}` });
-  if (await confirm.count()) await confirm.click();
+  await page.getByRole("button", { name: `Confirm: ${label.toLowerCase()}`, exact: true }).click();
 }
+
+// The value beside a term in a request's summary list, such as "Reported urgency" or "Priority".
+export const summaryValue = (page, term) =>
+  page.locator(".summary-list dt", { hasText: new RegExp(`^${term}$`) }).locator("xpath=following-sibling::dd[1]");

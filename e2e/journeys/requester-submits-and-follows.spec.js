@@ -26,10 +26,10 @@ test("TC-33: a requester submits a request, gets its reference, and finds it in 
   await expect(problems.getByRole("listitem")).toHaveCount(5);
 
   // FR-005, FR-006, FR-021: a complete submission, with the category chosen from the active list.
-  await page.getByLabel("Title").fill(title);
-  await page.getByLabel("Description").fill(description);
-  await page.getByLabel("Category").selectOption({ label: category() });
-  await page.getByLabel("Location").fill(location);
+  await page.getByLabel("Title", { exact: true }).fill(title);
+  await page.getByLabel("Description", { exact: true }).fill(description);
+  await page.getByLabel("Category", { exact: true }).selectOption({ label: category() });
+  await page.getByLabel("Location", { exact: true }).fill(location);
   await page.getByRole("radio", { name: "Medium" }).check();
   await page.getByRole("button", { name: "Submit request" }).click();
 

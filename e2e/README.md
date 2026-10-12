@@ -7,7 +7,7 @@ staging (#122), with the seed data (#109).
 | Journey | File | What it shows |
 |---|---|---|
 | TC-33 | `journeys/requester-submits-and-follows.spec.js` | A requester signs in, is refused an empty form with all five fields named, submits, gets a reference in the agreed format, and finds the request in their list and its detail (FR-001, FR-005 to FR-011) |
-| TC-34 | `journeys/staff-new-to-closed.spec.js` | A requester submits; the Coordinator finds it in the queue, sets the priority and assigns it; the Staff member starts work, adds an internal note and a visible update, and resolves it; the Coordinator closes it; the history shows each step and who made it; the requester sees the outcome and the visible update but not the internal note (FR-011, FR-013 to FR-021, FR-025) |
+| TC-34 | `journeys/staff-new-to-closed.spec.js` | A requester submits with Low urgency; the Coordinator finds it in the queue, sets the priority to High, with both values kept and the requester shown only their own, and assigns it; the Staff member starts work, adds an internal note and a visible update, and resolves it; the Coordinator closes it; the history shows each step and who made it; the requester sees the outcome and the visible update but not the internal note (FR-011, FR-013 to FR-021, FR-025) |
 
 Each run creates its own requests with unique titles, so the journeys do not depend on earlier runs or on
 each other.
@@ -38,6 +38,21 @@ machine. The run reads its target and accounts from the environment, never from 
 
 On a failure, `test-results/` holds the trace and screenshots, and `playwright-report/` the HTML report
 (`npx playwright show-report`). Neither is committed.
+
+## In CI
+
+Once the CI workflow (#110) and staging (#122) exist, the journeys run as their own job, and only where
+`E2E_BASE_URL` and the account variables are set as secrets: a pull request from a fork, or a repository
+without them, skips the job rather than showing a red build for missing configuration. Run without a
+target, `playwright.config.js` stops at once with "Set E2E_BASE_URL to the CivicConnect instance to test".
+With `CI` set, a failed journey is retried once and the retry is traced, so a flaky step is reported as
+flaky, not passed, and a real failure is shown with its trace.
+
+## Writing a step
+
+Status changes come in two kinds on the staff screen, and `support/app.js` has a helper for each, so a
+step says which it makes: `move` for a move with no inputs (Start work is sent by its own button), and
+`moveWithInputs` for a move that opens a form and is sent by its "Confirm" button (Assign, Resolve, Close).
 
 ## What staging must provide
 
