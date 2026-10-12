@@ -911,11 +911,11 @@ The M3 brief, s5.3, asks for this block so that the assessor can find the submit
 
 # 28. M2 Baseline Conformance
 
-[To be completed under #127 by Jean Smit: what was built as the M2 baseline planned it, module by module against ADR-001 to ADR-008, and each important deviation with its reference. It also gives the current position where M3 has overtaken a statement in sections 1 to 26 that is kept as it was written, such as #90's state in s20 and s25.1 and #65's in s26.2. M3 brief s6, item 2, and s7]
+[To be completed under #127 by Darius Mushi: what was built as the M2 baseline planned it, module by module against ADR-001 to ADR-008, and each important deviation with its reference. It also gives the current position where M3 has overtaken a statement in sections 1 to 26 that is kept as it was written, such as #90's state in s20 and s25.1 and #65's in s26.2. M3 brief s6, item 2, and s7]
 
 # 29. Controlled Changes
 
-[To be completed under #127 by Jean Smit: each significant change made in M3, its reason, its impact and its reference: CR-002 (#92, #136), CR-004 and DEC-016 (#107, #129), CR-005 (#95), CR-006 (#126) and DEC-017 (#131). Each is cited only once it is in the Change Requests sheet or the Decision Log: CR-004 and DEC-016 arrive with #129, and CR-005, CR-006 and DEC-017 with the registers update after it. Where s16, s26.2 or s26.3 describe one of them as it stood in M2, for example CR-004 as under review or CR-002 as M3 work, this section gives its outcome. M3 brief s6, item 3]
+[To be completed under #127 by Tristan Roets: each significant change made in M3, its reason, its impact and its reference: CR-002 (#92, #136), CR-004 and DEC-016 (#107, #129), CR-005 (#95), CR-006 (#126) and DEC-017 (#131). Each is cited only once it is in the Change Requests sheet or the Decision Log: CR-004 and DEC-016 arrive with #129, and CR-005, CR-006 and DEC-017 with the registers update after it. Where s16, s26.2 or s26.3 describe one of them as it stood in M2, for example CR-004 as under review or CR-002 as M3 work, this section gives its outcome. M3 brief s6, item 3]
 
 # 30. Construction and Configuration
 
