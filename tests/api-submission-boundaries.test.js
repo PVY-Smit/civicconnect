@@ -4,9 +4,9 @@
 // Where each limit comes from, recorded rather than invented:
 // - title: at most 200 characters, the schema's VARCHAR(200) (docs/data/initial-schema.sql);
 // - description and location: TEXT in the schema, and the M1 baseline sets no limit. 4000 and 300 are the
-//   values proposed in #112 for DEC-017, not yet agreed. They are pinned here so that changing them is a
-//   visible decision, and this file changes with DEC-017;
-// - reported urgency: the M1 baseline names no scale. Low, Medium and High are proposed in #112 (DEC-017);
+//   values DEC-017 fixes, agreed by all three members on #131. They are pinned here so that changing them
+//   is a visible decision, and this file changes with any later decision;
+// - reported urgency: the M1 baseline names no scale. Low, Medium and High are DEC-017's;
 // - category: one of the active categories (FR-006); the list itself is data, not a limit.
 // Every text field is trimmed before it is measured, and a minimum of one character means "not blank".
 
@@ -18,8 +18,8 @@ import { createApi, USERS, VALID_SUBMISSION } from "./support/api.js";
 const PINNED = { title: { min: 1, max: 200 }, description: { min: 1, max: 4000 }, location: { min: 1, max: 300 } };
 const SOURCE = {
   title: "schema VARCHAR(200)",
-  description: "proposed in #112, DEC-017 pending; not in the M1 baseline",
-  location: "proposed in #112, DEC-017 pending; not in the M1 baseline",
+  description: "DEC-017, agreed on #131; not in the M1 baseline",
+  location: "DEC-017, agreed on #131; not in the M1 baseline",
 };
 
 // Submits VALID_SUBMISSION with the given fields replaced (undefined removes a field). Answers the
@@ -116,7 +116,7 @@ test("FR-006 category partitions: inactive, unknown, blank and anything but a si
   }
 });
 
-test("FR-021 urgency partitions (scale proposed in #112, DEC-017 pending): each level accepted exactly as named", async () => {
+test("FR-021 urgency partitions (scale fixed by DEC-017): each level accepted exactly as named", async () => {
   for (const level of URGENCY_LEVELS) assert.equal((await accepted({ reportedUrgency: level }, level)).reportedUrgency, level);
 });
 
