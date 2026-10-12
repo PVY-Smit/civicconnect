@@ -16,6 +16,10 @@
 // pull requests.
 // The browser journeys in e2e/ need a deployed instance, so they are listed with Playwright's --list rather
 // than run, and counted as listed. Their results come from the run against staging (#122, #123).
+//
+// The per-record line counts the record's tests by result: pass, fail, todo and skip (node:test's TODO and
+// SKIP directives, so a test that is switched off is shown, never silently dropped), listed (browser journeys
+// found by --list, not run) and the lines not on this branch.
 // With --strict it exits 1 on a failed test, a line that matches nothing, or an uncatalogued test.
 
 import { execFileSync } from "node:child_process";
@@ -106,11 +110,11 @@ const results = {
 
 // ---- match ----
 const matches = (pattern, name) => (pattern.endsWith("*") ? name.startsWith(pattern.slice(0, -1)) : name === pattern);
-const listed = new Set();
+const catalogued = new Set();
 const problems = [];
 let failed = 0;
 
-console.log("record   pass  fail  todo  listed  absent");
+console.log("record   pass  fail  todo  skip  listed  absent");
 for (const r of records) {
   const count = { pass: 0, fail: 0, todo: 0, skip: 0, listed: 0, absent: 0 };
   for (const ref of r.refs) {
@@ -125,16 +129,16 @@ for (const r of records) {
     }
     if (hit.length === 0) problems.push(`${r.id}: no test in ${ref.file} matches "${ref.pattern}"`);
     for (const t of hit) {
-      listed.add(`${ref.file}\u0000${t.name}`);
+      catalogued.add(`${ref.file}\u0000${t.name}`);
       count[t.result] += 1;
     }
   }
   failed += count.fail;
-  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.listed).padStart(6)}  ${count.absent ? `${count.absent} line(s) not on this branch` : ""}`);
+  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.skip).padStart(4)}  ${String(count.listed).padStart(6)}  ${count.absent ? `${count.absent} line(s) not on this branch` : ""}`);
 }
 
 for (const [file, tests] of Object.entries(results)) {
-  for (const t of tests) if (!listed.has(`${file}\u0000${t.name}`)) problems.push(`not in the catalogue: ${file}: ${t.name}`);
+  for (const t of tests) if (!catalogued.has(`${file}\u0000${t.name}`)) problems.push(`not in the catalogue: ${file}: ${t.name}`);
 }
 
 const total = Object.values(results).flat();

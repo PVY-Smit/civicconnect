@@ -569,12 +569,12 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 |---|---|
 | Test basis | NFR-005, FR-002, FR-011, FR-012; the Access Matrix register; CR-002 |
 | Why selected | TC-01 shows the policy is right; this shows each endpoint asks it. A route that forgets the check passes TC-01 |
-| Technique and level | Decision table, 15 functions by 4 roles, each cell an endpoint call; black-box at the API |
+| Technique and level | Decision table, 15 functions by 4 roles, 60 cells, each cell one automated check that calls an endpoint; black-box at the API |
 | Input or precondition | One signed-in user per role, each with a request in scope; expectations read from the register fixture, with CR-002's four cells refused |
 | Expected result | Each cell succeeds where the register permits and is refused where it does not. A refusal is a 403, or a 404 for a request out of scope (FR-012), or the internal entry left out (FR-011), and writes nothing. For "change status", every move in the table succeeds exactly for the roles the model names. The management, category and user functions are checked at the permission check their routes will use |
-| Actual result | As expected for 60 cells; 3 todo |
-| Status | Pass, with three cells' own endpoints Not yet built (#115, #117) |
-| Evidence | Local run, 7 October 2026, #121 at 2362c11 (local): 61 pass, 3 todo |
+| Actual result | As expected for all 60 cells, and the table covers every function in the register (61 checks pass). Three functions, management counts, the category list and user accounts, have no endpoint of their own yet, so their 12 cells are checked at the permission check their routes will use. One todo per function (3) stands for the later call through its own endpoint; the todos are not cells |
+| Status | Pass, with three functions' own endpoints Not yet built (#115, #117) |
+| Evidence | Local run, 12 October 2026, #121 at 2362c11 (local): 64 tests, 61 pass (60 cells and the coverage check) and 3 todo (one per function without its own endpoint) |
 | Traceability | NFR-005, FR-002, FR-011, FR-012, CR-002, #121 |
 | Interpretation | Every built endpoint enforces its cells, called directly rather than through the interface, as NFR-005's verification method asks. The three todos become endpoint calls when #115 and #117 add the routes |
 
