@@ -927,15 +927,122 @@ The M3 brief, s5.3, asks for this block so that the assessor can find the submit
 
 # 32. Quality Strategy Applied
 
-[To be completed under #127 by Jean Smit: which requirements and risks received stronger verification and why, and how the test catalogue's records cover the M3 minimum. M3 brief s6, item 6, and s9]
+Verification effort follows what a failure would cost. The behaviour that decides who may see or change a request, how a request moves between statuses, and whether a change leaves its audit entry is tested most heavily, at more than one level. Behaviour whose failure is visible and recoverable, such as the layout of a screen, is tested more lightly.
+
+The test catalogue (`docs/quality/test-catalogue.md`, #126) is the record of this. Each record is one designed test case with the fields the M3 brief lists in s11: test basis, why selected, technique and level, input, expected result, actual result, status, evidence, traceability and interpretation. Under each record are the automated tests that carry it. The brief's Meaningful Test Rule (s9) counts designed cases and excludes tests that only add to a count, so the 60-cell Access Matrix decision table is one record with 60 checks, and the catalogue counts it once. `tools/check_test_catalogue.mjs` runs every listed test and reports, per record, how many pass, fail or are still to do. With `--strict` it fails on a failed test, on a listed test that does not exist, and on a test that no record lists, so the catalogue cannot drift from the tests.
+
+## 32.1 Where verification is strongest, and why
+
+| **Concern** | **Requirements and risks** | **How it is verified** | **Records** |
+|----|----|----|----|
+| Who may do what, and who may see what | NFR-005, FR-002, FR-011, FR-012 (all Must); RSK-05, RSK-17, RSK-23 | The authorisation policy is tested against the Access Matrix register itself, so a change to either is noticed. Every one of the 60 cells is then called through its endpoint, or, for the three functions whose endpoints are not built yet, at the permission check their routes will use. Another person's request and a request that does not exist get the same answer, and an internal entry is withheld even when the store ignores the visibility condition | TC-01 to TC-03, TC-11, TC-15, TC-22, TC-23 |
+| The status model | FR-016 (Must); RSK-09, RSK-16 | The transition table is compared with the Status Model register. Every ordered pair of the seven statuses is then tried through the endpoint, with what is written checked for each (s33.1) | TC-05 to TC-07, TC-24 |
+| A change and its audit entry | FR-025, FR-026 (Must); RSK-19; ADR-001 rule 3 | A failure while writing the audit entry rolls back the change and its history row. No function edits or deletes an audit entry | TC-04, TC-18 |
+| Signing in and resetting a password | FR-001, NFR-004 (Must); FR-004 (Should) | Every failed sign-in or reset gets one answer, with the password or code checked against a dummy hash when there is no usable account. A reset code works once, expires, and is withdrawn after five wrong tries, and a reset ends every earlier session | TC-08 to TC-11, TC-36 |
+| The request reference | FR-008 (Must); DEC-004, DEC-017 | The keyed permutation is checked on every input of a small domain and on 100,000 consecutive real values, so two sequence values never give the same reference | TC-12 |
+| What a user types | FR-007 (Must); DEC-017 | Each length limit is tested at its boundaries, counted in characters as PostgreSQL counts them. Control characters, which PostgreSQL would refuse after validation had passed, are refused at every endpoint | TC-13, TC-25, TC-26, TC-37 |
+| Urgency and priority | FR-021 (Must); RSK-22 | Only a Coordinator sets the priority, the reported urgency never changes with it, and the Requester sees only their own urgency | TC-19, TC-34 |
+
+The client screens are tested more lightly, as functions of what the server returns (TC-27 to TC-31), because the server makes every decision again and a wrong screen cannot grant anything. The management reports (FR-022 to FR-024) have no record yet, because their endpoint is not built (#117).
+
+## 32.2 How a test is shown to be able to fail
+
+A test that cannot fail shows nothing. For the services, the API suites and the scripts, each new test was checked by putting back the defect it guards against, one at a time, and confirming that a test then failed. The records name the faults used. For example, the browser journey TC-34 failed when the priority was made to overwrite the reported urgency, which the earlier version of the journey had passed. TC-37's tests failed against the services as they were before the fixes of 8 October. This also answers RSK-14: a test written with AI assistance is accepted only once it has been seen to fail for the right reason.
+
+## 32.3 The M3 minimum
+
+A record whose tests are in a pull request that has not merged is counted from the run on that pull request's branch, as its evidence states.
+
+| **Category (M3 brief s9)** | **Minimum** | **Records** | **Status at 12 October 2026** |
+|----|----|----|----|
+| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36 | Pass |
+| Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24 to TC-26, TC-37 | Pass |
+| API or integration | 3 | TC-21 to TC-26 and TC-37 at the handler boundary; TC-32 against PostgreSQL | Pass at the handler boundary; TC-32 Blocked until #108 and #109 |
+| End to end | 2 | TC-33, TC-34 | Blocked until staging (#122); both pass against a local stand-in of the API |
+| Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22 to TC-24, TC-36, TC-37 | Pass |
+| High-priority requirement or risk | 5 | TC-01, TC-05, TC-09 to TC-12, TC-18, TC-22, TC-24 | Pass |
+| Black-box techniques | 2 | Decision table, state transition, boundary values, equivalence partitions (s33) | Pass |
+| Performance | 1 scenario | TC-35 (s34) | Blocked until staging (#122) |
+
+[To be completed under #128 by Jean Smit: the statuses at the release candidate, from the catalogue check run on it]
+
+## 32.4 What the evidence does not show
+
+No line-coverage percentage is reported. The brief does not require one. A percentage shows which lines ran and says nothing about whether a test would notice them behaving wrongly; the fault checks in s32.2 are the evidence for that. What the strict catalogue check does show is that every automated test belongs to a designed case and every designed case has tests that run. Until TC-32 runs, the API suites show the behaviour at the HTTP boundary over an in-memory store whose transactions roll back. PostgreSQL's own behaviour, such as its conditional writes and constraints, is shown only once TC-32 runs.
 
 # 33. Black-Box, Integration and System Validation
 
-[To be completed under #127 by Jean Smit: the techniques chosen and why, the critical scenarios, and their results with evidence: the decision table, state transition and boundary suites (#121), the integration run against PostgreSQL, and the browser journeys (#123, #138). M3 brief s6, item 7, and s10]
+The techniques were chosen because the behaviour calls for them, as the M3 brief asks in s10. Each is applied where its conditions hold, and the records name the technique used.
+
+## 33.1 The techniques and why each was used
+
+**Decision table (TC-01, TC-22).** Whether an actor may perform a function depends on two conditions together, the role and the function, and for some functions on a third, whether the request is in the actor's scope. The Access Matrix register is that table: 15 functions by 4 roles. TC-01 checks the policy against it, and TC-22 calls each of the 60 cells through its endpoint. Three functions have no endpoint of their own yet (#115, #117), so their 12 cells are checked at the permission check their routes will use, and three todo entries stand for the later endpoint calls.
+
+**State transition (TC-05, TC-24).** What a request may do next depends on its current status. TC-05 checks the transition table against the Status Model register. TC-24 tries every ordered pair of the seven statuses, 49 in all, through the endpoint: 169 checks. Each of the 37 pairs outside the model is tried by all four roles and must answer 409 and write nothing. Each of the 12 moves in the model must succeed, with its history and audit entries, for every role the model names, 17 in all; TC-22 covers the roles it does not name. Further tests cover a target that is not a status, the two final statuses, and a whole life with reassignment, a hold, a resolution, a reopening and a close.
+
+**Boundary values (TC-13, TC-25).** The field limits that DEC-017 fixes are tested at 1, 2, the maximum less one, the maximum, and the maximum plus one: title 200 characters, description 4,000 and location 300. Lengths are counted in characters as PostgreSQL counts them, so a title of 199 letters and one emoji is accepted. That case was added after the boundary suite found that the first version counted an emoji twice, which #131 fixed (968a44f).
+
+**Equivalence partitions (TC-26, TC-37).** Each way a client can send a bad value is one partition, with one representative: blank, missing, the wrong type, an array or an object where one id belongs, an inactive category, a control character in text. Each must be refused with an error on its own field and nothing saved.
+
+**Negative and unauthorised cases (TC-09, TC-11, TC-23).** Every endpoint is called without a session and must answer 401 and write nothing. Failed sign-ins of every kind must give the same answer.
+
+**API testing at the handler boundary.** The API suites (#121) call the real route handlers behind the real authentication middleware, with a signed session cookie for each role, over an in-memory store that evaluates the policy's query conditions and whose transactions roll back. Only the store changes when they run against PostgreSQL (TC-32).
+
+**End-to-end journeys (TC-33, TC-34).** The two journeys the service exists for are driven in a browser with Playwright (#123, #138): a requester submits a request and follows it, and staff take a request from New to Closed with three people each in their own session. They use visible labels and roles, so they fail when what a user sees changes.
+
+## 33.2 Critical scenarios and results
+
+| **Scenario** | **Records** | **Result at 12 October 2026** | **Evidence** |
+|----|----|----|----|
+| Every role and function through its endpoint | TC-22 | 61 checks pass; 3 todo for endpoints not yet built | #121, local run at c7535f4 |
+| Every status pair through the endpoint | TC-24 | 169 of 169 pass | #121, local run at c7535f4 |
+| Field limits and input partitions through the endpoint | TC-25, TC-26, TC-37 | Pass | #121, local run at c7535f4 |
+| Calls without a session | TC-23 | Pass | #121, local run at c7535f4 |
+| The API suites against PostgreSQL | TC-32 | Blocked until #108 and #109 | |
+| A requester submits and follows a request | TC-33 | Blocked until staging; passes against a local stand-in of the API | #138 |
+| Staff take a request from New to Closed | TC-34 | Blocked until staging; passes against a local stand-in of the API | #138 |
+
+[To be completed under #128 by Jean Smit: the results from the CI run on the release candidate, TC-32 against PostgreSQL, and TC-33 and TC-34 against staging]
+
+## 33.3 What the results show
+
+At the handler boundary every built endpoint enforces its Access Matrix cells, every status change outside the model is refused without a write, and no malformed input reaches the store. The end-to-end journeys show that the client follows the server's contract, because the stand-in implements that contract. They do not yet show the real server, its database or its hosting together, which is what TC-32 and the staging run of TC-33 and TC-34 are for, and what s36 weighs if they have not run by submission.
 
 # 34. Performance and Reliability
 
-[To be completed under #127 by Jean Smit: the workload, the results against NFR-001 and NFR-002, the environment and the limitations, from `docs/quality/performance/` (#124, #139). M3 brief s6, item 8, and s13]
+M3 asks for one small performance exercise that the team can design and interpret (M3 brief s13). The full method is in `docs/quality/performance/README.md` (#124, #139), and each run's raw result, with the environment it ran in, is written to `docs/quality/performance/results/`.
+
+## 34.1 What is measured, and why
+
+**The staff queue (NFR-001, Must).** Staff and Coordinators work from the queue all day, and it reads more data than any other screen. The Coordinator's queue holds every request (FR-013), the largest scope any user has, so it is measured as the Coordinator. Target: the 95th percentile of 20 retrievals of the first page under 2.0 seconds, with 5,000 requests stored.
+
+**Request submission (NFR-002, Must).** A requester who waits too long submits again, and the municipality receives duplicates. Target: the 95th percentile of 20 submissions under 3.0 seconds, from submit to acknowledgement.
+
+**A small concurrent run.** Ten clients read the first queue page in a loop for 30 seconds, to show whether the queue slows or fails under concurrent reads. No requirement sets a target for concurrent use, so none is invented: NFR-001's single-user target is shown beside the result for comparison only.
+
+## 34.2 Workload, data and method
+
+The 5,000 requests are submitted through the API as a seeded Requester, so each gets its reference and its first history row as a real request does. They are spread across the active categories and the three urgency levels, and the Coordinator then rejects one in ten and assigns three in ten, rotating through each category's staff, so the queue holds New, Assigned and Rejected requests.
+
+Each time is taken from just before the request is sent until the whole answer has been read, with Node's high-resolution timer. That is the server's time plus the network between the measuring machine and staging. It does not include the time the browser takes to draw the screen. The 95th percentile is taken by the nearest rank, so the value reported is one that was measured. A run is reported as invalid, and given no verdict, if any operation failed, if an NFR-001 answer was not exactly the first page of the queue, or if it took fewer than the 20 operations the requirements state. Otherwise the unrounded 95th percentile is compared with the target. The tests in `perf/test/lib.test.js` hold these rules in place (TC-35).
+
+## 34.3 Results
+
+[To be completed under #124 by Jean Smit: the results of the runs against staging (#122) with the seed data (#109): for each measurement the distribution, the outcome against its target, the errors, and the environment recorded with it]
+
+Before staging exists the scripts were run against the local stand-in of the API used for the client screens, to check the scripts; the system itself was not measured. Those results were written outside the repository and are not evidence. NFR-001 marked its own run invalid, because the stand-in returns the whole queue where NFR-001 times one page, which is the check in s34.2 working as intended.
+
+## 34.4 What this does not show
+
+**Municipal production scale.** 5,000 requests is NFR-001's baselined volume. A municipality accumulates far more over years, and has more staff than ten clients represent.
+
+**Dates spread over time.** The seeded requests are all submitted on the day of the run, so sorting and filtering by date across months is not exercised.
+
+**Writes and reads together.** The concurrent run only reads. Contention between staff changing requests and the queue being read is not measured.
+
+**The screen.** Times are for the API's answer.
+
+**Other hosts and networks.** A result holds for the staging host and the network path recorded with it. A free-tier host that sleeps after a period without requests can answer its first request more slowly than the warm-up shows (s24).
 
 # 35. Defects and Quality Interpretation
 
