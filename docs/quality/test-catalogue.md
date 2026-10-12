@@ -32,12 +32,12 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | Category | Minimum | Records |
 |---|---|---|
 | Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36 |
-| Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24, TC-25, TC-26 |
-| API or integration | 3 | At the handler boundary: TC-21 to TC-26. Against PostgreSQL: TC-32 (Blocked) |
+| Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24, TC-25, TC-26, TC-37 |
+| API or integration | 3 | At the handler boundary: TC-21 to TC-26 and TC-37. Against PostgreSQL: TC-32 (Blocked) |
 | End to end | 2 | TC-33, TC-34 (written in #138; Blocked until staging, #122) |
-| Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24, TC-36 |
+| Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24, TC-36, TC-37 |
 | High-priority requirement or risk | 5 | TC-01 and TC-22 (NFR-005, Must), TC-05 and TC-24 (FR-016, Must), TC-09 to TC-11 (FR-001, Must), TC-12 (FR-008, Must; DEC-004), TC-18 (FR-025, Must; ADR-001 rule 3) |
-| Black-box techniques | 2 | Decision table (TC-01, TC-22), state transition (TC-05, TC-24), boundary values (TC-13, TC-25), equivalence partitions (TC-13, TC-26) |
+| Black-box techniques | 2 | Decision table (TC-01, TC-22), state transition (TC-05, TC-24), boundary values (TC-13, TC-25), equivalence partitions (TC-13, TC-26, TC-37) |
 | Performance | 1 scenario | TC-35 (scripts in #139; Blocked until staging, #122) |
 
 ## Where the tests are
@@ -50,7 +50,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #132 (#113), stacked on #131 | `tests/workflow-service.test.js` | c84b7c1 |
 | #133 to #135 (#118 to #120) | `client/test/*.test.js` | 7948369 (the top of the stack) |
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
-| #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
+| #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | c7535f4 (local), rebuilt on main with #131 and #132 merged in |
 | #138 (#123) | `e2e/journeys/*.spec.js` | 29f0005 |
 | #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 3ccee48 |
 | #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
@@ -574,7 +574,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Each cell succeeds where the register permits and is refused where it does not. A refusal is a 403, or a 404 for a request out of scope (FR-012), or the internal entry left out (FR-011), and writes nothing. For "change status", every move in the table succeeds exactly for the roles the model names. The management, category and user functions are checked at the permission check their routes will use |
 | Actual result | As expected for all 60 cells, and the table covers every function in the register (61 checks pass). Three functions, management counts, the category list and user accounts, have no endpoint of their own yet, so their 12 cells are checked at the permission check their routes will use. One todo per function (3) stands for the later call through its own endpoint; the todos are not cells |
 | Status | Pass, with three functions' own endpoints Not yet built (#115, #117) |
-| Evidence | Local run, 12 October 2026, #121 at 2362c11 (local): 64 tests, 61 pass (60 cells and the coverage check) and 3 todo (one per function without its own endpoint) |
+| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 64 tests, 61 pass (60 cells and the coverage check) and 3 todo (one per function without its own endpoint) |
 | Traceability | NFR-005, FR-002, FR-011, FR-012, CR-002, #121 |
 | Interpretation | Every built endpoint enforces its cells, called directly rather than through the interface, as NFR-005's verification method asks. The three todos become endpoint calls when #115 and #117 add the routes |
 
@@ -594,7 +594,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Every endpoint and every permission check answers 401, and nothing is written |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #121 at 2362c11 (local): 1 of 1 test |
+| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 1 of 1 test |
 | Traceability | FR-001, #121 |
 | Interpretation | Holds for the endpoints built so far; each new endpoint is added to this test |
 
@@ -613,7 +613,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | A pair in the model succeeds for each role it names, with one history row (none for reassignment) and one audit entry per changed field. Every other pair is 409 for every role, with status, history and audit unchanged. A target that is not a status is 400. Closed and Rejected are final. One request's whole life leaves its path in the history and ten audit entries |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #121 at 2362c11 (local): 169 of 169 tests |
+| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 169 of 169 tests |
 | Traceability | FR-016, FR-025, ADR-005, RSK-09, #121 |
 | Interpretation | 0-switch coverage of the model through the endpoint, plus one end-to-end path |
 
@@ -636,7 +636,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | 1, 2, max-1 and max accepted; blank and max+1 refused with one error on that field and nothing saved; the title counted in characters as the schema counts them, with the message counting the same way; the service's limits equal the pinned values |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #121 at 2362c11 (local): 5 of 5 tests |
+| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 5 of 5 tests |
 | Traceability | FR-007, DEC-017, #112, #121; the defect fixed in 968a44f |
 | Interpretation | The emoji case is a regression test for the counting defect fixed in #131 (968a44f) |
 
@@ -659,7 +659,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Each invalid partition is refused with one error on its field and nothing saved; several invalid fields are reported together; padding is trimmed; the category is saved as the store's id; server-set fields are ignored; an accepted submission answers 201 with a reference in the agreed format |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #121 at 2362c11 (local): 11 of 11 tests |
+| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 11 of 11 tests |
 | Traceability | FR-005, FR-006, FR-007, FR-009, FR-021, #121 |
 | Interpretation | The endpoint refuses every malformed shape without saving |
 
@@ -674,6 +674,30 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/api-submission-boundaries.test.js`: FR-007: several invalid fields are all reported in one answer, each by name
 - `tests/api-submission-boundaries.test.js`: FR-005, FR-021: fields the server sets are ignored when a client sends them
 - `tests/api-submission-boundaries.test.js`: FR-009: an accepted submission answers 201 with its reference and time, and the reference is the agreed format
+
+### TC-37 Input rules through the endpoints
+
+| Field | Value |
+|---|---|
+| Test basis | FR-007, FR-012, FR-015, FR-017, FR-018, FR-020; DEC-017; the shared text rules (#131, #132) |
+| Why selected | PostgreSQL refuses a NUL character after validation would have passed, which is a server error a user can cause, and an id sent as an array or object reaches a lookup and a write unchanged. The services' tests check each rule in one function; this checks that each endpoint applies it |
+| Technique and level | Equivalence partitions of text (control characters, line breaks, at and over 4,000 characters counted as code points) and of ids (number, string, array, object, boolean); black-box at the API |
+| Input or precondition | A signed-in Requester, Coordinator and Staff member; submissions, status changes with a reason or resolution summary, action entries and assignments, each with one partition; malformed references on every endpoint |
+| Expected result | A control character in any text field is refused with that field's 400 error and nothing is saved; the description, reasons, summaries and entries keep line breaks and tabs, and the title and location are one line; 4,000 emoji are accepted and 4,001 refused; an assignee id is accepted as one number or string and saved as the store's id, and refused in any other form with nothing written; a malformed reference gets the same 404 as a missing one from every endpoint |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 6 of 6 tests. Run against the services from before the fixes of 8 October, the first five failed; the reference test passed there too and is kept as a guard |
+| Traceability | FR-007, FR-012, FR-015, FR-017, FR-018, FR-020, DEC-017, #121, #131, #132 |
+| Interpretation | No input a client can send reaches the database in a form it refuses. Against PostgreSQL itself this is confirmed in TC-32 |
+
+**Automated by**
+
+- `tests/api-input-partitions.test.js`: FR-007: a control character in any text field is refused with that field's error, and nothing is saved
+- `tests/api-input-partitions.test.js`: FR-007: the description keeps line breaks and tabs; the title and location are one line
+- `tests/api-input-partitions.test.js`: FR-015: the assignee id is accepted as one number or string, saved as the store's id, and refused in any other form
+- `tests/api-input-partitions.test.js`: FR-018, FR-020: a reason or resolution summary is at most 4,000 characters, with no control characters
+- `tests/api-input-partitions.test.js`: FR-017: an action entry is at most 4,000 characters, with no control characters, and line breaks are kept
+- `tests/api-input-partitions.test.js`: FR-012: a malformed reference gets the same 404 as a missing one from every endpoint, and nothing is written
 
 ## Client (#118 to #120)
 
