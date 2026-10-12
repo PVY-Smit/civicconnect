@@ -51,7 +51,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #133 to #135 (#118 to #120) | `client/test/*.test.js` | 7948369 (the top of the stack) |
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
 | #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | 2362c11 (local) |
-| #138 (#123) | `e2e/journeys/*.spec.js` | f90d154 |
+| #138 (#123) | `e2e/journeys/*.spec.js` | 29f0005 |
 | #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 3ccee48 |
 | #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
 
@@ -889,10 +889,10 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Why selected | The workflow journey, with three users acting on one request, each with their own session |
 | Technique and level | End to end in the browser (Playwright) against staging, with three browser contexts |
 | Input or precondition | Staging (#122) with seed data (#109): Requester, Coordinator and Staff accounts, and an active category the Staff member is authorised for |
-| Expected result | The Coordinator finds the request in the queue, sets the priority and assigns it, with Assign disabled until a staff member is chosen; the Staff member starts work, adds an internal note and a visible update, and resolves it with a summary; the Coordinator closes it, with Close disabled until confirmed, and no moves remain; the history shows each step and who made it; the requester sees Closed, the resolution and the visible update, and not the internal note |
+| Expected result | The requester reports Low urgency; the Coordinator finds the request in the queue and sets the priority to High, with the reported urgency still Low beside it, and assigns it, with Assign disabled until a staff member is chosen; the Staff member starts work, adds an internal note and a visible update, and resolves it with a summary; the Coordinator closes it, with Close disabled until confirmed, and no moves remain; the history shows each step and who made it; the requester sees Closed, the resolution, the visible update and their own urgency, and not the internal note or the priority |
 | Actual result | Not run against staging. Against a local stand-in of the API contract: as expected |
 | Status | Blocked: needs staging (#122) and the seed data (#109) |
-| Evidence | The journey is #138. Local run against the stand-in, 7 October 2026, client at 7948369: passed. Enabling Assign before a choice, and sending internal notes to the requester, each failed it |
+| Evidence | The journey is #138. Local run against the stand-in, 12 October 2026, #138 at 29f0005, client at f9fe939: passed, and passed with CI set. Enabling Assign before a choice, sending internal notes to the requester (7 October), and setting the priority overwriting the reported urgency (12 October, which the journey before 29f0005 passed) each failed it |
 | Traceability | #123, #138, #122, #109 |
 | Interpretation | The journey is ready and its steps match the client; it shows nothing about the real server until it runs on staging |
 
