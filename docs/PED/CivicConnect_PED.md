@@ -1086,7 +1086,7 @@ This section brings the evidence of s27 to s35 together into one judgement, as t
 
 **Blockers.** Four gaps would each stop a release on their own:
 - **No integrated build.** The bootstrap (#90) and the schema (#140) have not merged, so the services are not wired into a running server with its database.
-- **No CI test gate.** No workflow builds the application or runs its tests (#110); a failing test does not block a merge.
+- **No CI test gate.** No workflow builds the application or runs its tests (#110), and the ruleset requires no status check, so neither a failing test nor a failing secret scan blocks a merge.
 - **No deployed candidate.** There is no staging environment (#122), so neither critical journey (TC-33, TC-34) nor the performance exercise (TC-35) has run on the integrated system.
 - **No verification against PostgreSQL.** The API suites have not run against the database (TC-32), so its conditional writes, constraints and id handling are unverified.
 
@@ -1096,7 +1096,7 @@ This section brings the evidence of s27 to s35 together into one judgement, as t
 
 | **Evidence area** | **Result** | **Interpretation** | **Concern or action** |
 |----|----|----|----|
-| Build and CI | Partial. One workflow runs on every pull request: the secret scan (#87), which passes. No workflow builds the application or runs its tests (#110 not started) | A committed secret blocks a merge. A failing test does not | #110 adds the build and the tests as a blocking check. Until then the suites and the strict catalogue check are run by hand, and each pull request records its run |
+| Build and CI | Partial. One workflow runs on every pull request: the secret scan (#87), which passes. No workflow builds the application or runs its tests (#110 not started). The ruleset on main requires two approvals, linear history and no force pushes, and no status check | A committed secret fails the scan, which reviewers see, but no check is required, so a failing check does not block a merge. The only blocking gate is the two-approval rule | Make the secret scan, and the build and tests once #110 adds them, required status checks in the ruleset. Until then the suites and the strict catalogue check are run by hand, and each pull request records its run |
 | Automated regression | Pass on each branch: for example 363 of 366 tests pass on the API suites' branch, with 3 todo for endpoints not yet built; 66 of 66 on #146; 13 of 13 on #139 | The critical rules are protected at component level and at the HTTP boundary, and each new test was shown able to fail (s32.2) | They run together only once the pull requests merge and CI runs them (#110) |
 | API and integration | Pass at the handler boundary (TC-21 to TC-26, TC-37). Blocked against PostgreSQL (TC-32) | Every built endpoint enforces its Access Matrix cells, every move outside the status model is refused without a write, and no malformed input reaches the store | Run TC-32 once #90 and #140 merge. The database's conditional writes and the id rule (#109) are untested until then |
 | System and end to end | Blocked. TC-33 and TC-34 pass against a local stand-in of the API; the system itself has not run them | The client follows the server's contract. Nothing yet shows the integrated system completing a journey | Release-blocking until one journey completes on a deployed candidate (#122) |
