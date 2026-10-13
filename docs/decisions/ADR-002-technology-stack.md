@@ -1,8 +1,9 @@
 # ADR-002: Technology stack
 
 - **Status:** Accepted, conditional on the two conditions under Decision. Approved by Tristan Roets and
-  Darius Mushi on #91, merged 30 September 2026. CR-004 (5 October 2026, #107, DEC-016) proposes amended
-  conditions; see Amendment. They apply once CR-004's approvals are recorded on #129.
+  Darius Mushi on #91, merged 30 September 2026. CR-004 (5 October 2026, #107, DEC-016) amends the
+  conditions; see Amendment. Approved on #129 by Darius Mushi on 8 October 2026 and Tristan Roets on
+  12 October 2026.
 - **Date:** Drafted 19 September 2026 by Darius Mushi (three drafts). Finalised 23 September 2026 by
   Jean Smit at Darius's request. Amended 28 September 2026 after review on #91.
 - **Decision Log entry:** DEC-008, recorded in M1 as deferred to M2, and recorded as decided in M2 with
@@ -19,7 +20,7 @@ DEC-008 was deferred to M2 with eight stated evidence conditions. Each is answer
 |---|---|
 | Requirement and architecture fit | Hard gates 2 and 4, and the driver comparison |
 | Realistic learning curve for these three members | Team capability, applied through RSK-01 |
-| Availability and compatibility on the BC Desktop platform | Gate 3. Still open, and a condition of this decision. CR-004 proposes replacing it as a merge condition and carrying it as RSK-30 (see Amendment) |
+| Availability and compatibility on the BC Desktop platform | Gate 3. Still open. CR-004 replaced it as a merge condition and carries it as RSK-30 (see Amendment) |
 | Dependency ecosystem maturity | The dependency comparison |
 | Testing and automation support | The ASR-04 row and gate 1 |
 | Deployment compatibility | DEC-010 (#60). The runtime the host must provide is stated under Later consequences |
@@ -100,9 +101,9 @@ candidates fail gate 3.
 3. **Runs on the machines all three members actually have (CON-07).** **Open for both.** Documentation
    cannot close it. Someone has to install and run the stack on a BC Desktop machine. For A, Node also
    publishes a Windows zip archive that runs without installation, which is the fallback if the campus
-   image lacks Node. That fallback is itself untested on campus. CR-004 (see Amendment) proposes that
-   gate 3 stop being a merge condition for the bootstrap: a reproducible check replaces it, and the
-   campus check is carried as RSK-30 until it is run.
+   image lacks Node. That fallback is itself untested on campus. Under CR-004 (see Amendment) gate 3
+   is no longer a merge condition for the bootstrap: a reproducible check replaces it, and the campus
+   check is carried as RSK-30 until it is run.
 4. **Enforces authorisation on the server (NFR-005, FR-002).** Both pass. Express middleware and
    Django's view pipeline each support a single enforcement point, which ADR-001 rules 1 and 2
    require.
@@ -110,8 +111,8 @@ candidates fail gate 3.
    MIT and PSF, with one exception: psycopg is LGPL-3.0-only. The LGPL permits use of the library
    unmodified, which is how this project would use it.
 
-No candidate is disqualified. Gate 3 remains a condition of the decision below, as set; CR-004 proposes
-to replace it as a merge condition (see Amendment).
+No candidate is disqualified. Gate 3 was set as a condition of the decision below; CR-004 replaced it
+as a merge condition (see Amendment).
 
 ## Comparison against the drivers
 
@@ -206,9 +207,8 @@ separate decision, taken after Prisma 8 is released as stable.
 
 ## Amendment, 5 October 2026 (CR-004, DEC-016)
 
-**Status:** proposed. Darius Mushi approved CR-004 on #129 on 8 October 2026. It takes effect when Tristan
-Roets records his approval there. The Change Requests row then cites both approvals and their dates, and
-this line is updated to match, before #129 merges.
+**Status:** approved. Darius Mushi approved CR-004 on #129 on 8 October 2026 and Tristan Roets on
+12 October 2026. The Change Requests row cites both approvals.
 
 The two conditions above stay in this record as they were set. CR-004 replaces them as the conditions
 for merging the bootstrap (#90, under #108).
