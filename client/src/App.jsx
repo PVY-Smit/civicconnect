@@ -6,13 +6,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createApi } from "./api.js";
-import { HOME, matchRoute, safeReturnPath } from "./router.js";
+import { can, homeFor, matchRoute, needsSignIn, onwardsFor, routeAllowed } from "./router.js";
 import { Layout } from "./components/Layout.jsx";
 import { SignIn } from "./screens/SignIn.jsx";
 import { clearDraft, SubmitRequest } from "./screens/SubmitRequest.jsx";
 import { MyRequests } from "./screens/MyRequests.jsx";
 import { RequestDetail } from "./screens/RequestDetail.jsx";
 import { Notifications } from "./screens/Notifications.jsx";
+import { Queue } from "./screens/Queue.jsx";
+import { StaffRequestDetail } from "./screens/StaffRequestDetail.jsx";
+import { Reports } from "./screens/Reports.jsx";
+import { Users } from "./screens/Users.jsx";
+import { Categories } from "./screens/Categories.jsx";
+import { ResetPassword } from "./screens/ResetPassword.jsx";
 import { NotFound } from "./screens/NotFound.jsx";
 
 const currentPath = () => window.location.pathname + window.location.search;
@@ -48,20 +54,22 @@ export function App() {
   }, [api]);
 
   const [pathname, search] = path.split("?");
-  const route = pathname === "/" ? matchRoute(HOME) : matchRoute(pathname);
+  const route = pathname === "/" ? matchRoute(homeFor(user)) : matchRoute(pathname);
+  const isStaff = can(user, "viewRequestsInScope");
   // Effects depend on these plain values, not on the route object, which is new on every render.
   const routeName = route?.name ?? null;
-  const routeIsPublic = Boolean(route?.public);
-  const returnTo = routeName === "signIn" ? safeReturnPath(new URLSearchParams(search ?? "").get("return")) : null;
+  const requested = routeName === "signIn" ? new URLSearchParams(search ?? "").get("return") : null;
+  const mustSignIn = needsSignIn(route, user);
+  const onwards = onwardsFor(route, user, requested);
 
   // Navigation is a side effect, so it happens in effects after render, never during it.
   useEffect(() => {
-    if (user === null && routeName && !routeIsPublic) toSignIn();
-  }, [user, routeName, routeIsPublic, toSignIn]);
+    if (mustSignIn) toSignIn();
+  }, [mustSignIn, toSignIn]);
 
   useEffect(() => {
-    if (user && routeName === "signIn") navigate(returnTo, { replace: true });
-  }, [user, routeName, returnTo, navigate]);
+    if (onwards) navigate(onwards, { replace: true });
+  }, [onwards, navigate]);
 
   if (user === undefined) return <p className="loading">Loading…</p>;
 
@@ -69,12 +77,23 @@ export function App() {
     if (user) return null; // the effect above is moving the user on
     return (
       <Layout user={null} navigate={navigate}>
-        <SignIn api={api} onSignedIn={(u) => (setUser(u), navigate(returnTo, { replace: true }))} />
+        <SignIn api={api} navigate={navigate} onSignedIn={(u) => (setUser(u), navigate(onwardsFor(route, u, requested), { replace: true }))} />
+      </Layout>
+    );
+  }
+
+  if (route?.name === "reset") {
+    return (
+      <Layout user={null} navigate={navigate}>
+        <ResetPassword api={api} navigate={navigate} />
       </Layout>
     );
   }
 
   if (!user) return null;
+
+  // A screen the user's permissions do not include is not offered (the server refuses its calls anyway).
+  const allowed = routeAllowed(route, user);
 
   const signOut = async () => {
     await api.signOut().catch(() => {});
@@ -92,7 +111,23 @@ export function App() {
       screen = <MyRequests api={api} navigate={navigate} />;
       break;
     case "detail":
-      screen = <RequestDetail api={api} navigate={navigate} reference={route.params.reference} />;
+      screen = isStaff ? (
+        <StaffRequestDetail api={api} navigate={navigate} reference={route.params.reference} />
+      ) : (
+        <RequestDetail api={api} navigate={navigate} reference={route.params.reference} />
+      );
+      break;
+    case "queue":
+      screen = allowed ? <Queue api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
+      break;
+    case "reports":
+      screen = allowed ? <Reports api={api} navigate={navigate} search={search ? `?${search}` : ""} /> : <NotFound navigate={navigate} />;
+      break;
+    case "users":
+      screen = allowed ? <Users api={api} currentUserId={user.id} /> : <NotFound navigate={navigate} />;
+      break;
+    case "categories":
+      screen = allowed ? <Categories api={api} /> : <NotFound navigate={navigate} />;
       break;
     case "notifications":
       screen = <Notifications api={api} navigate={navigate} />;

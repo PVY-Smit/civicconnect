@@ -7,6 +7,13 @@
 //   GET  /api/categories                                                     (#115, active list for FR-006)
 //   POST /api/requests, GET /api/requests/mine, GET /api/requests/:reference (#112)
 //   GET  /api/notifications                                                  (#116)
+//   GET  /api/queue                                                          (#114)
+//   GET  /api/staff, GET /api/requests/:reference/assignable-staff           (#115)
+//   POST /api/requests/:reference/status, /priority, /actions                (#113)
+//   GET  /api/reports/summary, GET /api/reports/overdue                      (#117)
+//   GET, POST /api/users; POST /api/users/:id/deactivate, /reset-code        (#115, FR-004 with #111)
+//   GET, POST /api/categories?all=true; PATCH /api/categories/:id; POST /:id/deactivate (#115)
+//   POST /api/auth/reset                                                     (#111, FR-004)
 
 export class ApiError extends Error {
   constructor(status, body) {
@@ -41,5 +48,25 @@ export function createApi({ fetchImpl = globalThis.fetch, onUnauthorised = () =>
     myRequests: () => call("/requests/mine"),
     request: (reference) => call(`/requests/${encodeURIComponent(reference)}`),
     notifications: () => call("/notifications"),
+    // Staff and coordinator calls (#119)
+    queue: (search) => call(`/queue${search ?? ""}`),
+    staff: () => call("/staff"),
+    assignableStaff: (reference) => call(`/requests/${encodeURIComponent(reference)}/assignable-staff`),
+    changeStatus: (reference, body) => call(`/requests/${encodeURIComponent(reference)}/status`, { method: "POST", body }),
+    setPriority: (reference, priority) => call(`/requests/${encodeURIComponent(reference)}/priority`, { method: "POST", body: { priority } }),
+    addActionEntry: (reference, body, visibility) =>
+      call(`/requests/${encodeURIComponent(reference)}/actions`, { method: "POST", body: { body, visibility } }),
+    // Manager and administration calls (#120)
+    reportSummary: (from, to) => call(`/reports/summary?${new URLSearchParams({ from, to })}`),
+    overdue: () => call("/reports/overdue"),
+    users: () => call("/users"),
+    createUser: (fields) => call("/users", { method: "POST", body: fields }),
+    deactivateUser: (id) => call(`/users/${encodeURIComponent(id)}/deactivate`, { method: "POST" }),
+    issueResetCode: (id) => call(`/users/${encodeURIComponent(id)}/reset-code`, { method: "POST" }),
+    allCategories: () => call("/categories?all=true"),
+    addCategory: (name) => call("/categories", { method: "POST", body: { name } }),
+    renameCategory: (id, name) => call(`/categories/${encodeURIComponent(id)}`, { method: "PATCH", body: { name } }),
+    deactivateCategory: (id) => call(`/categories/${encodeURIComponent(id)}/deactivate`, { method: "POST" }),
+    resetPassword: (email, code, newPassword) => call("/auth/reset", { method: "POST", body: { email, code, newPassword }, authCall: true }),
   };
 }
