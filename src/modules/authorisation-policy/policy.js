@@ -52,14 +52,12 @@ const PERMISSIONS = Object.freeze({
 });
 
 // Cells where the Access Matrix grants what the baselined requirements refuse. The policy follows the
-// requirements and denies, and the conflict goes to change control (#92) rather than being settled here.
-// The tests fail if this list and the register stop matching, so a corrected matrix is noticed.
-export const MATRIX_CONFLICTS = Object.freeze([
-  { fn: "assignRequest", role: "Manager", ruling: "FR-016: the Status Model authorises only the Coordinator to assign or reassign" },
-  { fn: "acceptRequest", role: "Coordinator", ruling: "FR-016: the Status Model authorises only Staff to move New to In Progress" },
-  { fn: "rejectRequest", role: "Manager", ruling: "FR-016: the Status Model authorises only the Coordinator to reject" },
-  { fn: "setPriority", role: "Manager", ruling: "FR-021: only a Coordinator may set or change the priority" },
-]);
+// requirements and denies, and the conflict goes to change control rather than being settled here. The
+// tests fail if this list and the register stop matching, so a corrected matrix is noticed.
+//
+// Empty since CR-002 was implemented (#92, 6 October 2026): the Manager may not assign, reject or set
+// priority, and the Coordinator may not accept an unassigned request, in the register as in the policy.
+export const MATRIX_CONFLICTS = Object.freeze([]);
 
 export function permits(actor, fn) {
   const roles = PERMISSIONS[fn];

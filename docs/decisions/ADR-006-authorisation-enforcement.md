@@ -69,8 +69,11 @@ other handles poorly.
   (FR-015). This is where the two design decisions meet: every authorisation decision, including those
   about status changes, is taken in this one module.
 - **Manager scope.** The Access Matrix gives the Manager requests "in authorised categories", the same
-  wording as for Staff, and this record applies it that way. A Manager can be given every category.
-  Whether management oversight should be global instead is part of FEC-01.
+  wording as for Staff, and this record applies it that way. A Manager's categories are set the same way
+  as a Staff member's: by a Manager, through user administration (`manageUsers`, FR-003, #115), when the
+  account is created; the first Manager account and its categories come from the seed data (#109).
+  Giving a Manager every category is therefore an operational choice made per account, not a rule in the
+  policy. Whether management oversight should be global instead is part of FEC-01, which is still open.
 
 **How this refines the A2 recommendation.** A2 placed query scoping in the repository methods. Under
 ADR-001 rule 2, the scope condition comes from the policy module and the persistence layer only
@@ -141,3 +144,5 @@ Proposed to the Risk Register under #68, where the owner assigns the identifiers
   is measured.
 - **When FEC-01 is answered**, only `requestScope` changes.
 - **When #92 is resolved**, `MATRIX_CONFLICTS` is emptied or the transition table's roles change.
+  Resolved on 6 October 2026 (CR-002): the Access Matrix sheet was corrected to the requirements, the
+  fixture was re-exported with `tools/export_register_fixtures.py`, and `MATRIX_CONFLICTS` is empty.
