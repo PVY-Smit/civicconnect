@@ -320,8 +320,8 @@ Updates proposed to existing risks under #68:
 Added by the amendment (CR-004, #107):
 
 - **RSK-30:** the BC Desktop campus environment differs from the Node 24 and PostgreSQL 16 environment
-  the stack is verified on. Proposed at 3 by 3, Medium, with the owner's score asked for on #129. Owner:
-  Darius Mushi. Mitigation and contingency are
+  the stack is verified on. Scored 3 by 3, Medium, confirmed by its owner, Darius Mushi, on #129 on
+  13 October 2026. Mitigation and contingency are
   in the Risk Register; the campus check is run when lab access allows and recorded on #64.
 
 ## Evidence
