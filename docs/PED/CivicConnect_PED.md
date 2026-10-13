@@ -263,7 +263,7 @@ Every target below states a number and the method by which it is measured. A qua
 
 This matrix is the authoritative statement of FR-002. Every entry marked No is a negative test case in M3, which is how NFR-005 becomes verifiable rather than aspirational.
 
-*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69); the correction of the Access Matrix and of this table is M3 work under #92.*
+*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69). The Access Matrix in the registers workbook is now corrected for all four cells, and the test fixtures are exported from it (#92, #136); this table is shown as at the M1 baseline.*
 
 | **Function** | **Requester** | **Staff** | **Coordinator** | **Manager** |
 |----|----|----|----|----|
