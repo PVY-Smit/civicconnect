@@ -320,7 +320,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
 | Field | Value |
 |---|---|
-| Test basis | FR-008; DEC-004; DEC-017 (proposed, #131) |
+| Test basis | FR-008; DEC-004; DEC-017 (decided, #131) |
 | Why selected | A reused reference attaches one person's request to another's; a guessable one reveals volume, which DEC-004 guards |
 | Technique and level | Exhaustive check on a reduced domain; 100,000 consecutive values; boundary values at the range ends; negative tests; unit |
 | Input or precondition | The keyed permutation with a test key; sequence values 1 to 100,000, then 0, -1, 100,000,000, 1.5, text and null; keys that are short, empty, missing or not text; malformed references |
@@ -346,7 +346,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
 | Field | Value |
 |---|---|
-| Test basis | FR-005, FR-006, FR-007, FR-021; schema VARCHAR(200) for the title; DEC-017 (proposed) for the other limits and the urgency scale |
+| Test basis | FR-005, FR-006, FR-007, FR-021; schema VARCHAR(200) for the title; DEC-017 (decided, #131) for the other limits and the urgency scale |
 | Why selected | Validation decides what reaches the database and what the requester is told; a missed limit fails at the database with no useful message |
 | Technique and level | Boundary values and equivalence partitions; unit |
 | Input or precondition | Each text field at 1, its maximum and maximum plus one, blank and non-text; titles counted in characters including emoji and accented letters; categories active, inactive, unknown and malformed; urgency levels and near misses; NUL and other control characters in each text field, and line breaks and tabs in the description |
@@ -355,7 +355,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Status | Pass |
 | Evidence | Local run, 9 October 2026, #131 at 0efac6a: 8 of 8 tests |
 | Traceability | FR-005, FR-006, FR-007, FR-021, DEC-017, #112 |
-| Interpretation | The description and location limits and the urgency scale are proposals until DEC-017 is agreed; the tests follow them and change with it. TC-25 and TC-26 repeat the cases through the endpoint |
+| Interpretation | The description and location limits and the urgency scale are DEC-017's, decided on #131 and recorded in the Decision Log; the tests follow them and change with any later decision. TC-25 and TC-26 repeat the cases through the endpoint |
 
 **Automated by**
 
@@ -493,7 +493,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
 | Field | Value |
 |---|---|
-| Test basis | FR-021, FR-025; DEC-002; DEC-017 (proposed scale) |
+| Test basis | FR-021, FR-025; DEC-002; DEC-017 (decided scale) |
 | Why selected | Priority is the Coordinator's call; the reported urgency must never be overwritten by it |
 | Technique and level | Equivalence partitions by role and by value; component |
 | Input or precondition | A request with reported urgency High; each role; values in and out of the scale, and the current value |
@@ -629,7 +629,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 | Field | Value |
 |---|---|
-| Test basis | FR-007; schema VARCHAR(200); DEC-017 (proposed) |
+| Test basis | FR-007; schema VARCHAR(200); DEC-017 (decided, #131) |
 | Why selected | Limits are where validation and storage disagree; the emoji case was found here |
 | Technique and level | Boundary value analysis; black-box at the API |
 | Input or precondition | A signed-in Requester; each text field at 1, 2, maximum minus one, maximum and maximum plus one; the title in characters with emoji and accented letters |
