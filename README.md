@@ -46,29 +46,23 @@ Request as the change that affects them.
 
 
 
-## 💻 Local Developer Environment Installation & Setup (#66)
+## Local development setup
 
-Follow these steps sequentially to clone, configure, and verify your local sandbox environment:
+### Prerequisites
+- Node.js 24 LTS (`node -v` must report v24.x; ADR-002)
+- PostgreSQL 16, running locally, with an empty database
 
-### 1. Engine & Environment Verification
-Ensure your local host machine satisfies the system runtime version engine constraints baselined in ADR-002:
-*   Verify your active Node.js execution engine (`node -v` must return `>=24`).
+### Steps
+1. Copy `.env.example` to `.env` and set `DATABASE_URL` and `PORT`. Never commit `.env`.
+2. Run, in this order:
 
-### 2. Environment Configuration Profile
-Construct an active configuration credentials file named **`.env`** directly in the root directory of the repository. Populate it with your target local or remote PostgreSQL connection string parameters:
-```env
-DATABASE_URL="postgresql://<user>:<password>@<host>:<port>/<database>?schema=public"
-```
-
-### 3. Core Ecosystem Initialization
-Execute these commands sequentially in your terminal daemon to initialize third-party package dependencies, compile the local Prisma Client configurations, and trigger local verification sweeps:
 ```bash
-# Install local node modules
-npm install
-
-# Compile engine database schemas and generate Prisma Client hooks
-npm run prisma:generate
-
-# Execute the local automated integration testing suite
+npm ci
+npx prisma generate
+npx prisma migrate deploy
 npm test
 ```
+
+`prisma generate` builds the client into `src/generated/`, which is git-ignored because it
+is derived from `prisma/schema.prisma`. `npm test` needs a reachable database, because the
+RSK-01 test writes a User and reads it back.
