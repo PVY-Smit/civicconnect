@@ -121,6 +121,18 @@ test("DEC-004: without the key the mapping cannot be reproduced; another key giv
   assert.equal(createReferenceFormatter(KEY)(42), formatReference(42), "the same key always gives the same reference");
 });
 
+// A known-answer test (review of #131). The property tests above pass for any permutation, so a change to
+// the round function, the HMAC input or the number of rounds would pass them while reassigning every
+// reference already issued. These values pin the permutation itself: if one changes, existing references
+// change, which is a decision under DEC-017 and needs a migration, not a test update.
+test("FR-008, DEC-017: fixed sequence values under the test key always give the same references", () => {
+  assert.equal(formatReference(1), "CC-4261-9482");
+  assert.equal(formatReference(2), "CC-7677-3001");
+  assert.equal(formatReference(3), "CC-0456-7563");
+  assert.equal(formatReference(1000), "CC-2214-6221");
+  assert.equal(formatReference(CAPACITY), "CC-4611-2489");
+});
+
 test("a reference key shorter than 32 characters is refused at start-up", () => {
   for (const bad of ["short", "", undefined, 12345]) {
     assert.throws(() => createReferenceFormatter(bad), /REFERENCE_KEY must be at least 32 characters/, String(bad));
