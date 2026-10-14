@@ -8,15 +8,18 @@
 // single-user target is shown beside the result for comparison only.
 //
 // The clients share the Coordinator's session, so the run measures the server under concurrent reads of the
-// largest queue, not sign-in. Ten clients for 30 seconds is a small workload chosen to show behaviour under
+// largest queue, not sign-in. If the session ends, the clients share one sign-in (lib.mjs), so
+// sessionRenewals counts the times it ended, not the clients that noticed. Ten clients for 30 seconds is a small workload chosen to show behaviour under
 // concurrent reads. It is not derived from municipal usage data, which the project does not have.
 //
 // The first --warmup seconds run the same loop but are left out of the latencies, so a cold start does not
 // inflate them; their answers are still counted by status. The 99th percentile is given with the number of
 // samples it rests on, and only from 100 samples up, since below that it is one of the slowest few calls.
+// The script first waits until the server's health check answers, and records that wait (wakeUp). A call
+// that fails before an answer counts as a network error, with status 0.
 
 import { parseArgs } from "node:util";
-import { environment, percentile, serverVersion, signIn, summarise, wholeNumber, writeResult } from "./lib.mjs";
+import { percentile, provenance, signIn, summarise, waitForHealthy, wholeNumber, writeResult } from "./lib.mjs";
 
 const P99_MIN_SAMPLES = 100;
 const { values: opts } = parseArgs({
@@ -27,6 +30,7 @@ const durationS = wholeNumber("duration", opts.duration);
 const warmupS = wholeNumber("warmup", opts.warmup, { min: 0 });
 if (warmupS >= durationS) throw new Error("--warmup must be shorter than --duration.");
 
+const wakeUp = await waitForHealthy();
 const coordinator = await signIn("Coordinator");
 const first = await coordinator.call("/queue");
 if (first.status !== 200 || !first.body) throw new Error(`The queue answered ${first.status}${first.raw ? `: ${first.raw}` : ""}.`);
@@ -45,11 +49,15 @@ async function client() {
     const sent = performance.now();
     try {
       const r = await coordinator.call("/queue");
+      if (r.status === 0) {
+        errors.push(r.error);
+        continue;
+      }
       statuses[r.status] = (statuses[r.status] ?? 0) + 1;
       if (sent < measureFrom) warmupCalls += 1;
       else if (r.status === 200) latencies.push(r.ms);
     } catch (error) {
-      errors.push(String(error.message ?? error));
+      errors.push(String(error.message ?? error)); // signing in again failed
     }
   }
 }
@@ -57,7 +65,7 @@ await Promise.all(Array.from({ length: connections }, client));
 const elapsedS = (performance.now() - t0) / 1000;
 const measuredS = elapsedS - warmupS;
 
-const completed = Object.values(statuses).reduce((a, b) => a + b, 0);
+const completed = Object.values(statuses).reduce((a, b) => a + b, 0); // answered calls; network errors are apart
 const result = {
   kind: "queue-load",
   issue: "#124",
@@ -81,14 +89,12 @@ const result = {
         p99Note: latencies.length >= P99_MIN_SAMPLES ? `from ${latencies.length} samples` : `not given: ${latencies.length} samples, fewer than ${P99_MIN_SAMPLES}`,
       }
     : null,
-  started: started.toISOString(),
-  finished: new Date().toISOString(),
-  environment: environment(),
-  server: await serverVersion(),
+  ...(await provenance(started, wakeUp)),
 };
 const file = writeResult("queue-load", result);
 const s = result.summary;
 console.log(`queue load: ${connections} clients for ${result.durationS} s (${warmupS} s warm-up) against a ${result.queueTotal}-request queue`);
 console.log(`${completed} retrievals, ${result.throughputPerS}/s after the warm-up; non-200: ${completed - (statuses[200] ?? 0)}; network errors: ${errors.length}`);
 if (s) console.log(`p50 ${s.p50Ms} ms, p95 ${s.p95Ms} ms, p99 ${s.p99Ms ?? "-"} ms (${s.p99Note}), max ${s.maxMs} ms (NFR-001 single-user p95 target, for comparison: 2000 ms)`);
+console.log(result.evidence);
 console.log(`written ${file}`);

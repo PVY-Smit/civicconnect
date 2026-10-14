@@ -3,19 +3,20 @@
 //   node seed.mjs [--count 5000] [--concurrency 4] [--no-mix] [--force]
 //
 // Requests go in through the API as the seeded Requester, the way real ones arrive, so each gets its
-// reference from the sequence and its first history row (ADR-007). Categories and reported urgency are
-// spread evenly across the active categories and the three levels. With the mix (the default), the
-// Coordinator then rejects one in ten of the requests that were saved and assigns three in ten, rotating
-// through the Staff members authorised for each request's category, so the queue holds New, Assigned and
-// Rejected requests, not only New, and no one Staff member holds them all. The mix is worked out over the
-// saved requests in submission order, so a failed submission does not shift the proportions.
+// reference from the sequence and its first history row (ADR-007). Every category gets every reported
+// urgency equally (seedFields). With the mix (the default), the Coordinator then rejects a tenth of the
+// requests that were saved and assigns three tenths, rotating through the Staff members authorised for each
+// request's category, so the queue holds New, Assigned and Rejected requests, not only New, and no one Staff
+// member holds them all. Which requests are moved is a fixed shuffle (mixMoves), so the moves are spread
+// across categories and urgencies rather than following their rotation. The mix is worked out over the saved
+// requests, so a failed submission does not shift the proportions.
 //
 // The guard against seeding twice is by count only: if the Coordinator's queue already holds --count
 // requests, whatever they are, nothing is added unless --force is given. On a target that holds other
 // requests, seed a fresh database, or use --force and check the queue's total afterwards.
 
 import { parseArgs } from "node:util";
-import { environment, mixMove, serverVersion, signIn, wholeNumber, writeResult } from "./lib.mjs";
+import { mixMoves, provenance, seedFields, signIn, waitForHealthy, wholeNumber, writeResult } from "./lib.mjs";
 
 const { values: opts } = parseArgs({
   options: {
@@ -28,8 +29,8 @@ const { values: opts } = parseArgs({
 const count = wholeNumber("count", opts.count);
 const concurrency = wholeNumber("concurrency", opts.concurrency);
 
-const URGENCY = ["Low", "Medium", "High"];
 const started = new Date();
+const wakeUp = await waitForHealthy();
 const requester = await signIn("Requester");
 const coordinator = await signIn("Coordinator");
 
@@ -54,7 +55,8 @@ async function seed() {
   async function worker() {
     while (next < count) {
       const n = next++;
-      const category = categories[n % categories.length];
+      const fields = seedFields(n, categories.length);
+      const category = categories[fields.category];
       const res = await requester.call("/requests", {
         method: "POST",
         body: {
@@ -62,11 +64,11 @@ async function seed() {
           description: `Seeded for the NFR-001 measurement (#124). Request ${n + 1} of ${count}.`,
           categoryId: category.id,
           location: `${(n % 200) + 1} Seed Street`,
-          reportedUrgency: URGENCY[n % URGENCY.length],
+          reportedUrgency: fields.urgency,
         },
       });
       if (res.status === 201) references[n] = { reference: res.body.reference, categoryId: category.id };
-      else failures.push({ n, status: res.status, body: res.body, ...(res.raw ? { raw: res.raw } : {}) });
+      else failures.push({ n, status: res.status, body: res.body, ...(res.raw ? { raw: res.raw } : {}), ...(res.error ? { error: res.error } : {}) });
       if ((n + 1) % 500 === 0) console.log(`submitted ${n + 1} of ${count}`);
     }
   }
@@ -77,8 +79,9 @@ async function seed() {
   const assignees = {};
   if (!opts["no-mix"]) {
     const staffFor = new Map(); // category id -> { list, next }
+    const plan = mixMoves(saved.length);
     for (const [i, r] of saved.entries()) {
-      const to = mixMove(i);
+      const to = plan[i];
       if (!to) continue;
       let move = { to: "Rejected", reason: "Seeded rejection for the performance dataset." };
       if (to === "Assigned") {
@@ -116,10 +119,7 @@ async function seed() {
     queueTotalBefore: before.body.total,
     queueTotalAfter: after.body?.total ?? null,
     sessionRenewals: requester.renewals + coordinator.renewals,
-    started: started.toISOString(),
-    finished: new Date().toISOString(),
-    environment: environment(),
-    server: await serverVersion(),
+    ...(await provenance(started, wakeUp)),
   };
   const file = writeResult("seed", result);
   console.log(`submitted ${result.submitted} of ${count}, ${failures.length} failed; queue now ${result.queueTotalAfter}`);

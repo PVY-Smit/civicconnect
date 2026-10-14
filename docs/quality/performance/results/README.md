@@ -6,6 +6,7 @@ against the target and the environment. They are written by the scripts in `perf
 were written; the interpretation is in `../README.md`.
 
 Nothing enforces that a file is unedited, so each one records how to check it: `scriptsCommit` is the
-commit the scripts ran at, and `scriptsChanged` is `false` only if `perf/` had no uncommitted changes then.
-A result is only evidence if `scriptsChanged` is `false`; running that commit's script with the options in
-its `method` against the same target reproduces the run.
+commit the scripts ran at, `scriptsChanged` is `false` only if `perf/` had no uncommitted changes then, and
+`server` is what the server's health check said, including the release it ran. A result is only evidence
+if `scriptsChanged` is `false` and `server` names the release; its `evidence` field says which. Running
+that commit's script with the options in its `method` against the same release reproduces the run.

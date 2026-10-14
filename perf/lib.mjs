@@ -51,11 +51,18 @@ export function parseBody(text) {
 
 // Signs in through the API and returns a client that sends the session cookie with every call. Each call
 // is timed from just before the request is sent until the whole response body has been read, which is when
-// a screen could show it; the JSON is parsed after the timer stops. If the session has ended (401), the
-// client signs in again once and repeats the call, and only the repeat is timed. renewals counts how often
-// that happened, so a result shows it.
+// a screen could show it; the JSON is parsed after the timer stops.
+//
+// A call that fails before an answer arrives (a reset connection, a timeout, a host that is down) returns
+// status 0 with the error, so the run records it as a failed call and still writes its result.
+//
+// If the session has ended (401), the client signs in again and repeats the call, and only the repeat is
+// timed. Calls running at the same time share one sign-in: a call whose 401 arrives while another is signing
+// in waits for it, and one that was sent with a session already replaced only repeats. renewals counts the
+// sign-ins, not the calls that waited, so a result shows how often the session ended.
 export async function signIn(role) {
   const client = { cookie: null, renewals: 0 };
+  let renewing = null;
 
   async function login() {
     const res = await fetch(`${baseUrl()}/api/auth/sign-in`, {
@@ -71,21 +78,37 @@ export async function signIn(role) {
 
   async function once(path, { method = "GET", body } = {}) {
     const start = performance.now();
-    const r = await fetch(`${baseUrl()}/api${path}`, {
-      method,
-      headers: { Cookie: client.cookie, ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    const text = await r.text();
-    const ms = performance.now() - start;
-    return { ms, status: r.status, ...parseBody(text) };
+    try {
+      const r = await fetch(`${baseUrl()}/api${path}`, {
+        method,
+        headers: { Cookie: client.cookie, ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      const text = await r.text();
+      const ms = performance.now() - start;
+      return { ms, status: r.status, ...parseBody(text) };
+    } catch (error) {
+      return { ms: performance.now() - start, status: 0, body: null, error: networkError(error) };
+    }
+  }
+
+  async function renew(sentWith) {
+    if (client.cookie !== sentWith) return; // another call has already signed in again
+    renewing ??= login()
+      .then(() => {
+        client.renewals += 1;
+      })
+      .finally(() => {
+        renewing = null;
+      });
+    await renewing;
   }
 
   client.call = async (path, options) => {
+    const sentWith = client.cookie;
     const first = await once(path, options);
     if (first.status !== 401) return first;
-    await login();
-    client.renewals += 1;
+    await renew(sentWith);
     return once(path, options);
   };
 
@@ -100,7 +123,9 @@ export function percentile(samples, p) {
   if (samples.length === 0) throw new Error("No samples.");
   if (!(p > 0 && p <= 100)) throw new Error(`Percentile out of range: ${p}`);
   const sorted = [...samples].sort((a, b) => a - b);
-  return sorted[Math.ceil((p / 100) * sorted.length) - 1];
+  // p * n first: (p / 100) * n can land just above a whole number (7 / 100 * 100 is 7.000000000000001),
+  // and the rank would be one too high.
+  return sorted[Math.ceil((p * sorted.length) / 100) - 1];
 }
 
 const round = (ms) => Math.round(ms * 10) / 10;
@@ -143,12 +168,46 @@ export function firstPageProblem({ rows, pageSize, total }) {
   return null;
 }
 
-// The seed's mix (seed.mjs): which move, if any, the i-th saved request gets. One in ten rejected, three in
-// ten assigned, the rest left New.
-export function mixMove(i) {
-  if (i % 10 === 0) return "Rejected";
-  if (i % 10 <= 3) return "Assigned";
-  return null;
+// The category and reported urgency of the n-th seeded request. Categories rotate; the urgency moves on once
+// per full round of categories, so every category gets every urgency equally. With three categories, n % 3
+// for both would give each category a single urgency.
+export const URGENCY = ["Low", "Medium", "High"];
+export function seedFields(n, categoryCount) {
+  return { category: n % categoryCount, urgency: URGENCY[Math.floor(n / categoryCount) % URGENCY.length] };
+}
+
+// A fixed pseudo-random sequence (mulberry32), so a seed run is repeatable but its choices do not follow the
+// rotation of categories and urgency above.
+function sequence(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
+  };
+}
+
+// The seed's mix (seed.mjs): which move, if any, each of the n saved requests gets. A tenth are rejected and
+// three tenths assigned, rounded, the rest left New. Which requests get a move is a fixed shuffle, not a
+// position, so the mix is spread across categories and urgencies: a rule by position, such as every tenth,
+// would reject only one category whenever the number of categories divides ten.
+export function mixMoves(n, seed = 124) {
+  const random = sequence(seed);
+  const order = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  const rejected = Math.round(n / 10);
+  const assigned = Math.round((3 * n) / 10);
+  const moves = Array(n).fill(null);
+  order.forEach((i, rank) => {
+    if (rank < rejected) moves[i] = "Rejected";
+    else if (rank < rejected + assigned) moves[i] = "Assigned";
+  });
+  return moves;
 }
 
 // Where and with what a run was made, recorded with its result as the brief asks (s13). scriptsChanged is
@@ -170,14 +229,76 @@ export function environment() {
   };
 }
 
-// The server's release identification, if staging exposes it (#122). Recorded, never required.
+// The server's health check. #90 serves it at /health, outside /api, answering { status: "ok" }.
+export const HEALTH_PATH = "/health";
+
+// The server's release identification, if its health check gives one (#122). Recorded with every result.
 export async function serverVersion() {
   try {
-    const r = await fetch(`${baseUrl()}/api/health`);
+    const r = await fetch(`${baseUrl()}${HEALTH_PATH}`);
     return r.ok ? await r.json() : null;
   } catch {
     return null;
   }
+}
+
+// Waits until the health check answers 200, before anything is timed. A free-tier host that has gone idle
+// takes a while to wake, and that wait is no sample's time. Returns how long it took and how many checks
+// were made, which the result records apart from the samples. Gives up after timeoutMs with an error that
+// says so.
+export async function waitForHealthy({ timeoutMs = 180_000, intervalMs = 2_000 } = {}) {
+  const start = performance.now();
+  let attempts = 0;
+  let last = "no answer";
+  while (true) {
+    attempts += 1;
+    try {
+      const r = await fetch(`${baseUrl()}${HEALTH_PATH}`, { signal: AbortSignal.timeout(intervalMs * 5) });
+      await r.text();
+      if (r.status === 200) return { ms: Math.round(performance.now() - start), attempts };
+      last = `status ${r.status}`;
+    } catch (error) {
+      last = networkError(error);
+    }
+    if (performance.now() - start + intervalMs > timeoutMs) {
+      throw new Error(`${baseUrl()}${HEALTH_PATH} did not answer 200 within ${Math.round(timeoutMs / 1000)} s (${attempts} checks, last: ${last}).`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
+// Whether a result can be evidence: the scripts that made it were committed as they ran, and the server
+// named the release it was running, so the result belongs to one build. Gives the reasons it cannot, or null.
+export const RELEASE_FIELDS = ["release", "version", "commit"];
+export function evidenceProblem(environment, server) {
+  const problems = [];
+  if (environment?.scriptsChanged !== false) problems.push(environment?.scriptsChanged ? "perf/ had uncommitted changes" : "the scripts' commit is unknown");
+  if (!RELEASE_FIELDS.some((f) => typeof server?.[f] === "string" && server[f].trim() !== "")) problems.push("the server did not identify its release");
+  return problems.length ? problems.join("; ") : null;
+}
+
+// The words for a call that failed before an answer, with the underlying cause's code where Node gives one
+// (fetch reports "fetch failed" with the reason in its cause).
+export function networkError(error) {
+  const code = error?.cause?.code ?? error?.cause?.name ?? error?.name;
+  const message = String(error?.message ?? error);
+  return code && !message.includes(code) ? `${message} (${code})` : message;
+}
+
+// The parts every result file ends with: when it ran, the environment, the server's release, and whether
+// the result can be evidence.
+export async function provenance(started, wakeUp) {
+  const env = environment();
+  const server = await serverVersion();
+  const problem = evidenceProblem(env, server);
+  return {
+    started: started.toISOString(),
+    finished: new Date().toISOString(),
+    wakeUp,
+    environment: env,
+    server,
+    evidence: problem ? `not evidence: ${problem}` : "evidence",
+  };
 }
 
 export function writeResult(name, result) {
