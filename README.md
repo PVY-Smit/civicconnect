@@ -43,3 +43,26 @@ Request as the change that affects them.
 | M2 | Architecture, Design and Engineering Decisions | Not started |
 | M3 | Controlled Construction, Integration, Quality and Release Readiness | Not started |
 | M4 | Final Product, Project Success and Engineering Defence | Not started |
+
+
+
+## Local development setup
+
+### Prerequisites
+- Node.js 24 LTS (`node -v` must report v24.x; ADR-002)
+- PostgreSQL 16, running locally, with an empty database
+
+### Steps
+1. Copy `.env.example` to `.env` and set `DATABASE_URL` and `PORT`. Never commit `.env`.
+2. Run, in this order:
+
+```bash
+npm ci
+npx prisma generate
+npx prisma migrate deploy
+npm test
+```
+
+`prisma generate` builds the client into `src/generated/`, which is git-ignored because it
+is derived from `prisma/schema.prisma`. `npm test` needs a reachable database, because the
+RSK-01 test writes a User and reads it back.
