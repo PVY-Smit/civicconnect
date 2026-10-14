@@ -2,6 +2,7 @@
 //
 //   node tools/check_test_catalogue.mjs                          # from the repository root
 //   node tools/check_test_catalogue.mjs --catalogue <path> --strict
+//   node tools/check_test_catalogue.mjs --strict --complete        # once every listed pull request is merged
 //
 // Each catalogue record lists the automated tests that carry it, one per line under "Automated by":
 //
@@ -21,6 +22,9 @@
 // SKIP directives, so a test that is switched off is shown, never silently dropped), listed (browser journeys
 // found by --list, not run) and the lines not on this branch.
 // With --strict it exits 1 on a failed test, a line that matches nothing, or an uncatalogued test.
+// --strict alone passes when a listed test file has been deleted, because a missing file is reported as not
+// on this branch. With --complete, every line not on this branch is named with its reason and the tool
+// exits 1, so a deleted file, a tagged test that never merged, or journeys that could not be listed fail.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -28,6 +32,7 @@ import { join } from "node:path";
 
 const args = process.argv.slice(2);
 const strict = args.includes("--strict");
+const complete = args.includes("--complete");
 const at = args.indexOf("--catalogue");
 const catalogue = at >= 0 ? args[at + 1] : "docs/quality/test-catalogue.md";
 
@@ -58,8 +63,9 @@ for (const line of readFileSync(catalogue, "utf-8").split(/\r?\n/)) {
 
 // ---- the tests, by running each referenced file and every test file in the usual places ----
 // Playwright's list: "  [chromium] › file.spec.js:10:1 › name", paths relative to the journeys folder.
+const PLAYWRIGHT = "e2e/node_modules/@playwright/test/cli.js";
 function journeysIn(files) {
-  if (files.length === 0 || !existsSync("e2e/node_modules/@playwright/test/cli.js")) return {};
+  if (files.length === 0 || !existsSync(PLAYWRIGHT)) return {};
   let out = "";
   try {
     out = execFileSync(process.execPath, ["node_modules/@playwright/test/cli.js", "test", "--list"], {
@@ -112,7 +118,15 @@ const results = {
 const matches = (pattern, name) => (pattern.endsWith("*") ? name.startsWith(pattern.slice(0, -1)) : name === pattern);
 const catalogued = new Set();
 const problems = [];
+const absent = [];
 let failed = 0;
+
+// Why a line is not on this branch, for --complete.
+function absence(ref) {
+  if (!existsSync(join(".", ref.file))) return `${ref.file} is not in this checkout`;
+  if (ref.file.startsWith("e2e/") && !existsSync(PLAYWRIGHT)) return `${ref.file} cannot be listed: run npm ci in e2e`;
+  return `${ref.file} has no test "${ref.pattern}" from ${ref.pr}`;
+}
 
 console.log("record   pass  fail  todo  skip  listed  absent");
 for (const r of records) {
@@ -120,11 +134,13 @@ for (const r of records) {
   for (const ref of r.refs) {
     if (!results[ref.file]) {
       count.absent += 1;
+      absent.push(`${r.id}: ${absence(ref)}`);
       continue;
     }
     const hit = results[ref.file].filter((t) => matches(ref.pattern, t.name));
     if (hit.length === 0 && ref.pr) {
       count.absent += 1;
+      absent.push(`${r.id}: ${absence(ref)}`);
       continue;
     }
     if (hit.length === 0) problems.push(`${r.id}: no test in ${ref.file} matches "${ref.pattern}"`);
@@ -144,4 +160,5 @@ for (const [file, tests] of Object.entries(results)) {
 const total = Object.values(results).flat();
 console.log(`\n${files.length} test files, ${total.length} tests: ${total.filter((t) => t.result === "pass").length} pass, ${failed} fail in catalogued records`);
 for (const p of problems) console.log(p);
-if (strict && (failed > 0 || problems.length > 0)) process.exit(1);
+if (complete) for (const a of new Set(absent)) console.log(`not on this branch: ${a}`);
+if ((strict && (failed > 0 || problems.length > 0)) || (complete && absent.length > 0)) process.exit(1);

@@ -16,8 +16,15 @@ of its listed tests pass, fail or are todo, and how many browser journeys are li
 instance, so the tool lists them with Playwright rather than running them); every listed test that does not exist; and every test that no
 record lists. A listed file that is not on the current branch, or a listed test tagged with its open pull
 request, such as `[#136]`, that is not on it, is reported as not on this branch, because records cover open
-pull requests. A name ending in `*` matches every test whose name starts with the rest. With `--strict` it fails on any of those, which CI (#110) runs once every listed pull
-request is on main.
+pull requests. A tag is removed once its pull request has merged, so a missing test on main is reported as
+missing. A name ending in `*` matches every test whose name starts with the rest.
+
+With `--strict` the tool fails on a failed test, a listed test that does not exist in its file, or a test
+no record lists. `--strict` alone does not catch a deleted test file, or tests that never merged: a missing
+file counts as not on this branch, and that never fails. `--complete` makes every line not on this branch
+fail, naming the file and the reason, including journeys that cannot be listed because e2e's packages are
+not installed. When the CI workflow (#110) is in place, it runs `--strict` on every pull request, and
+`--strict --complete` on main once every listed pull request has merged.
 
 **Expected result** is written from the requirement, register or decision named in **Test basis**, before
 the result is known. **Actual result**, **Status** and **Evidence** come from a run. Until the CI workflow
@@ -42,20 +49,19 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 
 ## Where the tests are
 
-| Pull request | Tests | Commit run |
+| Where | Tests | Commit of the run in the records |
 |---|---|---|
-| main | `tests/authorisation-policy.test.js`, `tests/workflow-status.test.js` | b10c3e0 |
-| #130 (#111) | `tests/identity-access.test.js` | 3581885 |
-| #131 (#112) | `tests/request-submission.test.js`, and `src/shared/text.js` | 0efac6a |
-| #132 (#113), stacked on #131 | `tests/workflow-service.test.js` | c84b7c1 |
-| #133 to #135 (#118 to #120) | `client/test/*.test.js` | 7948369 (the top of the stack) |
-| #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
-| #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | c7535f4 (local), rebuilt on main with #131 and #132 merged in |
-| #138 (#123) | `e2e/journeys/*.spec.js` | 29f0005 |
-| #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 3ccee48 |
-| #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
+| main | `tests/authorisation-policy.test.js` (with CR-002's test, #136), `tests/workflow-status.test.js`, `tests/identity-access.test.js` (#130), `tests/password-reset.test.js` (#146), `client/test/*.test.js` (#133 to #135), `perf/test/lib.test.js` (#139; TC-35 still names its run on #139 at 3ccee48, which #150 replaces), and the journeys in `e2e/journeys/*.spec.js` (#138, listed, not run) | 98708d7, 14 October 2026 |
+| #131 (#112 and #113, with #132 folded in) | `tests/request-submission.test.js`, `tests/workflow-service.test.js`, and `src/shared/text.js` | 0efac6a and c84b7c1, 9 October 2026 |
+| #147 (#121), draft | `tests/api-*.test.js`, `tests/support/api.js` | c7535f4 (local), 12 October 2026 |
 
-The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
+The runs for #131 and #147 were made before those branches were rebuilt on main, so the commits named
+in their records are not the branches' current heads. They are kept as the record of those runs, and each record's
+evidence is replaced by a run on main, or by the CI run (#110), when its pull request merges. The tests
+themselves were run again on the rebuilt branches before they were pushed (86 tests on #131 at 01141b1, and
+434 on #147 at efc15a3, 431 pass and 3 todo).
+
+The local runs used Node 24.14.0 on Windows 11.
 
 ---
 
@@ -72,7 +78,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | Each of the 60 cells permits exactly where the register says Yes, except the four cells CR-002 corrects, which are refused; the policy knows exactly the register's functions; an unknown role is refused everything |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, main at b10c3e0: 4 of 4 tests. The CR-002 test on #136 at 2c1b1f5 |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 5 of 5 tests, with CR-002's test (#136) |
 | Traceability | NFR-005, FR-002, ADR-006, CR-002, #92, RSK-16 |
 | Interpretation | The policy and the register agree cell by cell, and a register change that the policy does not follow fails the run. It shows the decision function, not that every route asks it; TC-22 covers that |
 
@@ -82,7 +88,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/authorisation-policy.test.js`: every role and function pair matches the Access Matrix, except the recorded conflicts (NFR-005)
 - `tests/authorisation-policy.test.js`: each recorded conflict is a cell the matrix grants and the policy denies, so a corrected matrix is noticed
 - `tests/authorisation-policy.test.js`: an unknown role is denied everything
-- `tests/authorisation-policy.test.js`: CR-002 (#92): the four corrected cells are refusals in the register and in the policy, with no conflict left [#136]
+- `tests/authorisation-policy.test.js`: CR-002 (#92): the four corrected cells are refusals in the register and in the policy, with no conflict left
 
 ### TC-02 Request scope by role
 
@@ -95,7 +101,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | Requester: own only. Staff and Manager: own plus their categories. Coordinator: all. The query condition and the single-request check select the same requests for every role. Accepting needs the request in the actor's categories even if they submitted it |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, main at b10c3e0: 6 of 6 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 6 of 6 tests |
 | Traceability | FR-012, FR-013, FR-015, ADR-006, FEC-01 |
 | Interpretation | The two forms of each scope cannot drift apart. Whether Staff scope stays by category is FEC-01, still open |
 
@@ -119,7 +125,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The requester sees only the requester-visible entry, even when the store returns both; Staff in the category see both, with priority and assignee |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 9 October 2026: main at b10c3e0, 1 test; #131 at 0efac6a, 3 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7, 1 test; local run, 9 October 2026, #131 at 0efac6a (before its rebuild), 3 tests |
 | Traceability | FR-011, FR-017, DEC-003, ADR-006 |
 | Interpretation | The entry filter holds at two layers, so one fault does not leak an entry |
 
@@ -141,7 +147,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The policy permits nobody to edit or delete an audit entry; the audit module offers no edit or delete, and refuses an entry that records no change |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 9 October 2026: main at b10c3e0, 1 test; #132 at c84b7c1, 1 test |
+| Evidence | Local run, 14 October 2026, main at 98708d7, 1 test; local run, 9 October 2026, #132 at c84b7c1 (before it was folded into #131), 1 test |
 | Traceability | FR-026, NFR-011, ADR-007 |
 | Interpretation | The application offers no path to change an entry. The database privilege that adds the same restriction underneath is checked against PostgreSQL in TC-32 |
 
@@ -163,7 +169,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The table holds exactly the register's transitions. A pair and role are allowed only where the model names them, and an unauthorised actor is refused before any guard is evaluated |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, main at b10c3e0: 3 of 3 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 3 of 3 tests |
 | Traceability | FR-016, ADR-005, RSK-09, RSK-16, FEC-02 |
 | Interpretation | The model in the code is the baselined model. TC-24 repeats the 49 pairs through the endpoint |
 
@@ -184,7 +190,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | Each guard refuses without its input: resolution summary (FR-018), rejection reason (FR-020), accept only when unassigned, begin work only by the assignee or a Coordinator, reassign only to a different assignee |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, main at b10c3e0: 6 of 6 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 6 of 6 tests |
 | Traceability | FR-015, FR-018, FR-020, FR-025, ADR-005 |
 | Interpretation | The guards hold in the transition policy. TC-17 shows the service writes nothing when a guard refuses |
 
@@ -208,7 +214,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The server offers exactly the table's moves for the actor, with their inputs. The client labels every move, gives every guard input a labelled field of the right kind with an id unique across the table, sends only the inputs the move asks for, keeps Assign and Close disabled until chosen and confirmed, shows priority and entry forms only when the server's capabilities allow, and marks only the rejection reason as visible to the requester |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026: main at b10c3e0, 1 test; client at 7948369, 7 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 8 of 8 tests, 1 server and 7 client |
 | Traceability | FR-016, FR-020, FR-021, ADR-005, #119, #134 |
 | Interpretation | A move added to the table fails these tests until the screen names it. The rendered screen is covered by the journeys in TC-33 and TC-34 |
 
@@ -236,7 +242,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | A token round-trips to its user id and is refused when altered, expired or signed with another secret; the service refuses a secret under 32 characters; the cookie is HttpOnly and SameSite=Lax, and Secure over HTTPS; a session ends with its lifetime |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #130 at 3581885: 4 of 4 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 4 of 4 tests |
 | Traceability | FR-001, NFR-004, #111 |
 | Interpretation | Shows the token and cookie rules. Transport security on the deployed host is part of staging (#122) |
 
@@ -258,7 +264,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | The three failures get the same generic message and a 401 with no cookie; the password check runs against a dummy hash when there is no usable account; a missing email or password is refused before any lookup |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #130 at 3581885: 4 of 4 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 4 of 4 tests |
 | Traceability | FR-001, NFR-004, #111 |
 | Interpretation | The answers cannot be told apart by content. Timing is reduced by the dummy hash, not measured |
 
@@ -280,7 +286,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | Correct credentials sign in whatever the email's case and surrounding spaces; the cookie is set and the user is returned without the password hash; the permissions returned are exactly what the policy permits for the role |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #130 at 3581885: 3 of 3 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 3 of 3 tests |
 | Traceability | FR-001, FR-002, ADR-006, #111 |
 | Interpretation | The client's menus come from the policy through this answer, so they cannot drift from the server |
 
@@ -301,7 +307,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Expected result | No valid session: 401 and the handler is not reached. A valid session reaches it with the actor read from the store. A deactivated user's session stops on the next request. Without the permission: 403. A request that skipped authentication is refused. Signing out clears the cookie |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, #130 at 3581885: 6 of 6 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 6 of 6 tests |
 | Traceability | FR-001, FR-002, FR-028, NFR-005, #111 |
 | Interpretation | The middleware is correct. TC-22 and TC-23 show the routes use it |
 
@@ -570,7 +576,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 |---|---|
 | Test basis | NFR-005, FR-002, FR-011, FR-012; the Access Matrix register; CR-002 |
 | Why selected | TC-01 shows the policy is right; this shows each endpoint asks it. A route that forgets the check passes TC-01 |
-| Technique and level | Decision table, 15 functions by 4 roles, 60 cells, each cell one automated check that calls an endpoint; black-box at the API |
+| Technique and level | Decision table, 15 functions by 4 roles, 60 cells, each cell one automated check: 48 cells through their endpoint, and the 12 cells of the three functions without an endpoint yet (#115, #117) at the permission check their route will use; black-box at the API |
 | Input or precondition | One signed-in user per role, each with a request in scope; expectations read from the register fixture, with CR-002's four cells refused |
 | Expected result | Each cell succeeds where the register permits and is refused where it does not. A refusal is a 403, or a 404 for a request out of scope (FR-012), or the internal entry left out (FR-011), and writes nothing. For "change status", every move in the table succeeds exactly for the roles the model names. The management, category and user functions are checked at the permission check their routes will use |
 | Actual result | As expected for all 60 cells, and the table covers every function in the register (61 checks pass). Three functions, management counts, the category list and user accounts, have no endpoint of their own yet, so their 12 cells are checked at the permission check their routes will use. One todo per function (3) stands for the later call through its own endpoint; the todos are not cells |
@@ -713,7 +719,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Calls go to the application's own /api with the session cookie and JSON; a 400's field errors reach the screen; a 401 on a protected call sends the user to sign in, and a failed sign-in shows the message without redirecting; a reference is encoded into the path; a 204 and a non-JSON answer are handled |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, client at 7948369: 6 of 6 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 6 of 6 tests |
 | Traceability | FR-001, FR-007, #118 |
 | Interpretation | A crafted reference cannot change which endpoint is called |
 
@@ -737,7 +743,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Each role is offered exactly the screens and menu items its permissions allow, and a Requester gets no Queue; with no permissions list nothing extra is offered; every route's permission is a policy function; the reset screen is public, stays open to a signed-in user, and the administration screens are not public; the router matches each screen; only a path inside the application is accepted as a return address |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, client at 7948369: 8 of 8 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 8 of 8 tests |
 | Traceability | FR-002, FR-004, FR-013, ADR-006, #118 to #120 |
 | Interpretation | The client hides what the server would refuse; the server still checks every call (TC-22) |
 
@@ -763,7 +769,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Filters round-trip through the address with empties and defaults left out; unknown values are replaced or dropped; a backwards range is caught before sending; exactly the three named sorts are offered in both directions |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, client at 7948369: 4 of 4 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 4 of 4 tests |
 | Traceability | FR-014, #119 |
 | Interpretation | The queue's server side (#114) is not built yet; its filtering is covered by TC-32 once it is |
 
@@ -785,7 +791,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | The breakdown pivots to categories by statuses with totals both ways and missing pairs as zero; duplicates are added and bad counts are zero; an empty or all-zero breakdown shows the no-requests message; the default period is the 30 days ending today in South African time; a period needs both dates and must not end before it starts; ages read as whole days; the overdue target is stated exactly as sent |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, client at 7948369: 7 of 7 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 7 of 7 tests |
 | Traceability | FR-022, FR-023, FR-024, SC-D-03, #120 |
 | Interpretation | The counts themselves are the server's (#117), checked against seeded data in TC-32 |
 
@@ -810,7 +816,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Only active categories are offered; a refused action names the account it was for |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 7 October 2026, client at 7948369: 2 of 2 tests |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 2 of 2 tests |
 | Traceability | FR-006, FR-028, #120 |
 | Interpretation | The server rules for these (#115) are not built yet |
 
@@ -832,39 +838,39 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account, with a lifetime of 24 hours unless the caller chooses up to 7 days; issuing is recorded with who, for whom and when, never the code; the code is stored only as a hash; it sets a new password that then signs in, works once even when used twice at once, expires, and is replaced by a new one; five wrong tries withdraw it, four do not, and wrong tries at once all count; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup, and a password equal to the current one is refused without spending the code; a reset ends every earlier session; the reset succeeds only when exactly one row is written |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 12 October 2026, #146 at 6fa5e85: 27 of 27 tests. Nine deliberate faults each failed a test |
+| Evidence | Local run, 14 October 2026, main at 98708d7: 27 of 27 tests. Before it merged, on #146 at 6fa5e85 (12 October), nine deliberate faults each failed a test |
 | Traceability | FR-004, NFR-004, FR-001, FR-003, FR-028, #111, #146 |
 | Interpretation | The rules hold in the service and at the routes. Against PostgreSQL the conditional writes and the counted tries are checked in TC-32, once #109 adds the session version, the failure count and the account events to the schema. Rate limiting by address is not tested here; it is recorded as debt (#125) |
 
 **Automated by**
 
-- `tests/password-reset.test.js`: FR-004: a Manager gets a one-time code in the agreed form, and only its hash is stored [#146]
-- `tests/password-reset.test.js`: issuing a code is recorded with who issued it, for whom and when, and the record holds no code [#146]
-- `tests/password-reset.test.js`: FR-002, FR-004: only a role with manageUsers can issue a code, and a refusal stores nothing [#146]
-- `tests/password-reset.test.js`: a code is not issued for an account that does not exist or is deactivated (FR-028) [#146]
-- `tests/password-reset.test.js`: a code issued before the account was deactivated cannot be used, and no new one can be issued [#146]
-- `tests/password-reset.test.js`: a caller can choose the code's lifetime, up to the maximum, for a new account's first password (FR-003) [#146]
-- `tests/password-reset.test.js`: codes come only from the alphabet without look-alikes, and do not repeat [#146]
-- `tests/password-reset.test.js`: FR-004: the code sets the new password, which then signs in, and the code is cleared [#146]
-- `tests/password-reset.test.js`: FR-004: a code works once [#146]
-- `tests/password-reset.test.js`: FR-004: two uses of one code at the same moment: exactly one succeeds [#146]
-- `tests/password-reset.test.js`: FR-004: a code expires after its lifetime, and works until then [#146]
-- `tests/password-reset.test.js`: FR-004: issuing a new code replaces the old one [#146]
-- `tests/password-reset.test.js`: the code is accepted however the user types it: lower case, spaces, with or without the hyphen [#146]
-- `tests/password-reset.test.js`: FR-004: every failure gets the same answer, and the code is checked even when there is no usable account [#146]
-- `tests/password-reset.test.js`: a code is withdrawn after 5 wrong tries, and the right code then fails too [#146]
-- `tests/password-reset.test.js`: 4 wrong tries leave the code usable, and a new code starts the count again [#146]
-- `tests/password-reset.test.js`: 5 wrong tries at the same moment all count, and withdraw the code [#146]
-- `tests/password-reset.test.js`: wrong tries for an account with no live code are not counted against it [#146]
-- `tests/password-reset.test.js`: a new password that breaks the length rule is refused before any lookup, so its message reveals nothing [#146]
-- `tests/password-reset.test.js`: a new password of 8 and of 128 characters is accepted [#146]
-- `tests/password-reset.test.js`: a new password equal to the current one is refused once the code is right, and the code stays usable [#146]
-- `tests/password-reset.test.js`: a code replaced between the check and the write is refused, so it cannot be used twice at once [#146]
-- `tests/password-reset.test.js`: the reset succeeds only when the store reports exactly one row written [#146]
-- `tests/password-reset.test.js`: FR-004: a reset ends every session made before it, and a sign-in after it works [#146]
-- `tests/password-reset.test.js`: a session token from before session versions counts as version 0, and any other version is refused [#146]
-- `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409 [#146]
-- `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message [#146]
+- `tests/password-reset.test.js`: FR-004: a Manager gets a one-time code in the agreed form, and only its hash is stored
+- `tests/password-reset.test.js`: issuing a code is recorded with who issued it, for whom and when, and the record holds no code
+- `tests/password-reset.test.js`: FR-002, FR-004: only a role with manageUsers can issue a code, and a refusal stores nothing
+- `tests/password-reset.test.js`: a code is not issued for an account that does not exist or is deactivated (FR-028)
+- `tests/password-reset.test.js`: a code issued before the account was deactivated cannot be used, and no new one can be issued
+- `tests/password-reset.test.js`: a caller can choose the code's lifetime, up to the maximum, for a new account's first password (FR-003)
+- `tests/password-reset.test.js`: codes come only from the alphabet without look-alikes, and do not repeat
+- `tests/password-reset.test.js`: FR-004: the code sets the new password, which then signs in, and the code is cleared
+- `tests/password-reset.test.js`: FR-004: a code works once
+- `tests/password-reset.test.js`: FR-004: two uses of one code at the same moment: exactly one succeeds
+- `tests/password-reset.test.js`: FR-004: a code expires after its lifetime, and works until then
+- `tests/password-reset.test.js`: FR-004: issuing a new code replaces the old one
+- `tests/password-reset.test.js`: the code is accepted however the user types it: lower case, spaces, with or without the hyphen
+- `tests/password-reset.test.js`: FR-004: every failure gets the same answer, and the code is checked even when there is no usable account
+- `tests/password-reset.test.js`: a code is withdrawn after 5 wrong tries, and the right code then fails too
+- `tests/password-reset.test.js`: 4 wrong tries leave the code usable, and a new code starts the count again
+- `tests/password-reset.test.js`: 5 wrong tries at the same moment all count, and withdraw the code
+- `tests/password-reset.test.js`: wrong tries for an account with no live code are not counted against it
+- `tests/password-reset.test.js`: a new password that breaks the length rule is refused before any lookup, so its message reveals nothing
+- `tests/password-reset.test.js`: a new password of 8 and of 128 characters is accepted
+- `tests/password-reset.test.js`: a new password equal to the current one is refused once the code is right, and the code stays usable
+- `tests/password-reset.test.js`: a code replaced between the check and the write is refused, so it cannot be used twice at once
+- `tests/password-reset.test.js`: the reset succeeds only when the store reports exactly one row written
+- `tests/password-reset.test.js`: FR-004: a reset ends every session made before it, and a sign-in after it works
+- `tests/password-reset.test.js`: a session token from before session versions counts as version 0, and any other version is refused
+- `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409
+- `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message
 
 ## Not yet runnable
 
@@ -904,7 +910,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 **Automated by**
 
-- `e2e/journeys/requester-submits-and-follows.spec.js`: TC-33: a requester submits a request, gets its reference, and finds it in their list and its detail [#138]
+- `e2e/journeys/requester-submits-and-follows.spec.js`: TC-33: a requester submits a request, gets its reference, and finds it in their list and its detail
 
 ### TC-34 Journey: staff take a request from New to Closed
 
@@ -923,7 +929,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 **Automated by**
 
-- `e2e/journeys/staff-new-to-closed.spec.js`: TC-34: a request goes from New to Closed through the Coordinator and Staff, and the requester sees the outcome [#138]
+- `e2e/journeys/staff-new-to-closed.spec.js`: TC-34: a request goes from New to Closed through the Coordinator and Staff, and the requester sees the outcome
 
 ### TC-35 Performance: the staff queue and request submission
 
