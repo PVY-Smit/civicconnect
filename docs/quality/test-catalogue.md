@@ -23,7 +23,7 @@ With `--strict` the tool fails on a failed test, a listed test that does not exi
 no record lists. `--strict` alone does not catch a deleted test file, or tests that never merged: a missing
 file counts as not on this branch, and that never fails. `--complete` makes every line not on this branch
 fail, naming the file and the reason, including journeys that cannot be listed because e2e's packages are
-not installed. When the CI workflow (#110) is in place, it runs `--strict` on every pull request, and
+not installed, or a test file that needs a database (`src/lib/prisma.js`) where none is configured. When the CI workflow (#110) is in place, it runs `--strict` on every pull request, and
 `--strict --complete` on main once every listed pull request has merged.
 
 **Expected result** is written from the requirement, register or decision named in **Test basis**, before
@@ -38,12 +38,12 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 
 | Category | Minimum | Records |
 |---|---|---|
-| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36 |
+| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36, TC-38 |
 | Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24, TC-25, TC-26, TC-37 |
-| API or integration | 3 | At the handler boundary: TC-21 to TC-26 and TC-37. Against PostgreSQL: TC-32 (Blocked) |
+| API or integration | 3 | At the handler boundary: TC-21 to TC-26 and TC-37. Against PostgreSQL: TC-39, and TC-32 (Blocked) |
 | End to end | 2 | TC-33, TC-34 (written in #138; Blocked until staging, #122) |
 | Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22, TC-23, TC-24, TC-36, TC-37 |
-| High-priority requirement or risk | 5 | TC-01 and TC-22 (NFR-005, Must), TC-05 and TC-24 (FR-016, Must), TC-09 to TC-11 (FR-001, Must), TC-12 (FR-008, Must; DEC-004), TC-18 (FR-025, Must; ADR-001 rule 3) |
+| High-priority requirement or risk | 5 | TC-39 (RSK-01), TC-01 and TC-22 (NFR-005, Must), TC-05 and TC-24 (FR-016, Must), TC-09 to TC-11 (FR-001, Must), TC-12 (FR-008, Must; DEC-004), TC-18 (FR-025, Must; ADR-001 rule 3) |
 | Black-box techniques | 2 | Decision table (TC-01, TC-22), state transition (TC-05, TC-24), boundary values (TC-13, TC-25), equivalence partitions (TC-13, TC-26, TC-37) |
 | Performance | 1 scenario | TC-35 (scripts in #139; Blocked until staging, #122) |
 
@@ -51,7 +51,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 
 | Where | Tests | Commit of the run in the records |
 |---|---|---|
-| main | `tests/authorisation-policy.test.js` (with CR-002's test, #136), `tests/workflow-status.test.js`, `tests/identity-access.test.js` (#130), `tests/password-reset.test.js` (#146), `client/test/*.test.js` (#133 to #135), `perf/test/lib.test.js` (#139; TC-35 still names its run on #139 at 3ccee48, which #150 replaces), and the journeys in `e2e/journeys/*.spec.js` (#138, listed, not run) | 98708d7, 14 October 2026 |
+| main | `tests/authorisation-policy.test.js` (with CR-002's test, #136), `tests/workflow-status.test.js`, `tests/identity-access.test.js` (#130), `tests/password-reset.test.js` (#146), `client/test/*.test.js` (#133 to #135), `perf/test/lib.test.js` (#139; TC-35 still names its run on #139 at 3ccee48, which #150 replaces), `tests/health.test.js` and `tests/rsk01.test.js` (#90; at 481cda8, the second against PostgreSQL), and the journeys in `e2e/journeys/*.spec.js` (#138, listed, not run) | 98708d7, 14 October 2026 |
 | #131 (#112 and #113, with #132 folded in) | `tests/request-submission.test.js`, `tests/workflow-service.test.js`, and `src/shared/text.js` | 0efac6a and c84b7c1, 9 October 2026 |
 | #147 (#121), draft | `tests/api-*.test.js`, `tests/support/api.js` | c7535f4 (local), 12 October 2026 |
 
@@ -705,6 +705,46 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/api-input-partitions.test.js`: FR-018, FR-020: a reason or resolution summary is at most 4,000 characters, with no control characters
 - `tests/api-input-partitions.test.js`: FR-017: an action entry is at most 4,000 characters, with no control characters, and line breaks are kept
 - `tests/api-input-partitions.test.js`: FR-012: a malformed reference gets the same 404 as a missing one from every endpoint, and nothing is written
+
+## The bootstrap (#90)
+
+### TC-38 The health check answers
+
+| Field | Value |
+|---|---|
+| Test basis | NFR-003 (the availability measurement needs an endpoint to probe); #90 |
+| Why selected | The availability measurement, the browser journeys and the performance scripts all wait on this endpoint before they start (#150, #152). If it did not answer, each of them would stop, or would measure a host that was not up |
+| Technique and level | Smoke test; component (the Express application on a free port, with no database) |
+| Input or precondition | The application started on a free port |
+| Expected result | `GET /health` answers 200 with `{ "status": "ok" }` |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 14 October 2026, main at 481cda8: 1 of 1 test |
+| Traceability | NFR-003, #64, #90 |
+| Interpretation | The answer shows the process is serving, not that the database is reachable. It gives no release yet, so a performance result cannot name the build it measured until staging adds one (#122, #150) |
+
+**Automated by**
+
+- `tests/health.test.js`: health endpoint returns 200 and ok status
+
+### TC-39 RSK-01: a User through Prisma and PostgreSQL, with an argon2 hash
+
+| Field | Value |
+|---|---|
+| Test basis | RSK-01; ADR-002 (Prisma, argon2) as amended by CR-004; ADR-007 (the `User` table); NFR-004 |
+| Why selected | RSK-01 is the risk that the chosen stack does not work together. This is the smallest check that it does: a `User` written through Prisma's PostgreSQL adapter, read back, and its argon2 hash verified. It is also the test in CR-004's environment check |
+| Technique and level | Integration against PostgreSQL; one positive and one negative password check |
+| Input or precondition | PostgreSQL 16 with the migrations applied (`npx prisma migrate deploy`); the generated Prisma client; a new email for each run |
+| Expected result | The user is created and read back by email, active by default; the right password verifies and a wrong one does not; the row is deleted afterwards |
+| Actual result | As expected, with no row left behind |
+| Status | Pass where a database is configured. Elsewhere the catalogue check reports it as needing a database and does not run it |
+| Evidence | Local run, 14 October 2026, main at 481cda8, Windows 11, Node 24.14.0, against a local PostgreSQL 16.13 after `prisma migrate deploy`: 1 of 1 test, and the `users` table empty afterwards. Before #90 merged, the CR-004 environment check on #90 at a109702 (13 October) |
+| Traceability | RSK-01, ADR-002, ADR-007, CR-004, #90, #108 |
+| Interpretation | It shows the stack works against a real PostgreSQL. It does not test the application's own store, which is TC-32. CI runs it once #110 provides a database |
+
+**Automated by**
+
+- `tests/rsk01.test.js`: RSK-01: a User is persisted and authenticates through argon2
 
 ## Client (#118 to #120)
 

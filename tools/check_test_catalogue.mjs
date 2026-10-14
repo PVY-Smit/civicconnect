@@ -17,6 +17,9 @@
 // pull requests.
 // The browser journeys in e2e/ need a deployed instance, so they are listed with Playwright's --list rather
 // than run, and counted as listed. Their results come from the run against staging (#122, #123).
+// A test file that reaches PostgreSQL through src/lib/prisma.js runs only where a database is configured
+// (DATABASE_URL, or a .env file) and the Prisma client is generated (npx prisma generate). Elsewhere it is
+// not run, and its lines are reported as needing a database, as a missing file is reported.
 //
 // The per-record line counts the record's tests by result: pass, fail, todo and skip (node:test's TODO and
 // SKIP directives, so a test that is switched off is shown, never silently dropped), listed (browser journeys
@@ -108,9 +111,13 @@ const listSpecs = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.e
 const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...listDir("perf/test"), ...listSpecs("e2e/journeys"), ...records.flatMap((r) => r.refs.map((x) => x.file))])].filter((f) =>
   existsSync(join(".", f)),
 );
+const NO_DATABASE = "needs a database: set DATABASE_URL and run npx prisma generate";
+const needsDatabase = (file) => /lib\/prisma\.js/.test(readFileSync(file, "utf-8"));
+const databaseReady = Boolean(process.env.DATABASE_URL || existsSync(".env")) && existsSync("src/generated/client");
+const notRun = new Set(databaseReady ? [] : files.filter((f) => !f.startsWith("e2e/") && needsDatabase(f)));
 const journeyFiles = files.filter((f) => f.startsWith("e2e/"));
 const results = {
-  ...Object.fromEntries(files.filter((f) => !f.startsWith("e2e/")).map((f) => [f, testsIn(f)])),
+  ...Object.fromEntries(files.filter((f) => !f.startsWith("e2e/") && !notRun.has(f)).map((f) => [f, testsIn(f)])),
   ...journeysIn(journeyFiles),
 };
 
@@ -124,14 +131,20 @@ let failed = 0;
 // Why a line is not on this branch, for --complete.
 function absence(ref) {
   if (!existsSync(join(".", ref.file))) return `${ref.file} is not in this checkout`;
+  if (notRun.has(ref.file)) return `${ref.file} ${NO_DATABASE}`;
   if (ref.file.startsWith("e2e/") && !existsSync(PLAYWRIGHT)) return `${ref.file} cannot be listed: run npm ci in e2e`;
   return `${ref.file} has no test "${ref.pattern}" from ${ref.pr}`;
 }
 
 console.log("record   pass  fail  todo  skip  listed  absent");
 for (const r of records) {
-  const count = { pass: 0, fail: 0, todo: 0, skip: 0, listed: 0, absent: 0 };
+  const count = { pass: 0, fail: 0, todo: 0, skip: 0, listed: 0, absent: 0, database: 0 };
   for (const ref of r.refs) {
+    if (notRun.has(ref.file)) {
+      count.database += 1;
+      absent.push(`${r.id}: ${absence(ref)}`);
+      continue;
+    }
     if (!results[ref.file]) {
       count.absent += 1;
       absent.push(`${r.id}: ${absence(ref)}`);
@@ -150,7 +163,7 @@ for (const r of records) {
     }
   }
   failed += count.fail;
-  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.skip).padStart(4)}  ${String(count.listed).padStart(6)}  ${count.absent ? `${count.absent} line(s) not on this branch` : ""}`);
+  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.skip).padStart(4)}  ${String(count.listed).padStart(6)}  ${[count.absent && `${count.absent} line(s) not on this branch`, count.database && `${count.database} line(s) need a database`].filter(Boolean).join("; ")}`);
 }
 
 for (const [file, tests] of Object.entries(results)) {
