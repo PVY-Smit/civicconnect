@@ -12,7 +12,7 @@ generator client {
 }
 
 model User {
-  id                 Int       @id @default(autoincrement())
+  id                 BigInt    @id @default(autoincrement())
   name               String    @db.VarChar(200)
   email              String    @unique @db.VarChar(320)
   role               String    @db.VarChar(30)
@@ -34,7 +34,7 @@ model User {
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
+  id        BigInt   @id @default(autoincrement())
   name      String   @unique @db.VarChar(200)
   active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -47,8 +47,8 @@ model Category {
 }
 
 model UserCategory {
-  userId     Int @map("user_id")
-  categoryId Int @map("category_id")
+  userId     BigInt @map("user_id")
+  categoryId BigInt @map("category_id")
 
   user     User     @relation(fields: [userId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
@@ -58,11 +58,11 @@ model UserCategory {
 }
 
 model Request {
-  id                Int      @id @default(autoincrement())
+  id                BigInt   @id @default(autoincrement())
   reference         String   @unique @db.VarChar(40)
-  requesterId       Int      @map("requester_id")
-  categoryId        Int      @map("category_id")
-  assigneeId        Int?     @map("assignee_id")
+  requesterId       BigInt   @map("requester_id")
+  categoryId        BigInt   @map("category_id")
+  assigneeId        BigInt?  @map("assignee_id")
   title             String   @db.VarChar(200)
   description       String
   location          String
@@ -93,9 +93,9 @@ model Request {
 }
 
 model ActionEntry {
-  id         Int      @id @default(autoincrement())
-  requestId  Int      @map("request_id")
-  authorId   Int      @map("author_id")
+  id         BigInt   @id @default(autoincrement())
+  requestId  BigInt   @map("request_id")
+  authorId   BigInt   @map("author_id")
   body       String
   visibility String   @db.VarChar(30)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -108,11 +108,11 @@ model ActionEntry {
 }
 
 model RequestStatusHistory {
-  id         Int      @id @default(autoincrement())
-  requestId  Int      @map("request_id")
+  id         BigInt   @id @default(autoincrement())
+  requestId  BigInt   @map("request_id")
   fromStatus String?  @map("from_status") @db.VarChar(30)
   toStatus   String   @map("to_status") @db.VarChar(30)
-  actorId    Int      @map("actor_id")
+  actorId    BigInt   @map("actor_id")
   reason     String?
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -124,9 +124,9 @@ model RequestStatusHistory {
 }
 
 model AuditEntry {
-  id            Int      @id @default(autoincrement())
-  requestId     Int      @map("request_id")
-  actorId       Int      @map("actor_id")
+  id            BigInt   @id @default(autoincrement())
+  requestId     BigInt   @map("request_id")
+  actorId       BigInt   @map("actor_id")
   fieldChanged  String   @map("field_changed") @db.VarChar(100)
   previousValue String?  @map("previous_value")
   newValue      String?  @map("new_value")
