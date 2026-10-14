@@ -2,8 +2,23 @@
 // journey fails when what the user sees changes, not when markup does.
 
 import { expect } from "@playwright/test";
+import { stateFile } from "./accounts.js";
 
 export const REFERENCE = /^CC-\d{4}-\d{4}$/; // FR-008, DEC-017
+
+// Every request a journey creates has a title starting with this, so it can be told apart from the
+// performance dataset and other data on staging, and found or removed later (see README.md).
+export const JOURNEY_PREFIX = "E2E journey:";
+
+// Opens a page for a role from the state journeys/sign-in.setup.js saved, signed in without typing a
+// password, and checks the session is live.
+export async function startAs(browser, role) {
+  const context = await browser.newContext({ storageState: stateFile(role) });
+  const page = await context.newPage();
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  return { context, page };
+}
 
 export async function signIn(page, account) {
   await page.goto("/sign-in");

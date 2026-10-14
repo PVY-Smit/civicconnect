@@ -1,3 +1,6 @@
 # Playwright output (#123): traces, screenshots and the HTML report from a run
 test-results/
 playwright-report/
+
+# Signed-in state saved by journeys/sign-in.setup.js: session tokens, valid for a working day
+.auth/
