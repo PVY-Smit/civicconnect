@@ -19,10 +19,135 @@ function requiredEnv(name) {
   return value;
 }
 
+function assertSafeVolumeMode() {
+  if (process.env.SEED_VOLUME !== "5000") {
+    return false;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SEED_VOLUME=5000 must never run in production");
+  }
+
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== "true") {
+    throw new Error(
+      "ALLOW_DESTRUCTIVE_SEED=true is required for SEED_VOLUME=5000",
+    );
+  }
+
+  return true;
+}
+
 function referenceFor(index) {
-  return `CC-${String(index).padStart(8, "0").slice(0, 4)}-${String(index)
-    .padStart(8, "0")
-    .slice(4)}`;
+  const value = String(index).padStart(8, "0");
+  return `CC-${value.slice(0, 4)}-${value.slice(4)}`;
+}
+
+async function upsertUser({ name, email, role, passwordHash }) {
+  return prisma.user.upsert({
+    where: { email },
+    update: {
+      name,
+      role,
+      passwordHash,
+      active: true,
+    },
+    create: {
+      name,
+      email,
+      role,
+      passwordHash,
+    },
+  });
+}
+
+async function createNewRequest({
+  reference,
+  requesterId,
+  categoryId,
+  title,
+  description,
+  location,
+  reportedUrgency,
+}) {
+  return prisma.request.create({
+    data: {
+      reference,
+      requesterId,
+      categoryId,
+      title,
+      description,
+      location,
+      reportedUrgency,
+      status: "New",
+      priority: null,
+      statusHistory: {
+        create: {
+          fromStatus: null,
+          toStatus: "New",
+          actorId: requesterId,
+          reason: null,
+        },
+      },
+    },
+  });
+}
+
+async function assignRequest({
+  request,
+  coordinatorId,
+  staffId,
+  priority = "Medium",
+}) {
+  await prisma.$transaction([
+    prisma.request.update({
+      where: { id: request.id },
+      data: {
+        status: "Assigned",
+        assigneeId: staffId,
+        priority,
+      },
+    }),
+
+    prisma.requestStatusHistory.create({
+      data: {
+        requestId: request.id,
+        fromStatus: "New",
+        toStatus: "Assigned",
+        actorId: coordinatorId,
+        reason: null,
+      },
+    }),
+
+    prisma.auditEntry.create({
+      data: {
+        requestId: request.id,
+        actorId: coordinatorId,
+        fieldChanged: "status",
+        previousValue: "New",
+        newValue: "Assigned",
+      },
+    }),
+
+    prisma.auditEntry.create({
+      data: {
+        requestId: request.id,
+        actorId: coordinatorId,
+        fieldChanged: "assigneeId",
+        previousValue: null,
+        newValue: String(staffId),
+      },
+    }),
+
+    prisma.auditEntry.create({
+      data: {
+        requestId: request.id,
+        actorId: coordinatorId,
+        fieldChanged: "priority",
+        previousValue: null,
+        newValue: priority,
+      },
+    }),
+  ]);
 }
 
 async function main() {
@@ -43,203 +168,155 @@ async function main() {
     argon2.hash(managerPassword),
   ]);
 
-  const requester = await prisma.user.upsert({
-    where: { email: "requester@civicconnect.test" },
-    update: {},
-    create: {
-      name: "Seed Requester",
-      email: "requester@civicconnect.test",
-      role: "Requester",
-      passwordHash: requesterHash,
-    },
+  const requester = await upsertUser({
+    name: "Seed Requester",
+    email: "requester@civicconnect.test",
+    role: "Requester",
+    passwordHash: requesterHash,
   });
 
-  const staff = await prisma.user.upsert({
-    where: { email: "staff@civicconnect.test" },
-    update: {},
-    create: {
-      name: "Seed Staff",
-      email: "staff@civicconnect.test",
-      role: "Staff",
-      passwordHash: staffHash,
-    },
+  const staff = await upsertUser({
+    name: "Seed Staff",
+    email: "staff@civicconnect.test",
+    role: "Staff",
+    passwordHash: staffHash,
   });
 
-  const coordinator = await prisma.user.upsert({
-    where: { email: "coordinator@civicconnect.test" },
-    update: {},
-    create: {
-      name: "Seed Coordinator",
-      email: "coordinator@civicconnect.test",
-      role: "Coordinator",
-      passwordHash: coordinatorHash,
-    },
+  const coordinator = await upsertUser({
+    name: "Seed Coordinator",
+    email: "coordinator@civicconnect.test",
+    role: "Coordinator",
+    passwordHash: coordinatorHash,
   });
 
-  await prisma.user.upsert({
-    where: { email: "manager@civicconnect.test" },
-    update: {},
-    create: {
-      name: "Seed Manager",
-      email: "manager@civicconnect.test",
-      role: "Manager",
-      passwordHash: managerHash,
-    },
+  await upsertUser({
+    name: "Seed Manager",
+    email: "manager@civicconnect.test",
+    role: "Manager",
+    passwordHash: managerHash,
   });
 
   const roads = await prisma.category.upsert({
     where: { name: "Roads" },
-    update: {},
+    update: { active: true },
     create: { name: "Roads" },
   });
 
   const water = await prisma.category.upsert({
     where: { name: "Water" },
-    update: {},
+    update: { active: true },
     create: { name: "Water" },
   });
 
   const electricity = await prisma.category.upsert({
     where: { name: "Electricity" },
-    update: {},
+    update: { active: true },
     create: { name: "Electricity" },
   });
 
-  await prisma.userCategory.upsert({
-    where: {
-      userId_categoryId: {
+  for (const category of [roads, water, electricity]) {
+    await prisma.userCategory.upsert({
+      where: {
+        userId_categoryId: {
+          userId: staff.id,
+          categoryId: category.id,
+        },
+      },
+      update: {},
+      create: {
         userId: staff.id,
-        categoryId: roads.id,
+        categoryId: category.id,
       },
-    },
-    update: {},
-    create: {
-      userId: staff.id,
-      categoryId: roads.id,
-    },
-  });
+    });
+  }
 
-  await prisma.userCategory.upsert({
-    where: {
-      userId_categoryId: {
-        userId: coordinator.id,
-        categoryId: roads.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: coordinator.id,
-      categoryId: roads.id,
-    },
-  });
+  const volumeMode = assertSafeVolumeMode();
 
-  const volume = Number(process.env.SEED_VOLUME ?? 0);
-
-  if (volume === 5000) {
-    await prisma.auditEntry.deleteMany();
-    await prisma.requestStatusHistory.deleteMany();
-    await prisma.actionEntry.deleteMany();
-    await prisma.request.deleteMany();
+  if (volumeMode) {
+    await prisma.$transaction([
+      prisma.auditEntry.deleteMany(),
+      prisma.requestStatusHistory.deleteMany(),
+      prisma.actionEntry.deleteMany(),
+      prisma.request.deleteMany(),
+    ]);
 
     const categories = [roads, water, electricity];
+    const urgencies = ["Low", "Medium", "High"];
 
     for (let i = 1; i <= 5000; i += 1) {
       const category = categories[(i - 1) % categories.length];
 
-      await prisma.request.create({
-        data: {
-          reference: referenceFor(i),
-          requesterId: requester.id,
-          categoryId: category.id,
-          assigneeId: i % 3 === 0 ? staff.id : null,
-          title: `Seed request ${i}`,
-          description: `Generated request ${i} for NFR-001 performance testing.`,
-          location: `Seed location ${i}`,
-          reportedUrgency: ["Low", "Medium", "High"][(i - 1) % 3],
-          status: i % 3 === 0 ? "Assigned" : "New",
-          priority: i % 3 === 0 ? "Medium" : null,
-          statusHistory: {
-            create: {
-              fromStatus: null,
-              toStatus: i % 3 === 0 ? "Assigned" : "New",
-              actorId: requester.id,
-              reason: null,
-            },
-          },
-        },
+      const request = await createNewRequest({
+        reference: referenceFor(i),
+        requesterId: requester.id,
+        categoryId: category.id,
+        title: `Seed request ${i}`,
+        description: `Generated request ${i} for NFR-001 performance testing.`,
+        location: `Seed location ${i}`,
+        reportedUrgency: urgencies[(i - 1) % urgencies.length],
       });
+
+      if (i % 3 === 0) {
+        await assignRequest({
+          request,
+          coordinatorId: coordinator.id,
+          staffId: staff.id,
+          priority: "Medium",
+        });
+      }
     }
 
     console.log("Seeded 5,000 requests for NFR-001.");
     return;
   }
 
-  const existingSeedRequest = await prisma.request.findUnique({
-    where: { reference: "CC-0000-0001" },
+  const existing = await prisma.request.count({
+    where: {
+      title: {
+        startsWith: "Seed ",
+      },
+    },
   });
 
-  if (!existingSeedRequest) {
-    await prisma.request.create({
-      data: {
-        reference: "CC-0000-0001",
-        requesterId: requester.id,
-        categoryId: roads.id,
-        title: "Pothole on Main Road",
-        description: "Large pothole causing traffic to slow down.",
-        location: "Main Road",
-        reportedUrgency: "Medium",
-        status: "New",
-        statusHistory: {
-          create: {
-            fromStatus: null,
-            toStatus: "New",
-            actorId: requester.id,
-          },
-        },
-      },
+  if (existing === 0) {
+    const first = await createNewRequest({
+      reference: referenceFor(1),
+      requesterId: requester.id,
+      categoryId: roads.id,
+      title: "Seed pothole request",
+      description: "Large pothole causing traffic to slow down.",
+      location: "Main Road",
+      reportedUrgency: "Medium",
     });
 
-    await prisma.request.create({
-      data: {
-        reference: "CC-0000-0002",
-        requesterId: requester.id,
-        categoryId: water.id,
-        assigneeId: staff.id,
-        title: "Water leak",
-        description: "Water is leaking continuously from a municipal pipe.",
-        location: "Oak Street",
-        reportedUrgency: "High",
-        status: "Assigned",
-        priority: "High",
-        statusHistory: {
-          create: {
-            fromStatus: null,
-            toStatus: "Assigned",
-            actorId: coordinator.id,
-          },
-        },
-      },
+    const second = await createNewRequest({
+      reference: referenceFor(2),
+      requesterId: requester.id,
+      categoryId: water.id,
+      title: "Seed water leak request",
+      description: "Water is leaking continuously from a municipal pipe.",
+      location: "Oak Street",
+      reportedUrgency: "High",
     });
 
-    await prisma.request.create({
-      data: {
-        reference: "CC-0000-0003",
-        requesterId: requester.id,
-        categoryId: electricity.id,
-        title: "Street light not working",
-        description: "Street light has been off for several nights.",
-        location: "Pine Avenue",
-        reportedUrgency: "Low",
-        status: "New",
-        statusHistory: {
-          create: {
-            fromStatus: null,
-            toStatus: "New",
-            actorId: requester.id,
-          },
-        },
-      },
+    await assignRequest({
+      request: second,
+      coordinatorId: coordinator.id,
+      staffId: staff.id,
+      priority: "High",
     });
+
+    await createNewRequest({
+      reference: referenceFor(3),
+      requesterId: requester.id,
+      categoryId: electricity.id,
+      title: "Seed street light request",
+      description: "Street light has been off for several nights.",
+      location: "Pine Avenue",
+      reportedUrgency: "Low",
+    });
+
+    void first;
   }
 
   console.log("Seed data created.");
