@@ -12,7 +12,7 @@ generator client {
 }
 
 model User {
-  id                 BigInt    @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
   name               String    @db.VarChar(200)
   email              String    @unique @db.VarChar(320)
   role               String    @db.VarChar(30)
@@ -21,7 +21,7 @@ model User {
   resetCodeHash      String?   @map("reset_code_hash")
   resetCodeExpiresAt DateTime? @map("reset_code_expires_at") @db.Timestamptz(6)
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   submittedRequests Request[]              @relation("Requester")
   assignedRequests  Request[]              @relation("Assignee")
@@ -34,11 +34,11 @@ model User {
 }
 
 model Category {
-  id        BigInt   @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String   @unique @db.VarChar(200)
   active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   requests Request[]
   users    UserCategory[]
@@ -47,8 +47,8 @@ model Category {
 }
 
 model UserCategory {
-  userId     BigInt @map("user_id")
-  categoryId BigInt @map("category_id")
+  userId     Int @map("user_id")
+  categoryId Int @map("category_id")
 
   user     User     @relation(fields: [userId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
@@ -58,11 +58,11 @@ model UserCategory {
 }
 
 model Request {
-  id                BigInt   @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   reference         String   @unique @db.VarChar(40)
-  requesterId       BigInt   @map("requester_id")
-  categoryId        BigInt   @map("category_id")
-  assigneeId        BigInt?  @map("assignee_id")
+  requesterId       Int      @map("requester_id")
+  categoryId        Int      @map("category_id")
+  assigneeId        Int?     @map("assignee_id")
   title             String   @db.VarChar(200)
   description       String
   location          String
@@ -71,7 +71,7 @@ model Request {
   priority          String?  @db.VarChar(30)
   resolutionSummary String?  @map("resolution_summary")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   requester User     @relation("Requester", fields: [requesterId], references: [id])
   category  Category @relation(fields: [categoryId], references: [id])
@@ -86,13 +86,16 @@ model Request {
   @@index([status])
   @@index([assigneeId])
   @@index([createdAt])
+  @@index([updatedAt])
+  @@index([status, createdAt])
+  @@index([priority])
   @@map("requests")
 }
 
 model ActionEntry {
-  id         BigInt   @id @default(autoincrement())
-  requestId  BigInt   @map("request_id")
-  authorId   BigInt   @map("author_id")
+  id         Int      @id @default(autoincrement())
+  requestId  Int      @map("request_id")
+  authorId   Int      @map("author_id")
   body       String
   visibility String   @db.VarChar(30)
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -105,11 +108,11 @@ model ActionEntry {
 }
 
 model RequestStatusHistory {
-  id         BigInt   @id @default(autoincrement())
-  requestId  BigInt   @map("request_id")
+  id         Int      @id @default(autoincrement())
+  requestId  Int      @map("request_id")
   fromStatus String?  @map("from_status") @db.VarChar(30)
   toStatus   String   @map("to_status") @db.VarChar(30)
-  actorId    BigInt   @map("actor_id")
+  actorId    Int      @map("actor_id")
   reason     String?
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -121,16 +124,16 @@ model RequestStatusHistory {
 }
 
 model AuditEntry {
-  id            BigInt   @id @default(autoincrement())
-  requestId     BigInt?  @map("request_id")
-  actorId       BigInt   @map("actor_id")
+  id            Int      @id @default(autoincrement())
+  requestId     Int      @map("request_id")
+  actorId       Int      @map("actor_id")
   fieldChanged  String   @map("field_changed") @db.VarChar(100)
   previousValue String?  @map("previous_value")
   newValue      String?  @map("new_value")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  request Request? @relation(fields: [requestId], references: [id])
-  actor   User     @relation(fields: [actorId], references: [id])
+  request Request @relation(fields: [requestId], references: [id])
+  actor   User    @relation(fields: [actorId], references: [id])
 
   @@index([requestId, createdAt])
   @@map("audit_entries")
