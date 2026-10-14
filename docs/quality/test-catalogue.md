@@ -337,6 +337,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/request-submission.test.js`: FR-008: 100,000 consecutive sequence values get 100,000 different references in the agreed format
 - `tests/request-submission.test.js`: DEC-004: consecutive references are unrelated, so the gap between two does not reveal how many came between
 - `tests/request-submission.test.js`: DEC-004: without the key the mapping cannot be reproduced; another key gives other references
+- `tests/request-submission.test.js`: FR-008, DEC-017: fixed sequence values under the test key always give the same references [#131]
 - `tests/request-submission.test.js`: a reference key shorter than 32 characters is refused at start-up
 - `tests/request-submission.test.js`: a sequence value outside 1 to 99,999,999 is refused rather than wrapped into a reused reference
 - `tests/request-submission.test.js`: only the reference format reaches a lookup
