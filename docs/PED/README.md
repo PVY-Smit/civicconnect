@@ -102,8 +102,10 @@ For a later version, `--m1-only` compares sections 1 to 17 alone and lists every
 v1.0. Each difference must be one the version's row in s1 lists; that comparison is made by the
 reviewer from the list the script prints.
 
-What to expect: on v2.0 it lists 55 differing lines, each one the 2.0 row lists. On v3.0 it lists 60:
-the same 55, with the cover lines now reading v3.0, and the five cells of the 3.0 row in s1. A count
+What to expect: on v2.0 it lists 55 differing lines, each one the 2.0 row lists. On v3.0 it lists 68:
+the same 55, with the cover lines now reading v3.0 and the s8.3 reading note rewritten; the five cells
+of the 3.0 row in s1; and eight lines for the four s8.3 cells CR-002 corrects, each cell's Yes removed
+and its No added. A count
 other than that, or a line outside the cover and the version rows, is a change to M1 content that
 needs its own entry.
 

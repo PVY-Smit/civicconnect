@@ -40,7 +40,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
-| 3.0 | Due 14 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). Sections 1 to 26 are otherwise unchanged. | | In progress |
+| 3.0 | Due 14 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | | In progress |
 
 # 2. Purpose and How to Read This Document
 
@@ -264,7 +264,7 @@ Every target below states a number and the method by which it is measured. A qua
 
 This matrix is the authoritative statement of FR-002. Every entry marked No is a negative test case in M3, which is how NFR-005 becomes verifiable rather than aspirational.
 
-*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69). The Access Matrix in the registers workbook is now corrected for all four cells, and the test fixtures are exported from it (#92, #136); this table is shown as at the M1 baseline.*
+*Reading note, corrected in v3.0 under CR-002: in v1.0 and v2.0, four cells of this table granted what the requirements refuse. The Manager could assign, reject and set priority, and the Coordinator could accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denied all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69). The Access Matrix in the registers workbook was corrected for all four cells and the test fixtures are exported from it (#92, #136), and in v3.0 the four cells below read No to match. v1.0 in the repository keeps the table as it was baselined.*
 
 | **Function** | **Requester** | **Staff** | **Coordinator** | **Manager** |
 |----|----|----|----|----|
@@ -272,13 +272,13 @@ This matrix is the authoritative statement of FR-002. Every entry marked No is a
 | View own requests | Yes | Yes | Yes | Yes |
 | View any request in authorised categories | No | Yes | Yes | Yes |
 | View internal action entries | No | Yes | Yes | Yes |
-| Assign a request to another user | No | No | Yes | Yes |
-| Accept an unassigned request in scope | No | Yes | Yes | No |
+| Assign a request to another user | No | No | Yes | No |
+| Accept an unassigned request in scope | No | Yes | No | No |
 | Record an action entry | No | Yes | Yes | Yes |
 | Change status (model-permitted transitions) | No | Yes | Yes | Yes |
 | Move Resolved to Closed | No | No | Yes | Yes |
-| Reject a request | No | No | Yes | Yes |
-| Set or change priority | No | No | Yes | Yes |
+| Reject a request | No | No | Yes | No |
+| Set or change priority | No | No | Yes | No |
 | View management counts and breakdowns | No | No | Yes | Yes |
 | Maintain the category list | No | No | No | Yes |
 | Create or deactivate a user account | No | No | No | Yes |
@@ -732,6 +732,8 @@ Milestone 2 requires at least two final project-specific design decisions inform
 
 **What the tests found.** Four cells of the Access Matrix grant what the requirements refuse: the Manager assigning, rejecting and setting priority, and the Coordinator accepting an unassigned request. FR-016 makes the Status Model authoritative for transitions, and the Status Model gives assigning to the Coordinator and accepting to Staff (FR-015), and rejecting to the Coordinator (FR-020). FR-021 gives priority to the Coordinator only. The policy denies all four, and #92 takes the conflict to change control.
 
+*Resolved in M3 (13 October 2026): CR-002 corrected the four cells in the Access Matrix register and in s8.3, the test fixtures are exported from the register, and the policy's list of conflicts is empty (#92, #136). See s29.*
+
 **Complexity accepted.** A query that does not use the scope bypasses it. Until a check enforces this, it rests on review, and the M3 negative tests at the endpoints are what catch a miss.
 
 ## 22.3 Where the two decisions meet
@@ -839,6 +841,8 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 **DEC-010, the production database**: Section 24 records the application running as a Render web service (#103). The production database is deferred to M3. Render's free PostgreSQL expires 30 days after creation and is then deleted, and it supports no backups (Render, no date), so it cannot be the system of record that ADR-007 requires to be backed up and restorable (RSK-20). Closing it needs one of two pieces of evidence: the projected cost of a paid database plan, assessed against CON-03 and NFR-013, or a free PostgreSQL host without the expiry. The single instance node-cron requires (RSK-26) and the cold start after 15 minutes idle, which NFR-002 and NFR-001 cannot absorb on the first request, are recorded in s24 as limits of the direction taken.
 
 **CR-002, the Access Matrix**: four cells grant what FR-015, FR-016, FR-020 and FR-021 refuse (#92). On 30 September 2026 the team decided to correct the matrix to the requirements for all four cells (#69). The correction of the Access Matrix sheet, s8.3 and the test fixture is M3 work; the authorisation policy already denies the four cells, so no code depends on it.
+
+*Resolved in M3 (13 October 2026): CR-002 is implemented. The Access Matrix sheet and the test fixtures are corrected (#136), and the s8.3 table is corrected in PED v3.0. Nothing of CR-002 remains open.*
 
 **#65, the end-to-end path**: moves to M3. It needs the bootstrap (#90), whose merge is gated on the DEC-008 conditions, and the data model (#97). The two design decisions and their tests are merged (#93, #94), so M3 wires them into a working path rather than designing them.
 
