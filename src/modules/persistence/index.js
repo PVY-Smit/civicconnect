@@ -4,4 +4,3 @@
 // prisma directly. The raw client is exported only for this module's own
 // operations, for tests and for the seed script.
 export { prisma } from "../../lib/prisma.js";
-export { prisma } from "../../lib/prisma.js";
