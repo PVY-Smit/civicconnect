@@ -1,6 +1,6 @@
 -- ADR-007 / #109
 -- Extends the existing User migration from #108/#90.
--- This migration deliberately does not recreate users or password_hash.
+-- This migration deliberately does not recreate users.
 
 CREATE SEQUENCE "request_reference_seq"
     START WITH 1
@@ -10,8 +10,11 @@ CREATE SEQUENCE "request_reference_seq"
     NO CYCLE;
 
 ALTER TABLE "users"
+    ALTER COLUMN "password_hash" DROP NOT NULL,
+    ADD COLUMN "reset_failed_attempts" INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN "session_version" INTEGER NOT NULL DEFAULT 0,
     ADD CONSTRAINT "chk_user_role"
-    CHECK ("role" IN ('Requester', 'Staff', 'Coordinator', 'Manager'));
+        CHECK ("role" IN ('Requester', 'Staff', 'Coordinator', 'Manager'));
 
 CREATE TABLE "categories" (
     "id" BIGSERIAL NOT NULL,
@@ -19,6 +22,7 @@ CREATE TABLE "categories" (
     "active" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
 
@@ -28,6 +32,7 @@ CREATE UNIQUE INDEX "categories_name_key"
 CREATE TABLE "user_categories" (
     "user_id" BIGINT NOT NULL,
     "category_id" BIGINT NOT NULL,
+
     CONSTRAINT "user_categories_pkey"
         PRIMARY KEY ("user_id", "category_id")
 );
@@ -39,8 +44,8 @@ CREATE TABLE "requests" (
     "category_id" BIGINT NOT NULL,
     "assignee_id" BIGINT,
     "title" VARCHAR(200) NOT NULL,
-    "description" TEXT NOT NULL,
-    "location" TEXT NOT NULL,
+    "description" VARCHAR(4000) NOT NULL,
+    "location" VARCHAR(300) NOT NULL,
     "reported_urgency" VARCHAR(30) NOT NULL,
     "status" VARCHAR(30) NOT NULL DEFAULT 'New',
     "priority" VARCHAR(30),
@@ -107,7 +112,9 @@ CREATE TABLE "action_entries" (
     "body" TEXT NOT NULL,
     "visibility" VARCHAR(30) NOT NULL,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT "action_entries_pkey" PRIMARY KEY ("id"),
+
     CONSTRAINT "chk_action_entry_visibility"
         CHECK ("visibility" IN ('internal', 'requester-visible'))
 );
@@ -123,6 +130,7 @@ CREATE TABLE "request_status_history" (
     "actor_id" BIGINT NOT NULL,
     "reason" TEXT,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT "request_status_history_pkey" PRIMARY KEY ("id")
 );
 
@@ -137,11 +145,35 @@ CREATE TABLE "audit_entries" (
     "previous_value" TEXT,
     "new_value" TEXT,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     CONSTRAINT "audit_entries_pkey" PRIMARY KEY ("id")
 );
 
 CREATE INDEX "audit_entries_request_id_created_at_idx"
     ON "audit_entries"("request_id", "created_at");
+
+CREATE TABLE "account_events" (
+    "id" BIGSERIAL NOT NULL,
+    "user_id" BIGINT NOT NULL,
+    "actor_id" BIGINT,
+    "type" VARCHAR(50) NOT NULL,
+    "at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMPTZ(6),
+
+    CONSTRAINT "account_events_pkey" PRIMARY KEY ("id"),
+
+    CONSTRAINT "chk_account_event_type"
+        CHECK (
+            "type" IN (
+                'reset-code-issued',
+                'reset-code-withdrawn',
+                'password-reset'
+            )
+        )
+);
+
+CREATE INDEX "account_events_user_id_at_idx"
+    ON "account_events"("user_id", "at");
 
 ALTER TABLE "user_categories"
     ADD CONSTRAINT "user_categories_user_id_fkey"
@@ -218,4 +250,18 @@ ALTER TABLE "audit_entries"
     FOREIGN KEY ("actor_id")
     REFERENCES "users"("id")
     ON DELETE RESTRICT
+    ON UPDATE CASCADE;
+
+ALTER TABLE "account_events"
+    ADD CONSTRAINT "account_events_user_id_fkey"
+    FOREIGN KEY ("user_id")
+    REFERENCES "users"("id")
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE;
+
+ALTER TABLE "account_events"
+    ADD CONSTRAINT "account_events_actor_id_fkey"
+    FOREIGN KEY ("actor_id")
+    REFERENCES "users"("id")
+    ON DELETE SET NULL
     ON UPDATE CASCADE;
