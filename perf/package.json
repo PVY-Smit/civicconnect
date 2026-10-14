@@ -1,0 +1,16 @@
+{
+  "name": "civicconnect-perf",
+  "private": true,
+  "description": "Performance measurements for NFR-001 and NFR-002 (#124). Node's built-in fetch and timers only, so there is nothing to install.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "seed": "node seed.mjs",
+    "nfr-001": "node nfr-001-queue.mjs",
+    "nfr-002": "node nfr-002-submission.mjs",
+    "load": "node queue-load.mjs"
+  }
+}
