@@ -828,7 +828,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Why selected | A reset path is a second way into an account. If its failures can be told apart, a code can be guessed, works twice or for ever, or an attacker's session survives the reset, it undoes what FR-001 and NFR-004 protect |
 | Technique and level | Equivalence partitions of failure, boundary values (expiry, password length, the fifth wrong try), negative tests, concurrent cases (two uses of one code, five wrong tries at once); component, and the routes at the handler boundary |
 | Input or precondition | Active and deactivated accounts; codes issued, replaced, expired, withdrawn and used; codes typed in other forms; new passwords at 7, 8, 128 and 129 characters and equal to the current one; sessions made before and after a reset, and a token from before session versions |
-| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account, with a lifetime of 24 hours unless the caller chooses up to 7 days; issuing is recorded with who, for whom and when, never the code; the code is stored only as a hash; it sets a new password that then signs in, works once even when used twice at once, expires, and is replaced by a new one; five wrong tries withdraw it, four do not, and wrong tries at once all count; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup, and a password equal to the current one is refused without spending the code; a reset ends every earlier session; the reset succeeds only when exactly one row is written |
+| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account, with a lifetime of 24 hours unless the caller chooses up to 7 days; issuing is recorded with who, for whom and when, never the code; the code is stored only as a hash; it sets a new password that then signs in, works once even when used twice at once, expires, and is replaced by a new one; five wrong tries withdraw it, four do not, and wrong tries at once all count; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup, and a password equal to the current one is refused without spending the code; a reset ends every earlier session; the reset succeeds only when exactly one row is written; the reset fails if the wrong tries have reached the limit when it is written, even with the code still in place; a caller who may not issue codes is refused before the lifetime is checked; across sign-in and the reset, at most 4 argon2 checks run at once, and a failed check frees its place |
 | Actual result | As expected |
 | Status | Pass |
 | Evidence | Local run, 12 October 2026, #146 at 6fa5e85: 27 of 27 tests. Nine deliberate faults each failed a test |
@@ -864,6 +864,14 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/password-reset.test.js`: a session token from before session versions counts as version 0, and any other version is refused [#146]
 - `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409 [#146]
 - `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message [#146]
+
+**Automated by**, the follow-ups from the review of #146 (#148):
+
+- `tests/password-reset.test.js`: a caller who may not issue codes is refused before the lifetime is checked, whatever lifetime they pass
+- `tests/password-reset.test.js`: a right code checked while wrong tries are counted fails once they reach the limit, even with the code not yet withdrawn
+- `tests/password-reset.test.js`: the limiter runs at most its limit at once, in arrival order, and frees a place when a check throws
+- `tests/password-reset.test.js`: a place handed to a waiting check still counts as taken, so a check arriving later waits
+- `tests/password-reset.test.js`: sign-in and reset share one cap of 4 argon2 checks at once, however many calls arrive
 
 ## Not yet runnable
 
