@@ -18,8 +18,11 @@
 // The browser journeys in e2e/ need a deployed instance, so they are listed with Playwright's --list rather
 // than run, and counted as listed. Their results come from the run against staging (#122, #123).
 // A test file that reaches PostgreSQL through src/lib/prisma.js runs only where a database is configured
-// (DATABASE_URL, or a .env file) and the Prisma client is generated (npx prisma generate). Elsewhere it is
-// not run, and its lines are reported as needing a database, as a missing file is reported.
+// (DATABASE_URL, set or in a .env file) and the Prisma client is generated (npx prisma generate). Elsewhere
+// it is not run, and its lines are reported as needing a database, as a missing file is reported.
+// A test file that is found and run but runs none of its tests, because it crashed on import or declares
+// none, is a problem whatever its lines' tags say: node:test reports such a file as one test named after
+// the file itself.
 //
 // The per-record line counts the record's tests by result: pass, fail, todo and skip (node:test's TODO and
 // SKIP directives, so a test that is switched off is shown, never silently dropped), listed (browser journeys
@@ -89,6 +92,7 @@ function journeysIn(files) {
   return found;
 }
 
+const brokenFiles = new Map(); // file -> why none of its tests ran
 function testsIn(file) {
   const cwd = file.startsWith("client/") ? "client" : ".";
   const rel = file.startsWith("client/") ? file.slice("client/".length) : file;
@@ -103,6 +107,14 @@ function testsIn(file) {
     const m = l.match(/^(not ok|ok) \d+ - (.*?)(?: # (TODO|SKIP)\b.*)?$/); // top level only: no indentation
     if (m) tests.push({ name: m[2].replace(/\\#/g, "#"), result: m[3] ? m[3].toLowerCase() : m[1] === "ok" ? "pass" : "fail" });
   }
+  // A file that ran none of its tests appears as one test named after the file (backslashes escaped in
+  // TAP on Windows): failing if it crashed, passing if it declares no tests. No TAP at all is the same.
+  const slashes = (path) => path.replace(/\\\\/g, "/").replace(/\\/g, "/");
+  const self = tests.find((t) => slashes(t.name) === slashes(rel));
+  if (tests.length === 0 || (tests.length === 1 && self)) {
+    brokenFiles.set(file, self?.result === "fail" ? "crashed before any test ran" : "ran no tests");
+    return [];
+  }
   return tests;
 }
 
@@ -113,7 +125,11 @@ const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...li
 );
 const NO_DATABASE = "needs a database: set DATABASE_URL and run npx prisma generate";
 const needsDatabase = (file) => /lib\/prisma\.js/.test(readFileSync(file, "utf-8"));
-const databaseReady = Boolean(process.env.DATABASE_URL || existsSync(".env")) && existsSync("src/generated/client");
+// The detection reads the test file's own imports, so a test that reaches the database through a helper
+// (tests/support/api.js once it uses the adapter, for TC-32) must import src/lib/prisma.js itself or be
+// added here.
+const envFileHasUrl = existsSync(".env") && /^\s*DATABASE_URL\s*=/m.test(readFileSync(".env", "utf-8"));
+const databaseReady = Boolean(process.env.DATABASE_URL || envFileHasUrl) && existsSync("src/generated/client");
 const notRun = new Set(databaseReady ? [] : files.filter((f) => !f.startsWith("e2e/") && needsDatabase(f)));
 const journeyFiles = files.filter((f) => f.startsWith("e2e/"));
 const results = {
@@ -142,18 +158,23 @@ for (const r of records) {
   for (const ref of r.refs) {
     if (notRun.has(ref.file)) {
       count.database += 1;
-      absent.push(`${r.id}: ${absence(ref)}`);
+      absent.push({ id: r.id, reason: absence(ref) });
+      continue;
+    }
+    if (brokenFiles.has(ref.file)) {
+      count.fail += 1;
+      problems.push(`${r.id}: ${ref.file} ${brokenFiles.get(ref.file)}`);
       continue;
     }
     if (!results[ref.file]) {
       count.absent += 1;
-      absent.push(`${r.id}: ${absence(ref)}`);
+      absent.push({ id: r.id, reason: absence(ref) });
       continue;
     }
     const hit = results[ref.file].filter((t) => matches(ref.pattern, t.name));
     if (hit.length === 0 && ref.pr) {
       count.absent += 1;
-      absent.push(`${r.id}: ${absence(ref)}`);
+      absent.push({ id: r.id, reason: absence(ref) });
       continue;
     }
     if (hit.length === 0) problems.push(`${r.id}: no test in ${ref.file} matches "${ref.pattern}"`);
@@ -169,9 +190,14 @@ for (const r of records) {
 for (const [file, tests] of Object.entries(results)) {
   for (const t of tests) if (!catalogued.has(`${file}\u0000${t.name}`)) problems.push(`not in the catalogue: ${file}: ${t.name}`);
 }
+for (const [file, why] of brokenFiles) if (!records.some((r) => r.refs.some((x) => x.file === file))) problems.push(`${file} ${why}`);
 
 const total = Object.values(results).flat();
 console.log(`\n${files.length} test files, ${total.length} tests: ${total.filter((t) => t.result === "pass").length} pass, ${failed} fail in catalogued records`);
 for (const p of problems) console.log(p);
-if (complete) for (const a of new Set(absent)) console.log(`not on this branch: ${a}`);
+if (complete) {
+  const byReason = new Map();
+  for (const a of absent) byReason.set(a.reason, [...new Set([...(byReason.get(a.reason) ?? []), a.id])]);
+  for (const [reason, ids] of byReason) console.log(`not on this branch: ${reason} (${ids.join(", ")})`);
+}
 if ((strict && (failed > 0 || problems.length > 0)) || (complete && absent.length > 0)) process.exit(1);
