@@ -61,8 +61,3 @@ npm ci
 npx prisma generate
 npx prisma migrate deploy
 npm test
-```
-
-`prisma generate` builds the client into `src/generated/`, which is git-ignored because it
-is derived from `prisma/schema.prisma`. `npm test` needs a reachable database, because the
-RSK-01 test writes a User and reads it back.
