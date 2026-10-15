@@ -575,7 +575,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Each cell succeeds where the register permits and is refused where it does not. A refusal is a 403, or a 404 for a request out of scope (FR-012), or the internal entry left out (FR-011), and writes nothing. For "change status", every move in the table succeeds exactly for the roles the model names. The management, category and user functions are checked at the permission check their routes will use |
 | Actual result | As expected for all 60 cells, and the table covers every function in the register (61 checks pass). Three functions, management counts, the category list and user accounts, have no endpoint of their own yet, so their 12 cells are checked at the permission check their routes will use. One todo per function (3) stands for the later call through its own endpoint; the todos are not cells |
 | Status | Pass, with three functions' own endpoints Not yet built (#115, #117) |
-| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 64 tests, 61 pass (60 cells and the coverage check) and 3 todo (one per function without its own endpoint) |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 64 tests, 61 pass (60 cells and the coverage check) and 3 todo (one per function without its own endpoint) |
 | Traceability | NFR-005, FR-002, FR-011, FR-012, CR-002, #121 |
 | Interpretation | Every built endpoint enforces its cells, called directly rather than through the interface, as NFR-005's verification method asks. The three todos become endpoint calls when #115 and #117 add the routes |
 
@@ -595,7 +595,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Every endpoint and every permission check answers 401, and nothing is written |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 1 of 1 test |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 1 of 1 test |
 | Traceability | FR-001, #121 |
 | Interpretation | Holds for the endpoints built so far; each new endpoint is added to this test |
 
@@ -614,7 +614,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | A pair in the model succeeds for each role it names, with one history row (none for reassignment) and one audit entry per changed field. Every other pair is 409 for every role, with status, history and audit unchanged. A target that is not a status is 400. Closed and Rejected are final. One request's whole life leaves its path in the history and ten audit entries |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 169 of 169 tests |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 169 of 169 tests |
 | Traceability | FR-016, FR-025, ADR-005, RSK-09, #121 |
 | Interpretation | 0-switch coverage of the model through the endpoint, plus one end-to-end path |
 
@@ -637,7 +637,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | 1, 2, max-1 and max accepted; blank and max+1 refused with one error on that field and nothing saved; the title counted in characters as the schema counts them, with the message counting the same way; the service's limits equal the pinned values |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 5 of 5 tests |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 5 of 5 tests |
 | Traceability | FR-007, DEC-017, #112, #121; the defect fixed in 968a44f |
 | Interpretation | The emoji case is a regression test for the counting defect fixed in #131 (968a44f) |
 
@@ -660,7 +660,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | Each invalid partition is refused with one error on its field and nothing saved; several invalid fields are reported together; padding is trimmed; the category is saved as the store's id; server-set fields are ignored; an accepted submission answers 201 with a reference in the agreed format |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 11 of 11 tests |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 11 of 11 tests |
 | Traceability | FR-005, FR-006, FR-007, FR-009, FR-021, #121 |
 | Interpretation | The endpoint refuses every malformed shape without saving |
 
@@ -687,7 +687,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Expected result | A control character in any text field is refused with that field's 400 error and nothing is saved; the description, reasons, summaries and entries keep line breaks and tabs, and the title and location are one line; 4,000 emoji are accepted and 4,001 refused; an assignee id is accepted as one number or string and saved as the store's id, and refused in any other form with nothing written; a malformed reference gets the same 404 as a missing one from every endpoint |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 12 October 2026, #121 at c7535f4 (local): 6 of 6 tests. Run against the services from before the fixes of 8 October, the first five failed; the reference test passed there too and is kept as a guard |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 6 of 6 tests. Run against the services from before the fixes of 8 October, the first five failed; the reference test passed there too and is kept as a guard |
 | Traceability | FR-007, FR-012, FR-015, FR-017, FR-018, FR-020, DEC-017, #121, #131, #132 |
 | Interpretation | No input a client can send reaches the database in a form it refuses. Against PostgreSQL itself this is confirmed in TC-32 |
 
