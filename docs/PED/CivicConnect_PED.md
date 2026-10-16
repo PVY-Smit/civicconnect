@@ -1268,7 +1268,7 @@ This section brings the evidence of s27 to s35 together into one judgement, as t
 - **No deployed candidate.** There is no staging environment (#122), so neither critical journey (TC-33, TC-34) nor the performance exercise (TC-35) has run on the integrated system.
 - **No verification against PostgreSQL.** The API suites have not run against the database (TC-32), so its conditional writes, constraints and id handling are unverified.
 
-**Accepted limitations.** These do not block a release and are recorded in the Technical Debt Register (#125): rate limiting by address on the public reset endpoint, a check against common passwords, and production-scale performance, which M3 does not ask for.
+**Accepted limitations.** These do not block a release. The Manager-assisted password reset is recorded as TD-004 in the Technical Debt Register, which is in review (#144). Two further limitations are not yet recorded there and are to be added under #125: rate limiting by address on the public reset endpoint, and a check against common passwords. Production-scale performance is also not shown, and M3 does not ask for it.
 
 ## 36.1 Release Evidence Summary
 
@@ -1301,4 +1301,4 @@ Testing does not show that no defect exists. These are the uncertainties that re
 | The queue and submission are slower on the hosted service than NFR-001 and NFR-002 allow (RSK-02, RSK-18) | There is no staging environment, so neither has been measured; a free-tier host can sleep and answer its first request slowly (s24) | Scripts and method ready and tested (TC-35); the queue reads one page | Run the measurements on staging (#122). Jean Smit |
 | The application does not install or run on the BC Desktop campus machines (RSK-30) | The campus check has not been run; CI never tests the campus image | npm ci from a committed lockfile; the engines field to limit Node to version 24 (#90) | Run the campus check when lab access allows and record it on #64. Darius Mushi |
 | A dependency advisory affects the build (RSK-12) | Prisma 7 pins two packages with high-severity advisories that no 7.x release has fixed | npm overrides, with npm audit reporting 0 vulnerabilities | Remove the overrides when Prisma fixes issue #30295; add npm audit to CI (#110). Darius Mushi |
-| A reset code is guessed by many requests from one address | The public reset endpoint has no rate limit by address | A code is withdrawn after five wrong tries on its account, and every check is a deliberately slow argon2 comparison | Add rate limiting by address; recorded in the Technical Debt Register (#125). Jean Smit |
+| A reset code is guessed by many requests from one address | The public reset endpoint has no rate limit by address | A code is withdrawn after five wrong tries on its account, and every check is a deliberately slow argon2 comparison | Add rate limiting by address, and record it in the Technical Debt Register (#125, #144), where it is not yet entered. Jean Smit |
