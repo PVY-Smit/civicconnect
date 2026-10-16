@@ -11,7 +11,7 @@ Project Engineering Document (PED) v3.0
 | **Milestone** | Milestone 3 - Controlled Construction, Integration, Quality and Release Readiness |
 | **Document** | PED v3.0, continued from PED v2.0, which evolved from PED v1.0. PED v1.0 is kept unchanged in the repository as the M1 record. This document evolves through v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v3.0 IN PROGRESS, due for the M3 submission on 14 October 2026 (#127); its submission information is in s27. v2.0 is the team's M2 baseline, merged on 9 October 2026 (#95). The M1 and M2 gate decisions are the assessor's, and the team's sign-off of v1.0 and v2.0 is recorded in s16 and s26.3. |
+| **Baseline status** | v3.0 SUBMITTED for M3 on 16 October 2026 (#127); its submission information is in s27. v2.0 is the team's M2 baseline, merged on 9 October 2026 (#95). The M1 and M2 gate decisions are the assessor's, and the team's sign-off of v1.0 and v2.0 is recorded in s16 and s26.3. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -40,7 +40,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
-| 3.0 | Due 14 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | | In progress |
+| 3.0 | 16 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | | In progress |
 
 # 2. Purpose and How to Read This Document
 
@@ -901,37 +901,38 @@ The M3 brief, s5.3, asks for this block so that the assessor can find the submit
 |----|----|
 | Team | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
 | Repository | https://github.com/PVY-Smit/civicconnect |
-| Release candidate | [To be completed under #128: the tag, its commit and the version] |
+| Release candidate | None tagged, because the classification is NOT READY (s36.2). The submitted baseline is main at commit d1af49a (15 October 2026); pull requests still in review are named where their evidence is cited |
 | PED version | v3.0 |
-| RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM, with the M3 columns CR-006 adds (#126). The workbook keeps its M1 file name, which the registers, the PED and the pull requests cite, and holds the registers for every milestone |
+| RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM. The M3 columns CR-006 proposes are not added, because CR-006 still waits for Darius Mushi's answer (#126, s36.1). The workbook keeps its M1 file name, which the registers, the PED and the pull requests cite, and holds the registers for every milestone |
 | Test catalogue | `docs/quality/test-catalogue.md` (#126) |
-| CI and test evidence | [To be completed under #110 and #128: the CI run for the release candidate] |
-| Staging or demonstration | [To be completed under #122: the staging address, or the instructions to run the simulated staging environment] |
-| Date submitted | [To be completed under #128] |
+| CI and test evidence | No CI workflow runs the tests (#110 not done). The secret scan runs on every pull request. The test evidence is the local runs recorded in the test catalogue, on main at d1af49a on 15 October 2026, Node 24.14.0 on Windows 11 (s32.3) |
+| Staging or demonstration | No staging environment (#122 not done). To run the tests locally: `npm ci` and `node --test` in the repository root for the server; the same in `client/` and in `perf/`. The client screens start with `npm run dev` in `client/`, but the server on main serves only its health check, so they have no API to call. The screens were built and checked against a stand-in of the API contract, which is not part of the repository |
+| Date submitted | 16 October 2026 |
 
 ## 27.2 Overview
 
-M3 builds the M1 scope on the M2 baseline, one module at a time, each in its own pull request with its tests (ADR-001). The table gives each area's state on 13 October 2026, the day before submission. "On main" means merged; every other area is in an open pull request, a draft, or not started.
+M3 builds the M1 scope on the M2 baseline, one module at a time, each in its own pull request with its tests (ADR-001). The table gives each area's state on 16 October 2026, the day of submission. "On main" means merged; every other area is in an open pull request, a draft, or not started.
 
-| **Area** | **Requirements** | **Server** | **Client** | **State, 13 October 2026** |
+| **Area** | **Requirements** | **Server** | **Client** | **State, 16 October 2026** |
 |----|----|----|----|----|
 | Sign-in, sessions and the permission check | FR-001, FR-002, NFR-004, NFR-005 | #130 | #133 | On main |
-| Password reset | FR-004 | #146 | #134 | Open; approved by Tristan Roets |
-| Submission and the requester's views | FR-005 to FR-012 | #131 | #133 | Open; waits for DEC-017 to be recorded |
-| Workflow, priority, action entries and audit | FR-015 to FR-021, FR-025, FR-026 | #132, folded into #131 | #134 | Open, with #131 |
-| Access Matrix correction | CR-002 | #136 | | Open; rebuilt on main, waiting for its approvals |
+| Password reset | FR-004 | #146 | #134 | On main; review follow-ups in #153 |
+| Submission and the requester's views | FR-005 to FR-012 | #131 | #133 | On main (15 October), after DEC-017 was recorded (#154) |
+| Workflow, priority, action entries and audit | FR-015 to FR-021, FR-025, FR-026 | #132, folded into #131 | #134 | On main, with #131 |
+| Access Matrix correction | CR-002 | #136 | | On main |
 | Staff queue | FR-013, FR-014 | #141 (draft) | #134 | Draft |
 | Requester notifications | FR-029 | #142 (draft) | #133 | Draft |
 | Management reports | FR-022 to FR-024 | #143 (draft) | #134 | Draft |
 | User and category administration | FR-003, FR-027, FR-028 | #115, no pull request | #134 | Not started on the server |
-| Schema, migrations and seed data | ADR-007 | #140 (draft) | | Draft; waits for #90 |
-| Bootstrap and application wiring | ADR-001, ADR-002, CR-004 | #90 | | Open; the second member's environment check is still to be posted |
+| Schema, migrations and seed data | ADR-007 | #140 (draft) | | Draft. Its migrations and seed stand up on a fresh PostgreSQL 16 database (checked 15 October) |
+| Bootstrap | ADR-001, ADR-002, CR-004 | #90 | | On main (14 October): the Express application with its health check, the Prisma client and the first migration |
+| Persistence adapter and the routes wired into the server | ADR-001, ADR-007 | #108, #109, no pull request | | Not started, so main serves only its health check |
 | CI with a blocking test gate | NFR-012 | #110, no pull request | | Not started; the secret scan (#87) is the only workflow |
 | Simulated staging and release identification | | #122, no pull request | | Not started |
 
-**Release candidate.** [To be completed under #128 by Jean Smit: the tag, its commit and the version, and the areas above that it contains]
+**Release candidate.** None is tagged, because the classification is NOT READY (s36.2). The submission is main at commit d1af49a, 15 October 2026, which holds the areas marked On main above. Where this document cites evidence from a pull request still in review, it names the pull request.
 
-**Current status.** Each module is built and tested on its own, at component level and through its HTTP handlers (s32, s33). Main holds the authorisation policy, the transition table, sign-in and the requester's screens, but no running server: the routes, the database and the persistence adapter arrive with #90 and #140. Until they merge there is no integrated release candidate to deploy, and s36 weighs that.
+**Current status.** Each module is built and tested on its own, at component level and through its HTTP handlers (s32, s33). Main holds the authorisation policy, the transition table, sign-in, the password reset, submission, the requester's views, the workflow service, the client screens, and the bootstrap with its first migration. The routes are not wired into the server and the persistence adapter does not exist, so main serves only its health check, and the services run over in-memory stores in their tests. There is no integrated release candidate to deploy, and s36 weighs that.
 
 # 28. M2 Baseline Conformance
 
@@ -977,18 +978,18 @@ A test that cannot fail shows nothing. For the services, the API suites and the 
 
 A record whose tests are in a pull request that has not merged is counted from the run on that pull request's branch, as its evidence states.
 
-| **Category (M3 brief s9)** | **Minimum** | **Records** | **Status at 12 October 2026** |
+| **Category (M3 brief s9)** | **Minimum** | **Records** | **Status at 15 October 2026** |
 |----|----|----|----|
-| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36 | Pass |
+| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36, TC-38 | Pass |
 | Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24 to TC-26, TC-37 | Pass |
-| API or integration | 3 | TC-21 to TC-26 and TC-37 at the handler boundary; TC-32 against PostgreSQL | Pass at the handler boundary; TC-32 Blocked until #108 and #109 |
+| API or integration | 3 | TC-21 to TC-26 and TC-37 at the handler boundary; TC-39 and TC-32 against PostgreSQL | Pass at the handler boundary; TC-39, a smoke test of the stack, passes against PostgreSQL; TC-32 Blocked until the persistence adapter exists (#109) |
 | End to end | 2 | TC-33, TC-34 | Blocked until staging (#122); both pass against a local stand-in of the API |
 | Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22 to TC-24, TC-36, TC-37 | Pass |
 | High-priority requirement or risk | 5 | TC-01, TC-05, TC-09 to TC-12, TC-18, TC-22, TC-24 | Pass |
 | Black-box techniques | 2 | Decision table, state transition, boundary values, equivalence partitions (s33) | Pass |
 | Performance | 1 scenario | TC-35 (s34) | Blocked until staging (#122) |
 
-[To be completed under #128 by Jean Smit: the statuses at the release candidate, from the catalogue check run on it]
+The statuses are from the catalogue check on main at d1af49a, 15 October 2026. Every record whose tests are on main passes: 132 server, 34 client and 13 performance-script tests, and TC-39 against a local PostgreSQL 16.13. The strict check on main fails for one reason: #90's two tests have no record yet. #151 adds them as TC-38 and TC-39, and with it the strict check passes. TC-22 to TC-26 and TC-37 pass on #147's branch, rebased on main at d1af49a. #147 and #151 are in review.
 
 ## 32.4 What the evidence does not show
 
@@ -1016,17 +1017,17 @@ The techniques were chosen because the behaviour calls for them, as the M3 brief
 
 ## 33.2 Critical scenarios and results
 
-| **Scenario** | **Records** | **Result at 12 October 2026** | **Evidence** |
+| **Scenario** | **Records** | **Result at 15 October 2026** | **Evidence** |
 |----|----|----|----|
-| Every role and function through its endpoint | TC-22 | 61 checks pass: 48 cells through their endpoint, 12 at the permission check, and the coverage check; 3 todo for endpoints not yet built | #121, local run at c7535f4 |
-| Every status pair through the endpoint | TC-24 | 169 of 169 pass | #121, local run at c7535f4 |
-| Field limits and input partitions through the endpoint | TC-25, TC-26, TC-37 | Pass | #121, local run at c7535f4 |
-| Calls without a session | TC-23 | Pass | #121, local run at c7535f4 |
-| The API suites against PostgreSQL | TC-32 | Blocked until #108 and #109 | |
+| Every role and function through its endpoint | TC-22 | 61 checks pass: 48 cells through their endpoint, 12 at the permission check, and the coverage check; 3 todo for endpoints not yet built | #147 at 9fea651, rebased on main at d1af49a |
+| Every status pair through the endpoint | TC-24 | 169 of 169 pass | #147 at 9fea651, rebased on main at d1af49a |
+| Field limits and input partitions through the endpoint | TC-25, TC-26, TC-37 | Pass | #147 at 9fea651, rebased on main at d1af49a |
+| Calls without a session | TC-23 | Pass | #147 at 9fea651, rebased on main at d1af49a |
+| The API suites against PostgreSQL | TC-32 | Blocked: the persistence adapter does not exist (#109) | |
 | A requester submits and follows a request | TC-33 | Blocked until staging; passes against a local stand-in of the API | #138 |
 | Staff take a request from New to Closed | TC-34 | Blocked until staging; passes against a local stand-in of the API | #138 |
 
-[To be completed under #128 by Jean Smit: the results from the CI run on the release candidate, TC-32 against PostgreSQL, and TC-33 and TC-34 against staging]
+There is no CI run (#110), TC-32 has not run because there is no persistence adapter, and TC-33 and TC-34 have not run against staging (#122). The results above are therefore the M3 evidence for these scenarios.
 
 ## 33.3 What the results show
 
@@ -1052,9 +1053,9 @@ Each time is taken from just before the request is sent until the whole answer h
 
 ## 34.3 Results
 
-[To be completed under #124 by Jean Smit: the results of the runs against staging (#122) with the seed data (#109): for each measurement the distribution, the outcome against its target, the errors, and the environment recorded with it]
+No run against the system was possible in M3. There is no staging environment (#122), and the server on main does not yet serve the queue or submission, because the routes and the persistence adapter are not built. NFR-001 and NFR-002 are therefore not measured, and s36 records that.
 
-Before staging exists the scripts were run against the local stand-in of the API used for the client screens, to check the scripts; the system itself was not measured. Those results were written outside the repository and are not evidence. NFR-001 marked its own run invalid, because the stand-in returns the whole queue where NFR-001 times one page, which is the check in s34.2 working as intended.
+Before staging exists the scripts were run against the local stand-in of the API used for the client screens, to check the scripts; the system itself was not measured. Those results were written outside the repository and are not evidence. NFR-001 marked its own run invalid, because the stand-in returns the whole queue where NFR-001 times one page, which is the check in s34.2 working as intended. The follow-ups in #150 (in review) make a run wait for the host's health check, record network errors as failed calls, and mark every result as not evidence unless the server names the release it runs.
 
 ## 34.4 What this does not show
 
@@ -1084,12 +1085,12 @@ Evidence: Technical Debt Register and Defect Register under #125, controlled Acc
 
 # 36. Release Readiness
 
-This section brings the evidence of s27 to s35 together into one judgement, as the M3 brief asks in s15. It is written as at 13 October 2026 and is completed at the release candidate under #128.
+This section brings the evidence of s27 to s35 together into one judgement, as the M3 brief asks in s15. It is written as at 16 October 2026, the day of submission.
 
 **Gate summary.** The design evidence is strong: the services enforce the Access Matrix, the status model and the input rules, and every new test was shown able to fail (s32.2). The integration evidence is weak: nothing has yet run against PostgreSQL, on a deployed server, or through CI.
 
 **Blockers.** Four gaps would each stop a release on their own:
-- **No integrated build.** The bootstrap (#90) and the schema (#140) have not merged, so the services are not wired into a running server with its database.
+- **No integrated build.** The bootstrap (#90) has merged, but the routes are not wired into it and the persistence adapter does not exist, and the schema (#140) is a draft. Main serves only its health check.
 - **No CI test gate.** No workflow builds the application or runs its tests (#110), and the ruleset requires no status check, so neither a failing test nor a failing secret scan blocks a merge.
 - **No deployed candidate.** There is no staging environment (#122), so neither critical journey (TC-33, TC-34) nor the performance exercise (TC-35) has run on the integrated system.
 - **No verification against PostgreSQL.** The API suites have not run against the database (TC-32), so its conditional writes, constraints and id handling are unverified.
@@ -1101,21 +1102,21 @@ This section brings the evidence of s27 to s35 together into one judgement, as t
 | **Evidence area** | **Result** | **Interpretation** | **Concern or action** |
 |----|----|----|----|
 | Build and CI | Partial. One workflow runs on every pull request: the secret scan (#87), which passes. No workflow builds the application or runs its tests (#110 not started). The ruleset on main requires two approvals, linear history and no force pushes, and no status check | A committed secret fails the scan, which reviewers see, but no check is required, so a failing check does not block a merge. The only blocking gate is the two-approval rule | Make the secret scan, and the build and tests once #110 adds them, required status checks in the ruleset. Until then the suites and the strict catalogue check are run by hand, and each pull request records its run |
-| Automated regression | Pass on each branch: for example 363 of 366 tests pass on the API suites' branch, with 3 todo for endpoints not yet built; 66 of 66 on #146; 13 of 13 on #139 | The critical rules are protected at component level and at the HTTP boundary, and each new test was shown able to fail (s32.2) | They run together only once the pull requests merge and CI runs them (#110) |
-| API and integration | Pass at the handler boundary (TC-21 to TC-26, TC-37). Blocked against PostgreSQL (TC-32) | Every built endpoint enforces its Access Matrix cells, every move outside the status model is refused without a write, and no malformed input reaches the store | Run TC-32 once #90 and #140 merge. The database's conditional writes and the id rule (#109) are untested until then |
+| Automated regression | Pass on main at d1af49a (15 October 2026): 132 server, 34 client and 13 performance-script tests, and the RSK-01 test against PostgreSQL. On #147's branch, rebased on main, 385 server tests pass with 3 todo for endpoints not yet built | The critical rules are protected at component level and at the HTTP boundary, and each new test was shown able to fail (s32.2) | They run together only once the pull requests merge and CI runs them (#110) |
+| API and integration | Pass at the handler boundary (TC-21 to TC-26, TC-37). Blocked against PostgreSQL (TC-32) | Every built endpoint enforces its Access Matrix cells, every move outside the status model is refused without a write, and no malformed input reaches the store | Run TC-32 once the persistence adapter exists (#109, #140). The database's conditional writes and the id rule are untested until then |
 | System and end to end | Blocked. TC-33 and TC-34 pass against a local stand-in of the API; the system itself has not run them | The client follows the server's contract. Nothing yet shows the integrated system completing a journey | Release-blocking until one journey completes on a deployed candidate (#122) |
-| Static and security | Secret scan: passes on every pull request. npm audit: 0 vulnerabilities on #90's lockfile (9 and 11 October 2026), with two overrides for advisories Prisma 7 has not fixed (RSK-12). No static-analysis tool is configured | No secret is committed. The dependency advisories are mitigated by the overrides; there is no upstream fix yet | Add a static check with the CI workflow (#110). Remove the overrides when Prisma fixes issue #30295 |
+| Static and security | Secret scan: passes on every pull request. npm audit: 0 vulnerabilities on main's lockfile (15 October 2026), with two overrides for advisories Prisma 7 has not fixed (RSK-12). No static-analysis tool is configured | No secret is committed. The dependency advisories are mitigated by the overrides; there is no upstream fix yet | Add a static check with the CI workflow (#110). Remove the overrides when Prisma fixes issue #30295 |
 | Performance | Not measured. The scripts and their method are ready and tested (TC-35) | There is no evidence yet against NFR-001 or NFR-002 | Run on staging with the seeded 5,000 requests (#122, #109); record the limitation if it cannot run |
 | Known defects | Defects found in M3 review and testing are fixed in their pull requests with a regression test, for example the character count (968a44f), a NUL character causing a server error (0efac6a), and the assignee id's form (c84b7c1). The Access Matrix defect is corrected under CR-002 (#136). The Defect Register is in #144 (draft) | No open defect is known to block a release; the blockers above are gaps in integration | Record each defect, its fix and its regression test in the Defect Register (#125) |
 | Acceptance evidence | Not yet recorded. CR-006's five RTM columns, which give each acceptance criterion its tests, evidence and status, wait for Darius Mushi's answer on #126 | The test catalogue traces each designed case to its requirements, but no criterion has a recorded status yet | Add and fill the CR-006 columns once CR-006 is agreed, from the catalogue's records |
 
 ## 36.2 Classification
 
-**At 13 October 2026: NOT READY.** The brief defines NOT READY as one or more important gates, critical behaviours or release-blocking risks unresolved. Four are unresolved: no integrated build, no CI test gate, no deployed candidate on which a critical journey has completed, and no verification against the database. The evidence for each module on its own is strong, but a release is the integrated system, and that has not yet run.
+**At 16 October 2026: NOT READY.** The brief defines NOT READY as one or more important gates, critical behaviours or release-blocking risks unresolved. Four are unresolved: no integrated build, no CI test gate, no deployed candidate on which a critical journey has completed, and no verification against the database. The evidence for each module on its own is strong, but a release is the integrated system, and that has not yet run.
 
-**What would change it.** CONDITIONALLY READY needs, at least, #90 and #140 merged with the services wired into a running server; TC-32 passing against PostgreSQL; a CI workflow that runs the tests and blocks a merge on failure (#110); and TC-33 completing on a simulated staging environment (#122). The performance exercise, the CR-006 statuses and the open drafts would then be stated as conditions.
+**What would change it.** CONDITIONALLY READY needs, at least, #140 merged, the persistence adapter built and the services wired into the running server; TC-32 passing against PostgreSQL; a CI workflow that runs the tests and blocks a merge on failure (#110); and TC-33 completing on a simulated staging environment (#122). The performance exercise, the CR-006 statuses and the open drafts would then be stated as conditions.
 
-[To be completed under #128 by Jean Smit: the classification at the release candidate, with its reasoning from s36.1 as it then stands]
+**At submission: NOT READY, and no release candidate is tagged.** Between 13 and 16 October, #90, #129, #131 and #154 merged, so the bootstrap, the request and workflow services, CR-004 and DEC-017 are on main. None of the four blockers closed: the services are still not wired to a database, nothing is deployed, CI runs no tests, and TC-32 has not run. Tagging a release candidate would claim an integrated build that does not exist, so the submission is main at d1af49a, named as such.
 
 ## 36.3 Residual Risks
 
@@ -1123,7 +1124,7 @@ Testing does not show that no defect exists. These are the uncertainties that re
 
 | **Residual risk** | **Why it remains** | **Current mitigation** | **Next action and owner** |
 |----|----|----|----|
-| The services behave differently against PostgreSQL than against the in-memory store (RSK-21) | The schema and the persistence adapter have not merged (#90, #140), so TC-32 has not run | The services state their store contract, including conditional writes and comparing the stored code hash as read; the API suites check the behaviour at the HTTP boundary | Run TC-32 when #140 merges. Jean Smit |
+| The services behave differently against PostgreSQL than against the in-memory store (RSK-21) | The schema is a draft (#140) and the persistence adapter does not exist, so TC-32 has not run | The services state their store contract, including conditional writes and comparing the stored code hash as read; the API suites check the behaviour at the HTTP boundary | Run TC-32 once the adapter exists. Jean Smit |
 | The queue and submission are slower on the hosted service than NFR-001 and NFR-002 allow (RSK-02, RSK-18) | There is no staging environment, so neither has been measured; a free-tier host can sleep and answer its first request slowly (s24) | Scripts and method ready and tested (TC-35); the queue reads one page | Run the measurements on staging (#122). Jean Smit |
 | The application does not install or run on the BC Desktop campus machines (RSK-30) | The campus check has not been run; CI never tests the campus image | npm ci from a committed lockfile; the engines field to limit Node to version 24 (#90) | Run the campus check when lab access allows and record it on #64. Darius Mushi |
 | A dependency advisory affects the build (RSK-12) | Prisma 7 pins two packages with high-severity advisories that no 7.x release has fixed | npm overrides, with npm audit reporting 0 vulnerabilities | Remove the overrides when Prisma fixes issue #30295; add npm audit to CI (#110). Darius Mushi |
