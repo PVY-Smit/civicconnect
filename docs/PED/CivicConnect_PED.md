@@ -936,7 +936,67 @@ M3 builds the M1 scope on the M2 baseline, one module at a time, each in its own
 
 # 28. M2 Baseline Conformance
 
-[To be completed under #127 by Darius Mushi: what was built as the M2 baseline planned it, module by module against ADR-001 to ADR-008, and each important deviation with its reference. It also gives the current position where M3 has overtaken a statement in sections 1 to 26 that is kept as it was written, such as #90's state in s20 and s25.1 and #65's in s26.2. M3 brief s6, item 2, and s7]
+**1.** This section compares what main holds at commit d1af49a (15 October 2026, s27.1) with the M2 baseline in s18 to s26. It records what was built as the baseline planned it, what was not built, and each significant deviation with its reference. Minor coding choices are not recorded.
+
+## 28.1 Conformance by module and by decision
+
+**1.** All ten module directories that ADR-001 names exist under `src/modules/`: administration, audit, authorisation-policy, identity-access, notification, persistence, reporting, request-access, request-capture and workflow-status. The table gives what each holds, from s27.2.
+
+| **Module (ADR-001)** | **Responsibility** | **State at d1af49a** | **Evidence** |
+|----|----|----|----|
+| identity-access | Sign-in, sessions, password reset (FR-001, FR-004) | On main: sign-in, session, reset and HTTP handlers | #130, #146 |
+| authorisation-policy | Read scope and action checks (ASR-01) | On main | #94 |
+| request-capture | Submission, reference generation and validation (FR-005 to FR-009) | On main | #131 |
+| request-access | The requester's list and detail (FR-010 to FR-012) | On main | #131 |
+| workflow-status | Transition table and workflow service (FR-015 to FR-021) | On main | #93, #132, #131 |
+| audit | One audit entry per change (FR-025, FR-026) | On main. The entry is written inside the workflow service's transaction, as ADR-001 rule 3 requires | #132 |
+| notification | FR-029 indications | Only the module's index file is on main. The implementation is a draft | #142 |
+| reporting | FR-022 to FR-024 | Only the module's index file is on main. The implementation is a draft | #143 |
+| administration | FR-003, FR-027, FR-028 | Only the module's index file is on main. The server side is not started. The screens are on main | #115, #134, #135 |
+| persistence | Database access and transactions | The module re-exports the Prisma client. The named operations the services expect are not built | #108, #109 |
+
+**2.** The staff queue (FR-013, FR-014) is a draft (#141).
+
+| **M2 decision** | **What the baseline planned** | **State at d1af49a** | **Conforms** |
+|----|----|----|----|
+| ADR-001 rules 2 and 3 | Authorisation decisions only in the policy module. A status change and its audit entry in one transaction | Both hold in the modules and are tested at component level and at the handler boundary (TC-01, TC-04, TC-18, TC-22) | Yes |
+| ADR-001 rules 1 and 5 | Every call enters through the server's entry point. Data access sits behind the persistence module | The route handlers exist per module, but they are not wired into the server, and the persistence module only re-exports the Prisma client. Main serves only its health check, and the services run over in-memory stores that follow the store contract (s30.4) | Not yet shown in a running system |
+| ADR-002 stack | Node.js 24, Express 5, Prisma 7 on PostgreSQL, argon2, `node:test`, React with Vite | As planned. `package.json` pins Express 5.2.1, Prisma and its adapter 7.10.0, pg 8.23.0, argon2 0.45.1 and node-cron 4.6.0 exactly, and `engines` is `>=24 <25` with `engine-strict=true` in `.npmrc`. The two overrides s20 describes are in place, deepmerge-ts 8.0.2 and mysql2 3.24.4. The client is in `client/`. One minor addition: dotenv 18.0.4, pinned exactly, for local configuration, which needs no ADR. The campus check is outstanding (RSK-30) | Yes |
+| ADR-005 transitions | A declarative table with Strategy guards, one set of rules | On main (#93). Checked against the Status Model register (TC-05) and through the endpoint for every status pair (TC-24) | Yes |
+| ADR-006 authorisation | Scope applied at the query for reads, a central policy for actions | On main (#94). Checked against the Access Matrix register (TC-01). 48 of 60 cells are called through their endpoint and 12 at the permission check their routes will use (TC-22) | Yes. Endpoint verification is partial until #115 and #117 |
+| ADR-007 data | Seven entities in PostgreSQL, an atomic reference sequence, each change in one transaction | The first migration on main (`20261011014510_init`) creates only the User table, from the full User model. The other entities, the sequence and the seed data are in a draft (#140), which stands up on a fresh PostgreSQL 16 database (15 October). TC-32 has not run | Partly |
+| ADR-008 notification | An in-process interface that derives FR-029 indications from persisted evidence | Draft (#142), not on main | Not yet |
+| DEC-010 deployment | A Render web service, with the production database deferred to M3 | Nothing is deployed (#122). The production database was not decided in M3 | Not delivered |
+
+## 28.2 Significant deviations
+
+**1. The merge conditions for the bootstrap (CR-004, DEC-016, #129).** *Original:* s20 and s26.2 allowed #90 to merge only after the campus Node check and the RSK-01 proof of concept had passed. *Problem:* the two verification logs on #64 disagreed. The one with a screenshot ran on a member's own machine, on Node 25.9.0 with mock data, and the one reporting a campus run had no output. The proof of concept in #90 also persisted to a table the test created and dropped, which says nothing about the ADR-007 model. *Revised:* a member other than the author runs `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test` from a fresh clone on Node 24 against PostgreSQL 16, and posts the output with the operating system, `node -v` and where PostgreSQL ran on #90. The proof of concept creates a User from the ADR-007 model through Prisma, reads it back, accepts the right password and rejects a wrong one with argon2, and removes it, with no `CREATE TABLE` or `DROP TABLE`. CI repeats the check once #110 merges. Gate 3, the campus check, is not closed: it becomes RSK-30 (probability 3, impact 3, exposure 9, Medium, owner Darius Mushi). *Consequence:* Darius Mushi approved CR-004 on 8 October and Tristan Roets on 12 October, and #129 merged. Both conditions were then shown on #90. The environment check was posted by Jean Smit, the reviewer, since Darius Mushi was the author: a fresh clone with no `node_modules` at commit a109702 on Windows 11 (10.0.26200), Node 24.14.0, npm 11.9.0 and PostgreSQL 16.13 on a local cluster with an empty database. `prisma migrate deploy` applied the first migration, `npm test` passed 41 of 41, `npm audit` reported 0 vulnerabilities, and the database held only `users` and `_prisma_migrations` afterwards, with no rows in `users`. An earlier run by Darius Mushi on PostgreSQL 18.6 was recorded as not an exact match, and under ADR-002's amendment it does not count as the check. The RSK-01 test in `tests/rsk01.test.js` meets condition 2. The reviewer rejected its earlier forms three times: it could not fail, because it passed on any database error, it did not parse, and it used a table the test created and dropped. The campus machines have still not been run, and CI will never test their image, which is why RSK-30 stays open. See s29.
+
+**2. The persistence module is not built.** *Original:* ADR-001 rule 5 and ADR-007 place all database access in the persistence module, behind named operations. *Evidence:* each M3 module was built and tested against a stated store contract before the schema (#140) and the operations (#108, #109) were finished, and the module on main only re-exports the Prisma client. The reviewer of #90 flagged that a bare re-export lets other modules query the database directly, against rules 2 and 5, and the module now states that other modules use its named operations. *Revised decision:* none. This is unfinished work, not a changed design, and it is recorded here so that it is not read as one. *Consequence:* main serves only its health check, TC-32 is blocked, and s36 classifies the candidate NOT READY. The operations must satisfy the contract in s30.4. The reviewer also found that Prisma returns ids as `bigint`, which JSON cannot carry, so any handler that returns an id would answer 500. That rule is settled with the schema on #109.
+
+**3. The Access Matrix (CR-002, #92, #136).** *Original:* s8.3 granted four moves that FR-015, FR-020 and FR-021 refuse. *Evidence:* the M2 policy tests found it (s22.2). *Revised:* the register, the test fixtures and s8.3 are corrected to the requirements. *Consequence:* the code never changed, because the policy already denied the four cells. The baseline text was wrong, not the implementation.
+
+**4. ADR-007's User model.** *Original:* the User entity in ADR-007. *Evidence:* it was incomplete for authentication, which writing the schema (#109) showed. The model on main now holds name, role, active, the password hash, the reset-code fields and both timestamps. *Revised:* the model was corrected through the controlled change process. *Consequence:* the defect and its correction are recorded in s35 and the Defect Register (#125).
+
+**5. How a password is reset (FR-004).** *Original:* FR-004 asks for a controlled reset by a single-use link that expires, with one confirmation message whether or not the account exists. *Evidence:* the team has no email channel, because SC-D-01 is deferred, so a link has no way to reach a user. *Implemented:* a Manager-assisted reset with a one-time code (#146). The code works once, expires and is withdrawn after five wrong tries, and a reset ends every earlier session. Every failed sign-in or reset gets the same answer (TC-08 to TC-11, TC-36). *Consequence:* a Manager must be involved, which is weaker than self-service. The public reset endpoint has no rate limit by address. Both are recorded as known limitations in the Technical Debt Register (#125) and in s36.3. FR-004 is a Should requirement.
+
+## 28.3 Statements in sections 1 to 26 that M3 has overtaken
+
+Sections 1 to 26 are kept as written, so the current position is given here.
+
+| **Where** | **What it says** | **Position at d1af49a** |
+|----|----|----|
+| s20 and s26.2, DEC-008 | Both ADR-002 conditions must pass before #90 merges | Replaced by the amended conditions of CR-004 (28.2, item 1). Both were shown on #90, which is on main. The campus check is outstanding as RSK-30 |
+| s25.1, first row | #90 is open and its merge is gated | On main |
+| s20, last table row | React and Vite are added with the first client work | The client is on main (#133, #134, #135) |
+| s25.1 and s26.2, #65 | The end-to-end path is not started and moves to M3 | The services behind it are on main and tested at the handler boundary. The routes are not wired and the persistence operations are not built, so the path is incomplete. TC-33 and TC-34 pass only against a stand-in of the API |
+| s26.3, conditions 1 and 2 | The production database is chosen in M3. CR-004 is under review | The production database was not decided in M3, and no environment was deployed (s36). CR-004 is approved and merged (#129) |
+| s26.2, #47 | Met when a check runs on every pull request to main | The secret scan runs on every pull request, but the ruleset requires no status check, so #47 stays open (s31) |
+| s26.2, #27, #36, #37, #48, #49 | Open M1 limitations | All five were still open on 16 October 2026, checked with `gh issue view`. Each is carried forward as s26.2 states it |
+
+## 28.4 What the conformance shows
+
+The decisions that carry the most risk, ADR-005 and ADR-006, are the most closely conformed to and the most heavily tested, each against its register. The weakest conformance is where the pieces join: ADR-007's persistence and ADR-001's rules 1 and 5 hold in design and in component tests, but not yet in a running, integrated system. s36 weighs that.
 
 # 29. Controlled Changes
 
@@ -944,11 +1004,124 @@ M3 builds the M1 scope on the M2 baseline, one module at a time, each in its own
 
 # 30. Construction and Configuration
 
-[To be completed under #127 by Darius Mushi: the repository strategy, configuration and secrets handling, and the important implementation notes from the bootstrap (#90, #108). M3 brief s6, item 4]
+## 30.1 Repository strategy
+
+**1.** The controlled repository is https://github.com/PVY-Smit/civicconnect. Main is protected by the ruleset "Protect main" (id 22248862), read back from the GitHub API on 16 October 2026: enforcement active on `refs/heads/main`, last updated on 4 September 2026, the day it was created, so it has not changed since. It holds a pull request for every change, with two approving reviews and stale approvals dismissed on push, linear history and no force pushes. `current_user_can_bypass` reads `never`, so it binds administrators too (s12.2). The ruleset has no required status check, which s31 states plainly.
+
+**2.** Branches are named `type/issue-number-short-description` (CONTRIBUTING.md), and each pull request covers one issue and uses the pull request template, which asks for the registers touched, the AI-assistance declaration and what the reviewer should focus on. M3 branches follow the convention, for example `feat/111-sign-in-authorisation`, `fix/92-access-matrix-correction`, `test/124-performance` and `docs/107-cr-004-bootstrap-conditions`. Two M2 branches do not: #99 (`docs/ped-s21-s23-tristan-v2`) and #103 (`feature/s24-ped-documentation`) carry no issue number. They are the same limitation as #37, which was still open on 16 October. s27.2 lists each M3 area with its pull requests, so they are not repeated here.
+
+## 30.2 Review evidence
+
+**1.** The review of the bootstrap (#90) shows review changing the work. The reviewers requested changes four times before approving, and the findings were real defects:
+
+**1.** *The first review.* `engines` demanded Node `>=24.21.0`, which the reviewer's own Node 24.14.0 and possibly the campus machines fail, `dotenv` was imported in three files but not declared, and "Checks pass" was ticked although no workflow existed. A failed assertion in the health test would also have left the server open and hung the run.
+
+**2.** *The second review.* `npm test` failed from a clean checkout, because a path in `src/lib/prisma.js` was wrong. The RSK-01 test could not fail: it passed on any error from `SELECT 1`, so a database that was not running counted as a pass. The `.env.example` file named a variable the code did not read, so copying it failed.
+
+**3.** *The third and fourth reviews.* The test file did not parse, because every Prisma raw call was written with a backslash before the dollar sign, and the fix commit titled "remove syntax errors" left all four in. The proof of concept still had no authentication step and wrote to a table the test created and dropped.
+
+**4.** *After the rebase.* Both conditions of CR-004 were still unmet: there was no migration, the test did not create a User through `prisma.user`, the User model differed from ADR-007 and from the draft in #140, and `engines` allowed Node 25. The author fixed each, generating the first migration from the full User model and setting `engines` to `>=24 <25` with `engine-strict=true`. Tristan Roets asked for the same Node restriction and for `npm ci` in the README. Both reviewers then approved.
+
+**2.** The review of #129 (CR-004) shows the same control working on a register change. Darius Mushi requested changes twice before approving. He found that ADR-002 called the bootstrap both #64 and #90, that gate 3 still read as a live blocker, that CR-004's register row made the pull request's own merge its approval, that DEC-016 named only one of the two amended conditions, that DEC-008 still stated the original conditions as live, that the proof of concept's timebox had passed, and that RSK-30 claimed a CI control that had not merged. The author fixed each, and CR-004 now records both approvals with their dates.
+
+**3.** The review of this document's own pull request (#145) led to the 3.0 row's date matching the cover, a shorter cover status line, the build refusing to run with `--submission` while any placeholder remains, the expected `--m1-only` count recorded in the PED README, and sections s28 and s29 moving to different owners, in line with the authorship rotation in s12.1 and RSK-07.
+
+**4.** Every M3 change reached main through a pull request, and 52 pull requests had merged by 16 October. The two direct commits to main in s12.2 predate the ruleset.
+
+## 30.3 Configuration and secrets
+
+**1.** No credential, key or token is committed. `.gitignore` excludes `.env`, key and certificate files, and `.env.example` carries placeholder values only, naming `DATABASE_URL` and `PORT`, the variables the code reads (NFR-007, RSK-11). The application reads every environment-specific value through `src/lib/env.js` (s24), and on the hosted service they are injected at the container instance, not held in code. The generated Prisma client in `src/generated/` is git-ignored, since `prisma generate` rebuilds it from the schema.
+
+**2.** Secret scanning and push protection are enabled on the repository. A workflow also runs Gitleaks on every pull request and on every push to main, checking out the full history (`.github/workflows/secret-scan.yml`, #87). NFR-007 asks for a full-history scan before each baseline. Running `gitleaks detect --source . -v` on main on 16 October 2026 scanned 267 commits, about 2.8 MB, and reported no leaks.
+
+**3.** Environment-specific values and where they differ:
+
+| **Setting** | **Held in** | **Development** | **Planned staging** |
+|----|----|----|----|
+| Database connection | `DATABASE_URL`, read through `src/lib/env.js` | A local PostgreSQL 16 database | A hosted database. The production database choice is still open (s28.2) |
+| Session signing secret | Environment variable. The service refuses to start with one shorter than 32 characters | A local value, never committed | A distinct value held on the host |
+| Node version | The `engines` field, `>=24 <25`, with `engine-strict=true` in `.npmrc` so that an install on another version fails | 24 | 24 |
+| Instances | Host setting | 1 | 1, because node-cron needs a single instance (RSK-26, s24) |
+
+No value is recorded here or in the repository.
+
+**4.** Test data is generated, never copied from real people (RSK-10, FEC-04): the seed data (#140) and the 5,000 requests for the performance run are submitted through the API as a seeded Requester (s34.2).
+
+**5.** Dependencies come from a committed lockfile through `npm ci`, and every one is pinned to an exact version, as ADR-002 records. Two packages pinned by Prisma 7 are overridden to their fixed versions, deepmerge-ts 8.0.2 and mysql2 3.24.4 (RSK-12). The reviewer confirmed the reasoning: mysql2 is needed only by the Prisma CLI and is never loaded at runtime, because the application uses the pg adapter, and `npm audit`'s suggested fix of downgrading to Prisma 6 would have undone ADR-002's pin. `npm audit` reported 0 vulnerabilities on main's lockfile on 15 October.
+
+## 30.4 Implementation notes a maintainer needs
+
+**The policy module is the only place that encodes who may see what** (ADR-001 rule 2). The test fixtures are exported from the Access Matrix and Status Model registers, so a change to either register needs the fixture re-exported (`python tools/export_register_fixtures.py --check`) and TC-01 and TC-05 re-run.
+
+**Services state a store contract.** The in-memory stores in the tests satisfy it, and so must the persistence module's named operations: conditional writes, transactions that roll back the change, its history row and its audit entry together, and comparing a stored reset-code hash as it was read (s36.3). Other modules must not import the Prisma client directly.
+
+**A query that does not use the policy's scope bypasses it** (s22.2). Review and the endpoint tests (TC-22) are what catch a miss, so every new read goes through the policy.
+
+**Input limits come from DEC-017.** Lengths are counted in characters as PostgreSQL counts them, and control characters are refused at every endpoint (TC-25, TC-37).
+
+**Setup is `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test`,** against PostgreSQL 16, with `DATABASE_URL` set from `.env.example`. The README gives the four commands.
+
+**Tests use `node:test` for the server and the performance scripts, and Playwright for the two browser journeys** (#123, #138). `tools/check_test_catalogue.mjs --strict` keeps the test catalogue and the tests in step (s32).
+
+## 30.5 AI-assisted work
+
+**1.** AI-assisted contributions are recorded in the AI Usage Register in the registers workbook, with the verification performed and the decision taken. #90's description declares AI assistance, and the reviewer's checks on it are the verification (30.2, item 1): the first version of the RSK-01 test, which could not fail, is an example of AI-assisted output that review rejected until it was rewritten to create a User through `prisma.user`, read it back and check argon2 against the right and a wrong password.
+
+**2.** The drafting of s28, s30 and s31 was AI-assisted, and its entry is in the register. Every statement was checked against the repository: the module listing, `package.json`, `.npmrc`, the ruleset read back from the API, the Gitleaks run, the state of issues #27, #36, #37, #48 and #49, the review history of #90 and #129, and the workflow file. An early draft of s28 described the persistence module as an empty directory and the first migration as wider than it is. Checking the reviewer's comments on #90 corrected both.
+
+**3.** A test written with AI assistance is accepted only once it has been seen to fail for the right reason (s32.2).
 
 # 31. CI and Automated Verification
 
-[To be completed under #127 by Darius Mushi: the pipeline, the automated checks it runs, the rule that blocks a merge, and the links to the runs (#110). M3 brief s6, item 5, and s9]
+**1.** At submission one workflow runs in CI: the secret scan (#87). No workflow builds the application or runs its tests (#110 is not started), and the ruleset on main requires no status check. The automated tests were run by hand and each pull request records its run. This section states what that does and does not show.
+
+## 31.1 Pipeline
+
+**1.** The workflow is `.github/workflows/secret-scan.yml`, and it is the only file in `.github/workflows/`. It runs on every pull request and on every push to main, with read-only permissions. It checks out the full history and runs Gitleaks (`gitleaks/gitleaks-action`). It has passed on each run, and the checks panel of #90, #129 and #145 each shows it as the one check, passed. GitHub's own secret scanning and push protection are enabled alongside it (NFR-007).
+
+**2.** The checks below are run by hand from the repository root, `client/` and `perf/`, and each pull request records the result. They were last run together on main at d1af49a on 15 October 2026.
+
+## 31.2 Automated checks and results
+
+| **Check** | **How it runs** | **Result** | **Evidence** |
+|----|----|----|----|
+| Secret scan | CI, every pull request and push to main | Passes | #87, #90, #129, #145 |
+| Full-history secret scan, `gitleaks detect` | By hand, on main | 267 commits scanned, no leaks, 16 October 2026 | s30.3 |
+| Environment check under CR-004, fresh clone | By hand, by a member other than the author, posted on #90 | `npm ci`, `prisma generate` and `prisma migrate deploy` succeed, `npm test` 41 of 41, `npm audit` 0. Windows 11, Node 24.14.0, npm 11.9.0, PostgreSQL 16.13, commit a109702 | #90 |
+| Server tests (`node --test`) | By hand | 132 pass | s32.3 |
+| Client tests | By hand | 34 pass | s32.3 |
+| Performance-script tests | By hand | 13 pass | TC-35 |
+| Stack smoke test against PostgreSQL 16.13 | By hand, local database | Passes | TC-39 |
+| API suites at the handler boundary | By hand, on #147's branch rebased on main | 385 pass, 3 todo for endpoints not yet built | s33.2 |
+| Test catalogue check, `--strict` | By hand | Fails on main for one reason: #90's two tests have no record until #151 adds them | s32.3 |
+| Dependency check, `npm audit` | By hand | 0 vulnerabilities, with two overrides (RSK-12) | s36.1 |
+| Static analysis | None configured | | s36.1 |
+| Coverage percentage | Not reported | | s32.4 |
+
+## 31.3 Gate rules
+
+| **Control** | **What it stops** | **State** |
+|----|----|----|
+| Two approvals from non-authors, stale approvals dismissed | A merge nobody else has read | Enforced by the ruleset. Approvals were dismissed and re-given when #129 was rebuilt on main |
+| Linear history, no force pushes to main | Rewriting the controlled history | Enforced by the ruleset |
+| Secret scan | A committed secret | The workflow runs, but it is not a required status check, so a failing scan would not stop a merge (s36.1) |
+| Build and tests | A failing build or test | Not configured (#110) |
+
+**1.** The M3 brief asks for at least one meaningful failure that blocks progression. The only control that blocks a merge today is the approval rule. It did block: the reviewers of #90 withheld approval four times, on a failing `npm test`, a test that could not fail and a test file that did not parse, each found by running the code from a clean checkout. That is evidence that review works as a gate. It is not a configured check, because a person had to notice, and the team's own record shows that it took several rounds. No failing automated check that blocked a merge is cited in this document. This is a gap, and s36 records it as a blocker.
+
+## 31.4 What the evidence shows
+
+**1.** A green secret scan shows that no secret pattern the scanner knows was committed in that change. It does not show that no secret is present, and it says nothing about whether the code works.
+
+**2.** The hand-run suites show that the critical rules hold at component level and at the HTTP boundary, and the fault checks in s32.2 show that each new test fails when the defect it guards against is put back. The environment check on #90 shows that the stack installs and its tests pass on one clean machine, run by a member other than the author. They do not stop a failing change from merging. The assessor can see the runs only through the test catalogue and each pull request's record. They are weaker than CI evidence, and the release classification reflects that.
+
+**3.** Nothing here runs against the real database through the API (TC-32), on a deployed server, or on the campus image (RSK-30). A passing run of these checks would not show that.
+
+**4.** The team's rule for a test that fails intermittently is to find and fix the cause, never to rerun it until it passes.
+
+## 31.5 What would close the gap
+
+A workflow that, on every pull request, installs from the lockfiles, builds, runs the tests in the repository root, `client/` and `perf/` and the strict catalogue check, runs TC-39 against a PostgreSQL 16 service and runs `npm audit`, with the secret scan and the test job set as required status checks in the ruleset (#110, #47). This is also CR-004's condition that CI repeats the environment check. It is the first of the conditions for CONDITIONALLY READY in s36.2.
 
 # 32. Quality Strategy Applied
 
