@@ -53,7 +53,8 @@ Request as the change that affects them.
 - PostgreSQL 16, running locally, with an empty database
 
 ### Steps
-1. Copy `.env.example` to `.env` and set `DATABASE_URL` and `PORT`. Never commit `.env`.
+1. Copy `.env.example` to `.env` and set `DATABASE_URL`, `PORT`, `REFERENCE_KEY` and `SESSION_SECRET`
+   (each at least 32 characters). Never commit `.env`.
 2. Run, in this order:
 
 ```bash
@@ -61,3 +62,34 @@ npm ci
 npx prisma generate
 npx prisma migrate deploy
 npm test
+```
+
+`prisma generate` builds the client into `src/generated/`, which is git-ignored because it
+is derived from `prisma/schema.prisma`. `npm test` needs a reachable database, because the
+RSK-01 test writes a User and reads it back.
+
+`npm test` also runs TC-32 (`tests/api-postgres.test.js`), the API against that database. It makes its
+own users, category and requests, and removes them afterwards.
+
+### Running the application
+
+1. Set the four `SEED_*_PASSWORD` values in `.env`, then seed the accounts, three categories and three
+   requests. Running it again adds nothing:
+
+```bash
+npx prisma db seed
+```
+
+2. Build the client once, then start the server. It serves the API under `/api` and the built client
+   from `client/dist`, on `PORT`:
+
+```bash
+npm ci --prefix client
+npm run build --prefix client
+npm run dev
+```
+
+The seeded accounts are `requester@`, `staff@`, `coordinator@`, `manager@` and `manager2@civicconnect.test`,
+with the passwords from `.env`. `SEED_VOLUME=5000` with `ALLOW_DESTRUCTIVE_SEED=true` seeds 5,000
+requests for the NFR-001 measurement; it needs a database with no requests, so run
+`npx prisma migrate reset` first. It refuses to run with `NODE_ENV=production`.
