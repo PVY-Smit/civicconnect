@@ -1,20 +1,22 @@
 // TC-33: a requester submits a request and follows it (FR-001, FR-005 to FR-010).
 //
 // The most common journey, through the client, the server and the database together. A run creates its own
-// request with a unique title, so it does not depend on data from earlier runs.
+// request with a unique title, so it does not depend on data from earlier runs. The requester starts signed
+// in from the state the setup saved (journeys/sign-in.setup.js), which checks the sign-in form itself.
 
 import { expect, test } from "@playwright/test";
-import { accounts, category } from "../support/accounts.js";
-import { REFERENCE, signIn, signOut, statusOf } from "../support/app.js";
+import { category, stateFile } from "../support/accounts.js";
+import { JOURNEY_PREFIX, REFERENCE, signOut, statusOf } from "../support/app.js";
+
+test.use({ storageState: stateFile("Requester") });
 
 test("TC-33: a requester submits a request, gets its reference, and finds it in their list and its detail", async ({ page }) => {
-  const { requester } = accounts();
-  const title = `Streetlight out, journey ${Date.now()}`;
+  const title = `${JOURNEY_PREFIX} streetlight out (${Date.now()})`;
   const description = "The light outside number 14 has been off since Monday.";
   const location = "14 Oak Street";
 
-  // FR-001: signing in lands a requester on their own requests.
-  await signIn(page, requester);
+  // FR-001: a signed-in requester starts on their own requests.
+  await page.goto("/");
   await expect(page.getByRole("heading", { level: 1, name: "My requests" })).toBeVisible();
 
   // FR-007: an empty form is refused, with all five fields named at once.
@@ -30,7 +32,7 @@ test("TC-33: a requester submits a request, gets its reference, and finds it in 
   await page.getByLabel("Description", { exact: true }).fill(description);
   await page.getByLabel("Category", { exact: true }).selectOption({ label: category() });
   await page.getByLabel("Location", { exact: true }).fill(location);
-  await page.getByRole("radio", { name: "Medium" }).check();
+  await page.getByRole("radio", { name: "Medium", exact: true }).check();
   await page.getByRole("button", { name: "Submit request" }).click();
 
   // FR-008, FR-009: the acknowledgement carries a reference in the agreed format.
