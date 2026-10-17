@@ -14,7 +14,7 @@ development in five ways.
 | Database | `final_it` or any local database | `civicconnect_prod`, used by nothing else |
 | Database role | The owner | `civicconnect_app`: no DELETE anywhere; only SELECT and INSERT on the audit, history, entry and event tables (`app-role.sql`) |
 | Configuration | `.env` with test values | Its own `.env` outside every working tree, with secrets generated for it and never used elsewhere, `NODE_ENV=production` and `RELEASE` set to the tag |
-| Address | `localhost:3100` | `localhost:8080`, serving the API and the built client from one origin |
+| Address | `http://localhost:3100` | `https://localhost:8443`, serving the API and the built client from one origin; plain HTTP on 8080 redirects to it |
 
 ## Deploying a release
 
@@ -31,17 +31,23 @@ own connection goes in `.env`.
    - `DATABASE_URL`, using the `civicconnect_app` role;
    - `SESSION_SECRET` and `REFERENCE_KEY`, each 32 characters or more, generated for this environment;
    - `OVERDUE_TARGET_DAYS`;
-   - `NODE_ENV=production`, `PORT=8080`, and `RELEASE` set to the tag.
+   - `NODE_ENV=production`, `PORT=8443`, and `RELEASE` set to the tag;
+   - for TLS (NFR-006), `TLS_CERT_FILE` and `TLS_KEY_FILE` (kept outside every working tree),
+     `COOKIE_SECURE=true` and `HTTP_REDIRECT_PORT=8080`.
 
    `REFERENCE_KEY` must never change once requests exist (DEC-017).
 
-3. Install, generate the client, migrate as the owner, and grant the application's role. The build
-   tools are development dependencies, so `--include=dev` is needed under `NODE_ENV=production`:
+3. Stop the running server first: on Windows it holds its native modules open, and the install fails.
+   Then install, generate the client, migrate as the owner, and grant the application's role.
+   - The build tools are development dependencies, so `--include=dev` is needed under
+     `NODE_ENV=production`.
+   - `npx --no-install` makes a failed install stop the deployment. Plain `npx` would instead download an
+     unpinned Prisma CLI from the registry.
 
    ```bash
    npm ci --include=dev
-   npx prisma generate
-   DATABASE_URL="$OWNER_DATABASE_URL" npx prisma migrate deploy
+   npx --no-install prisma generate
+   DATABASE_URL="$OWNER_DATABASE_URL" npx --no-install prisma migrate deploy
    psql -v app_password="..." -f docs/deployment/app-role.sql -d "$OWNER_DATABASE_URL"
    ```
 
@@ -49,7 +55,7 @@ own connection goes in `.env`.
    passwords for this environment:
 
    ```bash
-   DATABASE_URL="$OWNER_DATABASE_URL" npx prisma db seed
+   DATABASE_URL="$OWNER_DATABASE_URL" npx --no-install prisma db seed
    ```
 
 5. Build the client:
@@ -65,13 +71,19 @@ own connection goes in `.env`.
    node src/server.js
    ```
 
-7. Verify the deployment. Every check must pass, and the release must be the tag deployed:
+7. Verify the deployment. Every check must pass, and the release must be the tag deployed. With a
+   self-signed certificate, Node is told to trust it, and the check stays on:
 
    ```bash
-   node tools/smoke-check.mjs http://localhost:8080 v1.0.0
+   NODE_EXTRA_CA_CERTS=<certificate file> node tools/smoke-check.mjs https://localhost:8443 v1.0.0 http://localhost:8080
    ```
 
-   Then run the two journeys against it (`e2e/`, with `E2E_BASE_URL=http://localhost:8080`).
+   Then run the two journeys against it: from `e2e/`, with `E2E_BASE_URL=https://localhost:8443` and,
+   for the self-signed certificate, `E2E_IGNORE_HTTPS_ERRORS=true`.
+
+The certificate is self-signed for `localhost` (`openssl req -x509 -newkey rsa:2048 -nodes -days 30
+-subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"`). A browser warns about it
+until the machine's owner chooses to trust it; a hosted deployment gets a certificate from its host.
 
 ## Backup and restore
 
@@ -105,8 +117,9 @@ The grants travel with the backup, so the application's role works on the restor
 
 These separate it from a real production deployment, and the go-live decision in the PED weighs them.
 
-- **No TLS.** It is served over HTTP on localhost. NFR-006 needs HTTPS, and `COOKIE_SECURE=true` once it
-  has it.
+- **A self-signed certificate.** Every request is served over HTTPS and plain HTTP is redirected
+  (NFR-006). The certificate is not issued by an authority, so a browser warns until it is trusted on
+  the machine.
 - **Backups are manual,** and they live on the same machine as the database. There is no schedule and
   no off-site copy, so a lost disk loses the backups too.
 - **No hosting.** It runs on one member's machine, not the Render web service DEC-010 chose.
