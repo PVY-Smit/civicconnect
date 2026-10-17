@@ -22,6 +22,7 @@ import {
   resetPassword,
   SAME_PASSWORD,
 } from "../src/modules/identity-access/reset.js";
+import { limitConcurrency, MAX_CONCURRENT_HASHES } from "../src/modules/identity-access/concurrency.js";
 import { createIdentityAccess } from "../src/modules/identity-access/http.js";
 import { issueToken, readSession } from "../src/modules/identity-access/session.js";
 import { signIn } from "../src/modules/identity-access/sign-in.js";
@@ -69,9 +70,9 @@ function fakeStore(list) {
       }
       return 1;
     },
-    async completeReset(id, { expectResetCodeHash, passwordHash }, { event }) {
+    async completeReset(id, { expectResetCodeHash, maxAttempts, passwordHash }, { event }) {
       const u = row(id);
-      if (!u || u.resetCodeHash !== expectResetCodeHash) return 0;
+      if (!u || u.resetCodeHash !== expectResetCodeHash || !(u.resetFailedAttempts < maxAttempts)) return 0;
       writes.push({ op: "completeReset", id });
       Object.assign(u, { passwordHash, resetCodeHash: null, resetCodeExpiresAt: null, resetFailedAttempts: 0, sessionVersion: u.sessionVersion + 1 });
       events.push(event);
@@ -178,6 +179,17 @@ test("a caller can choose the code's lifetime, up to the maximum, for a new acco
   for (const lifetimeHours of [0, -1, MAX_LIFETIME_HOURS + 1, Number.NaN, "24", Infinity]) {
     await assert.rejects(issueResetCode({ actor: MANAGER, userId: 1, lifetimeHours }, d), /lifetime/, String(lifetimeHours));
   }
+});
+
+test("a caller who may not issue codes is refused before the lifetime is checked, whatever lifetime they pass", async () => {
+  const store = fakeStore(USERS());
+  const { d } = deps(store);
+  for (const lifetimeHours of [-1, 0, MAX_LIFETIME_HOURS + 1, Number.NaN]) {
+    assert.deepEqual(await issueResetCode({ actor: null, userId: 1, lifetimeHours }, d), { ok: false, code: "not-signed-in" }, String(lifetimeHours));
+    assert.deepEqual(await issueResetCode({ actor: actorFor("Coordinator"), userId: 1, lifetimeHours }, d), { ok: false, code: "not-authorised" }, String(lifetimeHours));
+    await assert.rejects(issueResetCode({ actor: MANAGER, userId: 1, lifetimeHours }, d), /lifetime/, "a Manager still gets the lifetime error");
+  }
+  assert.equal(store.writes.length, 0);
 });
 
 test("codes come only from the alphabet without look-alikes, and do not repeat", () => {
@@ -390,6 +402,26 @@ test("a code replaced between the check and the write is refused, so it cannot b
   assert.equal(store.users[0].passwordHash, "hash:old password");
 });
 
+test("a right code checked while wrong tries are counted fails once they reach the limit, even with the code not yet withdrawn", async () => {
+  // The fake store withdraws the code in the same write that reaches the limit, so on its own that already
+  // stops this. Here the five failures are counted and the code is left in place, as if withdrawing it
+  // were a separate step, to show completeReset's own condition on the count.
+  const store = fakeStore(USERS());
+  const { d } = deps(store);
+  const code = await issued(store, d);
+  const realComplete = store.completeReset.bind(store);
+  const asked = [];
+  store.completeReset = async (id, args, extra) => {
+    asked.push(args.maxAttempts);
+    store.users[0].resetFailedAttempts = RESET_MAX_ATTEMPTS; // five wrong tries land after the check
+    return realComplete(id, args, extra);
+  };
+  assert.deepEqual(await reset(d, code, "racing the guesses"), { ok: false, code: "reset-failed", message: RESET_FAILURE });
+  assert.deepEqual(asked, [RESET_MAX_ATTEMPTS], "the limit is passed to the store's write");
+  assert.equal(store.users[0].passwordHash, "hash:old password");
+  assert.equal(store.users[0].sessionVersion, 0, "no session ended");
+});
+
 test("the reset succeeds only when the store reports exactly one row written", async () => {
   for (const count of [0, 2]) {
     const store = fakeStore(USERS());
@@ -492,4 +524,105 @@ test("POST /api/auth/reset answers 204, 400 with the password's error, or 400 wi
   assert.equal(done.statusCode, 204);
   assert.equal(done.ended, true);
   assert.equal((await call(ia.resetPassword, {})).statusCode, 400, "no body at all");
+});
+
+// ---- argon2 checks at once (review of #146) ----
+
+// A check that holds its place until the test lets it finish.
+function heldChecks() {
+  let running = 0;
+  let most = 0;
+  const started = [];
+  const held = [];
+  const check = (label) => async () => {
+    running += 1;
+    most = Math.max(most, running);
+    started.push(label);
+    await new Promise((resolve) => held.push(resolve));
+    running -= 1;
+    if (label === "throws") throw new Error("argon2 failed");
+    return label;
+  };
+  const settle = async () => {
+    for (let i = 0; i < 50; i++) await new Promise((resolve) => setImmediate(resolve));
+  };
+  return { check, started, held, settle, most: () => most, running: () => running };
+}
+
+test("the limiter runs at most its limit at once, in arrival order, and frees a place when a check throws", { timeout: 5000 }, async () => {
+  const limited = limitConcurrency(2);
+  const h = heldChecks();
+  const calls = ["a", "throws", "c", "d", "e"].map((label) => limited(h.check(label)).catch((e) => e.message));
+  await h.settle();
+  assert.deepEqual(h.started, ["a", "throws"], "two run; three wait");
+  h.held[1](); // the check that throws finishes first
+  await h.settle();
+  assert.deepEqual(h.started, ["a", "throws", "c"], "its place went to the next in line");
+  while (h.started.length < 5 || h.running() > 0) {
+    h.held.shift()?.();
+    await h.settle();
+  }
+  assert.deepEqual(await Promise.all(calls), ["a", "argon2 failed", "c", "d", "e"]);
+  assert.equal(h.most(), 2);
+  assert.throws(() => limitConcurrency(0), /at least 1/);
+});
+
+test("a place handed to a waiting check still counts as taken, so a check arriving later waits", { timeout: 5000 }, async () => {
+  const limited = limitConcurrency(1);
+  const h = heldChecks();
+  const first = limited(h.check("first"));
+  const second = limited(h.check("second"));
+  await h.settle();
+  h.held[0](); // first finishes; its place goes to second
+  await h.settle();
+  assert.deepEqual(h.started, ["first", "second"]);
+  const third = limited(h.check("third")); // arrives while second holds the place
+  await h.settle();
+  assert.deepEqual(h.started, ["first", "second"], "third waits");
+  assert.equal(h.most(), 1);
+  h.held[1]();
+  await h.settle();
+  h.held[2]();
+  assert.deepEqual(await Promise.all([first, second, third]), ["first", "second", "third"]);
+  assert.equal(h.most(), 1);
+});
+
+test(`sign-in and reset share one cap of ${MAX_CONCURRENT_HASHES} argon2 checks at once, however many calls arrive`, { timeout: 5000 }, async () => {
+  const store = fakeStore(USERS());
+  let running = 0;
+  let most = 0;
+  const slow = (result) => async () => {
+    running += 1;
+    most = Math.max(most, running);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    running -= 1;
+    return result;
+  };
+  const ia = createIdentityAccess({
+    users: store,
+    verifyPassword: (hash, value) => slow(hash === `hash:${value}`)(),
+    hashPassword: (value) => slow(`hash:${value}`)(),
+    dummyHash: DUMMY,
+    secret: SECRET,
+    secure: false,
+    now: () => NOW,
+  });
+  const res = () => {
+    const r = { statusCode: null, headers: {} };
+    r.status = (c) => ((r.statusCode = c), r);
+    r.json = () => r;
+    r.end = () => r;
+    r.setHeader = (n, v) => (r.headers[n] = v);
+    return r;
+  };
+  const issued = res();
+  await ia.issueResetCode({ actor: MANAGER, params: { id: "1" } }, issued);
+  const calls = [];
+  for (let i = 0; i < 12; i++) {
+    calls.push(ia.signIn({ body: { email: "max@example.org", password: i === 0 ? "manager pw" : "wrong" } }, res()));
+    calls.push(ia.resetPassword({ body: { email: "rea@example.org", code: "ABCD-EFGH", newPassword: "long enough" } }, res()));
+  }
+  await Promise.all(calls);
+  assert.equal(most, MAX_CONCURRENT_HASHES, "24 calls at once, never more than the cap in argon2");
+  assert.equal(MAX_CONCURRENT_HASHES, 4);
 });
