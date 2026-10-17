@@ -192,6 +192,36 @@ test("TC-32: the API against PostgreSQL", async (t) => {
     ],
   );
 
+  // FR-013, FR-014: the queue in the database. Three more requests in the category, two of them given a
+  // priority; the search narrows to this run's requests, and sorting by priority puts High, then Low,
+  // then the untriaged one last, in both directions.
+  const more = [];
+  for (const [title, priority] of [["Queue High", "High"], ["Queue none", null], ["Queue Low", "Low"]]) {
+    const made = await req("POST", "/requests", { title: `${title} ${run}`, description: "d", categoryId: String(category.id), location: "l", reportedUrgency: "Low" });
+    assert.equal(made.status, 201);
+    if (priority) assert.equal((await coord("POST", `/requests/${made.body.reference}/priority`, { priority })).status, 200);
+    more.push(made.body.reference);
+  }
+  const [high, none, low] = more;
+  const byPriority = await coord("GET", `/queue?q=Queue&sort=priority_desc`);
+  assert.equal(byPriority.status, 200);
+  const ours = (res) => res.body.requests.map((r) => r.reference).filter((r) => more.includes(r));
+  assert.deepEqual(ours(byPriority), [high, low, none]);
+  assert.deepEqual(ours(await coord("GET", `/queue?q=Queue&sort=priority_asc`)), [low, high, none]);
+  const searched = await coord("GET", `/queue?q=${encodeURIComponent(`Queue none ${run}`)}`);
+  assert.deepEqual(searched.body.requests.map((r) => r.reference), [none]);
+  assert.equal(searched.body.total, 1);
+  assert.deepEqual(searched.body.requests[0].assignee, null);
+  assert.equal(searched.body.requests[0].category, category.name);
+  assert.deepEqual(ours(await stf("GET", `/queue?q=${run}`)).sort(), [...more].sort(), "Staff see their category");
+  assert.deepEqual((await (await as(elsewhere))("GET", `/queue?q=${run}`)).body.total, 0, "Staff outside it see none");
+  assert.equal((await req("GET", "/queue")).status, 403);
+  assert.equal((await coord("GET", "/queue?status=New&status=Closed")).status, 400);
+  const closed = await coord("GET", `/queue?status=Closed&q=${encodeURIComponent("Pothole on Main Road")}`);
+  assert.ok(closed.body.requests.some((r) => r.reference === reference));
+  const staffList = await coord("GET", "/staff");
+  assert.ok(staffList.body.staff.some((s) => s.id === String(staff.id) && s.name === staff.name));
+
   // FR-004: a Manager issues a code; the reset sets the password and ends the earlier session.
   const mgr = await as(manager);
   assert.equal((await coord("POST", `/users/${requester.id}/reset-code`)).status, 403);

@@ -15,6 +15,7 @@
 
 const ID_KEYS = new Set(["id", "requesterId", "categoryId", "assigneeId", "authorId", "actorId", "requestId", "userId"]);
 const NO_ROW = -1n;
+const PRIORITY_RANK = Object.freeze({ Low: 1, Medium: 2, High: 3 });
 
 export function toDbId(value) {
   if (typeof value === "bigint") return value;
@@ -84,6 +85,11 @@ export function createStore(prisma) {
         select: { id: true, name: true },
       });
       return fromDb(rows);
+    },
+
+    // The queue's assignee filter (FR-014): every active Staff member, by name.
+    async activeStaff() {
+      return fromDb(await prisma.user.findMany({ where: { role: "Staff", active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }));
     },
 
     // reset.js: sets the code, its expiry and a failure count of 0, replacing any earlier code.
@@ -177,6 +183,38 @@ export function createStore(prisma) {
 
     async findMany({ where, orderBy }) {
       return fromDb(await prisma.request.findMany({ where: toDbWhere(where), orderBy, include: { category: true } }));
+    },
+
+    // The staff queue (queue/service.js): one page and the total that match, read in one transaction so
+    // they agree. Sorting by priority puts High before Medium before Low, and a request with no priority
+    // last either way, since it has not been triaged yet (FR-021). PostgreSQL would sort the words
+    // alphabetically, so for those two sorts the matching ids are ordered here and the page is read by id.
+    async findQueue({ where, sort, skip, take }) {
+      const dbWhere = toDbWhere(where);
+      const include = { category: true, assignee: { select: { id: true, name: true } } };
+      return prisma.$transaction(async (tx) => {
+        const total = await tx.request.count({ where: dbWhere });
+        let rows;
+        if (sort === "priority_desc" || sort === "priority_asc") {
+          const keys = await tx.request.findMany({ where: dbWhere, select: { id: true, priority: true, createdAt: true } });
+          const sign = sort === "priority_desc" ? 1 : -1;
+          keys.sort((a, b) => {
+            const ra = PRIORITY_RANK[a.priority] ?? null;
+            const rb = PRIORITY_RANK[b.priority] ?? null;
+            if (ra === null || rb === null) return (ra === null) - (rb === null) || b.createdAt - a.createdAt;
+            return sign * (rb - ra) || b.createdAt - a.createdAt;
+          });
+          const ids = keys.slice(skip, skip + take).map((k) => k.id);
+          const found = await tx.request.findMany({ where: { id: { in: ids } }, include });
+          const byId = new Map(found.map((r) => [r.id, r]));
+          rows = ids.map((id) => byId.get(id));
+        } else {
+          const field = sort.startsWith("updated") ? "updatedAt" : "createdAt";
+          const direction = sort.endsWith("_asc") ? "asc" : "desc";
+          rows = await tx.request.findMany({ where: dbWhere, include, orderBy: [{ [field]: direction }, { id: direction }], skip, take });
+        }
+        return { rows: fromDb(rows), total };
+      });
     },
 
     async findOne({ where, entryWhere }) {

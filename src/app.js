@@ -9,6 +9,7 @@
 import express from "express";
 import { createIdentityAccess } from "./modules/identity-access/http.js";
 import { InactiveCategoryError } from "./modules/persistence/store.js";
+import { createQueueHandlers } from "./modules/queue/http.js";
 import { createRequestAccessHandlers } from "./modules/request-access/http.js";
 import { createSubmissionHandler } from "./modules/request-capture/http.js";
 import { createWorkflowHandlers } from "./modules/workflow-status/http.js";
@@ -42,6 +43,7 @@ function mountApi(app, deps) {
   const access = createRequestAccessHandlers({ requests });
   const submit = createSubmissionHandler({ categories, requests, formatReference: deps.formatReference });
   const workflow = createWorkflowHandlers({ requests, users, store });
+  const queue = createQueueHandlers({ requests, users });
   const { authenticate, requirePermission } = identity;
 
   const api = express.Router();
@@ -64,6 +66,10 @@ function mountApi(app, deps) {
   api.post("/requests", authenticate, submit);
   api.get("/requests/mine", authenticate, access.listMine);
   api.get("/requests/:reference", authenticate, access.detail);
+
+  // The staff queue (FR-013, FR-014)
+  api.get("/queue", authenticate, queue.queue);
+  api.get("/staff", authenticate, queue.staff);
 
   // The workflow (FR-015 to FR-021, FR-025)
   api.get("/requests/:reference/assignable-staff", authenticate, workflow.assignableStaff);
