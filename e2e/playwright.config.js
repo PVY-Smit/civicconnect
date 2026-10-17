@@ -26,6 +26,9 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL,
+    // A simulated production target with a self-signed certificate (docs/deployment) sets this; a hosted
+    // target with a real certificate never needs it.
+    ignoreHTTPSErrors: process.env.E2E_IGNORE_HTTPS_ERRORS === "true",
     trace: ci ? "on-first-retry" : "retain-on-failure",
     screenshot: "only-on-failure",
   },
