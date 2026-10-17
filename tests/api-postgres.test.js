@@ -61,6 +61,8 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   const server = app.listen(0);
   t.after(async () => {
     server.close();
+    const madeHere = await prisma.user.findMany({ where: { email: { contains: run } }, select: { id: true } });
+    userIds.push(...madeHere.map((u) => u.id).filter((id) => !userIds.includes(id)));
     const requests = await prisma.request.findMany({ where: { requesterId: { in: userIds } }, select: { id: true } });
     const requestIds = requests.map((r) => r.id);
     await prisma.auditEntry.deleteMany({ where: { requestId: { in: requestIds } } });
@@ -70,7 +72,7 @@ test("TC-32: the API against PostgreSQL", async (t) => {
     await prisma.accountEvent.deleteMany({ where: { userId: { in: userIds } } });
     await prisma.userCategory.deleteMany({ where: { userId: { in: userIds } } });
     await prisma.user.deleteMany({ where: { id: { in: userIds } } });
-    await prisma.category.deleteMany({ where: { id: { in: [category.id, other.id] } } });
+    await prisma.category.deleteMany({ where: { OR: [{ id: { in: [category.id, other.id] } }, { name: { contains: run } }] } });
     await prisma.$disconnect();
   });
   const base = `http://localhost:${server.address().port}/api`;
@@ -251,6 +253,41 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   const overdueList = await coord("GET", "/reports/overdue");
   assert.equal(overdueList.body.targetDays, 10);
   assert.equal(overdueList.body.requests.some((r) => more.includes(r.reference)), false, "requests made today are not overdue");
+
+  // FR-027, FR-006: a Manager adds a category, renames it, and deactivates it; it is then no longer offered.
+  const mgrAdmin = await as(manager);
+  const added = await mgrAdmin("POST", "/categories", { name: `TC-32 parks ${run}` });
+  assert.equal(added.status, 201);
+  assert.equal((await mgrAdmin("POST", "/categories", { name: `tc-32 PARKS ${run}` })).status, 400, "unique ignoring case");
+  assert.equal((await mgrAdmin("PATCH", `/categories/${added.body.id}`, { name: `TC-32 green spaces ${run}` })).body.name, `TC-32 green spaces ${run}`);
+  const all = await mgrAdmin("GET", "/categories?all=true");
+  assert.equal(all.body.categories.find((c) => c.id === String(category.id)).requestCount, 4);
+  assert.equal((await coord("GET", "/categories?all=true")).status, 403);
+  assert.equal((await mgrAdmin("POST", `/categories/${added.body.id}/deactivate`)).body.active, false);
+  assert.equal((await req("GET", "/categories")).body.categories.some((c) => c.id === added.body.id), false);
+
+  // FR-003: a Manager creates a Staff account; its user sets a password with the setup code and signs in.
+  const newEmail = `tc32-new-${run}@civicconnect.test`;
+  const made = await mgrAdmin("POST", "/users", { name: `TC-32 New ${run}`, email: newEmail, role: "Staff", categoryIds: [String(category.id)] });
+  assert.equal(made.status, 201);
+  assert.equal((await mgrAdmin("POST", "/users", { name: "Again", email: newEmail.toUpperCase(), role: "Staff", categoryIds: [String(category.id)] })).status, 400);
+  const firstPassword = `first-${randomBytes(8).toString("hex")}`;
+  const anon2 = client(base);
+  assert.equal((await anon2("POST", "/auth/sign-in", { email: newEmail, password: firstPassword })).status, 401, "no password before setup");
+  assert.equal((await anon2("POST", "/auth/reset", { email: newEmail, code: made.body.setupCode.code, newPassword: firstPassword })).status, 204);
+  const newcomer = client(base);
+  assert.equal((await newcomer("POST", "/auth/sign-in", { email: newEmail, password: firstPassword })).status, 200);
+  assert.equal((await newcomer("GET", `/requests/${high}`)).status, 200, "the new Staff member sees their category");
+  const listed = await mgrAdmin("GET", "/users");
+  assert.deepEqual(listed.body.users.find((u) => u.email === newEmail).categories, [category.name]);
+
+  // FR-028: deactivation is refused while requests are assigned, then takes effect on the next request.
+  assert.equal((await coord("POST", `/requests/${high}/status`, { to: "Assigned", assigneeId: made.body.user.id })).status, 200);
+  assert.equal((await mgrAdmin("POST", `/users/${made.body.user.id}/deactivate`)).status, 409);
+  assert.equal((await coord("POST", `/requests/${high}/status`, { to: "Assigned", assigneeId: String(staff.id) })).status, 200);
+  assert.equal((await mgrAdmin("POST", `/users/${made.body.user.id}/deactivate`)).status, 200);
+  assert.equal((await newcomer("GET", "/auth/me")).status, 401, "the deactivated account's session stops at once");
+  assert.equal((await mgrAdmin("POST", `/users/${manager.id}/deactivate`)).status, 409, "not one's own account");
 
   // FR-004: a Manager issues a code; the reset sets the password and ends the earlier session.
   const mgr = await as(manager);

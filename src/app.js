@@ -7,6 +7,7 @@
 // NFR-003's probe need. src/server.js builds the dependencies from the configuration (src/wiring.js).
 
 import express from "express";
+import { createAdministrationHandlers } from "./modules/administration/http.js";
 import { createIdentityAccess } from "./modules/identity-access/http.js";
 import { createNotificationsHandler } from "./modules/notifications/http.js";
 import { InactiveCategoryError } from "./modules/persistence/store.js";
@@ -46,6 +47,7 @@ function mountApi(app, deps) {
   const submit = createSubmissionHandler({ categories, requests, formatReference: deps.formatReference });
   const workflow = createWorkflowHandlers({ requests, users, store });
   const queue = createQueueHandlers({ requests, users });
+  const admin = createAdministrationHandlers({ users, categories, hashSecret: deps.hashPassword });
   const report = createReportHandlers({ reports, overdueTargetDays: deps.overdueTargetDays });
   const { authenticate, requirePermission } = identity;
 
@@ -58,12 +60,20 @@ function mountApi(app, deps) {
   api.post("/auth/reset", identity.resetPassword);
   api.post("/users/:id/reset-code", authenticate, requirePermission("manageUsers"), identity.issueResetCode);
 
-  // FR-006: the active categories a Requester chooses from. Maintaining the list (?all=true and the
-  // writes) is #115, not built on the server.
+  // FR-006: the active categories a Requester chooses from; with ?all=true, the whole list for a Manager
+  // maintaining it (FR-027).
   api.get("/categories", authenticate, async (req, res) => {
-    if (req.query.all !== undefined) return res.status(501).json({ error: "Category maintenance is not built yet." });
+    if (req.query.all !== undefined) return admin.listAllCategories(req, res);
     return res.status(200).json({ categories: await categories.listActive() });
   });
+  api.post("/categories", authenticate, admin.addCategory);
+  api.patch("/categories/:id", authenticate, admin.renameCategory);
+  api.post("/categories/:id/deactivate", authenticate, admin.deactivateCategory);
+
+  // User administration (FR-003, FR-028)
+  api.get("/users", authenticate, admin.listUsers);
+  api.post("/users", authenticate, admin.createUser);
+  api.post("/users/:id/deactivate", authenticate, admin.deactivateUser);
 
   // Submission and the requester's views (FR-005 to FR-012)
   api.post("/requests", authenticate, submit);

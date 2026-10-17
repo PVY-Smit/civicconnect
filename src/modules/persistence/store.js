@@ -87,6 +87,40 @@ export function createStore(prisma) {
       return fromDb(rows);
     },
 
+    // administration/service.js (FR-003, FR-028)
+    async listAll() {
+      const rows = await prisma.user.findMany({
+        orderBy: [{ active: "desc" }, { name: "asc" }],
+        select: { id: true, name: true, email: true, role: true, active: true, categories: { select: { category: { select: { name: true } } } } },
+      });
+      return fromDb(rows).map(({ categories, ...u }) => ({ ...u, categoryNames: categories.map((c) => c.category.name).sort() }));
+    },
+
+    // The account, its categories and its account-created event, in one transaction.
+    async create({ name, email, role, categoryIds }, { event }) {
+      return prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: { name, email, role, categories: { create: categoryIds.map((id) => ({ categoryId: toDbId(id) })) } },
+          select: { id: true, name: true },
+        });
+        await tx.accountEvent.create({ data: accountEvent({ ...event, userId: user.id }) });
+        return fromDb(user);
+      });
+    },
+
+    // Only while the account is still active, with its event in the same transaction. Returns the rows written.
+    async deactivate(id, { event }) {
+      return prisma.$transaction(async (tx) => {
+        const { count } = await tx.user.updateMany({ where: { id: toDbId(id), active: true }, data: { active: false } });
+        if (count === 1) await tx.accountEvent.create({ data: accountEvent(event) });
+        return count;
+      });
+    },
+
+    async countOpenAssigned(id) {
+      return prisma.request.count({ where: { assigneeId: toDbId(id), status: { in: ["New", "Assigned", "In Progress", "On Hold"] } } });
+    },
+
     // The queue's assignee filter (FR-014): every active Staff member, by name.
     async activeStaff() {
       return fromDb(await prisma.user.findMany({ where: { role: "Staff", active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }));
@@ -144,6 +178,31 @@ export function createStore(prisma) {
     async activeIds() {
       const rows = await prisma.category.findMany({ where: { active: true }, select: { id: true } });
       return rows.map((r) => String(r.id));
+    },
+
+    // FR-027: the whole list for the Manager, with how many requests each holds.
+    async listAll() {
+      const rows = await prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, active: true, _count: { select: { requests: true } } } });
+      return fromDb(rows).map(({ _count, ...c }) => ({ ...c, requestCount: _count.requests }));
+    },
+
+    // Names are unique ignoring case (FR-027).
+    async findByName(name) {
+      return fromDb(await prisma.category.findFirst({ where: { name: { equals: name, mode: "insensitive" } }, select: { id: true, name: true } }));
+    },
+
+    async create(name) {
+      return fromDb(await prisma.category.create({ data: { name }, select: { id: true, name: true, active: true } }));
+    },
+
+    async rename(id, name) {
+      const { count } = await prisma.category.updateMany({ where: { id: toDbId(id) }, data: { name } });
+      return count === 1 ? fromDb(await prisma.category.findUnique({ where: { id: toDbId(id) }, select: { id: true, name: true, active: true } })) : null;
+    },
+
+    async deactivate(id) {
+      const { count } = await prisma.category.updateMany({ where: { id: toDbId(id) }, data: { active: false } });
+      return count === 1 ? fromDb(await prisma.category.findUnique({ where: { id: toDbId(id) }, select: { id: true, name: true, active: true } })) : null;
     },
 
     // FR-006: the controlled list a Requester chooses from.
