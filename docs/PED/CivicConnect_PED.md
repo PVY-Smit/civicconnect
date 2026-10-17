@@ -2,16 +2,16 @@
 
 **CivicConnect**
 
-Project Engineering Document (PED) v3.0
+Project Engineering Document (PED) v4.0
 
-*Controlled Construction, Integration, Quality and Release Readiness*
+*Finalise, Consolidate and Conclude*
 
 | **Project** | CivicConnect - Community Service Request Management Platform |
 |----|----|
-| **Milestone** | Milestone 3 - Controlled Construction, Integration, Quality and Release Readiness |
-| **Document** | PED v3.0, continued from PED v2.0, which evolved from PED v1.0. PED v1.0 is kept unchanged in the repository as the M1 record. This document evolves through v4.0; it is not recreated per milestone (Master Brief, s6). |
+| **Milestone** | Milestone 4 - Finalise, Consolidate and Conclude (Final Project) |
+| **Document** | PED v4.0 Final, continued from PED v3.0, v2.0 and v1.0. PED v1.0 is kept unchanged in the repository as the M1 record. This document evolves through v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v3.0 SUBMITTED for M3 on 16 October 2026 (#127); its submission information is in s27. v2.0 is the team's M2 baseline, merged on 9 October 2026 (#95). The M1 and M2 gate decisions are the assessor's, and the team's sign-off of v1.0 and v2.0 is recorded in s16 and s26.3. |
+| **Baseline status** | v4.0 FINAL, the concluding version (#128); its submission information is in s37. v3.0 was submitted for M3 on 16 October 2026 (#127), with its information in s27. v2.0 is the team's M2 baseline, merged on 9 October 2026 (#95). The M1 and M2 gate decisions are the assessor's, and the team's sign-off of v1.0 and v2.0 is recorded in s16 and s26.3. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -30,6 +30,10 @@ Project Engineering Document (PED) v3.0
 >
 > M2 takes the architecture, technology and initial design decisions M1 deferred, and records them in s18 to s26 with their ADRs. It decides what the application is built from and how its core rules are enforced. It does not select the quality, security, deployment and operational controls that Milestone 3 decides, informed by Assignment 3.
 
+> **Milestone 4 boundary**
+>
+> The Final Project closes the same project; it is not a new development phase (Final brief, s1). Sections 1 to 36 are kept as written. Sections 37 to 42 record the final product and release, the M1 scope against what was delivered, the closure of M3's issues, the final acceptance evidence, the deployment decision and the project's conclusion.
+
 # 1. Document Control and Version History
 
 This document is a controlled artefact. Baselined content is not silently overwritten: changes after sign-off enter through the change control process in s12.4 and are recorded here (Master Brief, s6.1).
@@ -41,6 +45,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
 | 3.0 | 16 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | | In progress |
+| 4.0 | [To be completed under #128: the date of the tag] | Jean Smit, Darius Mushi, Tristan Roets | Final Project. Sections 37 to 42 added: the final product and release, the M1 scope against the final delivery with the Scope Completion Percentage, the closure of M3's issues, the final acceptance evidence, the go-live decision and the project reflection (#128). The cover names v4.0 and Milestone 4 (CR-005, item 1). Sections 1 to 36 are unchanged. | [To be completed under #128: the pull request and its reviewers] | Final |
 
 # 2. Purpose and How to Read This Document
 
@@ -1330,3 +1335,275 @@ Testing does not show that no defect exists. These are the uncertainties that re
 | The application does not install or run on the BC Desktop campus machines (RSK-30) | The campus check has not been run; CI never tests the campus image | npm ci from a committed lockfile; the engines field to limit Node to version 24 (#90) | Run the campus check when lab access allows and record it on #64. Darius Mushi |
 | A dependency advisory affects the build (RSK-12) | Prisma 7 pins two packages with high-severity advisories that no 7.x release has fixed | npm overrides, with npm audit reporting 0 vulnerabilities | Remove the overrides when Prisma fixes issue #30295; add npm audit to CI (#110). Darius Mushi |
 | A reset code is guessed by many requests from one address | The public reset endpoint has no rate limit by address | A code is withdrawn after five wrong tries on its account, and every check is a deliberately slow argon2 comparison | Add rate limiting by address, and record it in the Technical Debt Register (#125, #144), where it is not yet entered. Jean Smit |
+
+# 37. Final Product and Release
+
+The Final Project concludes the same project: sections 1 to 36 are kept as written, so the M1 commitment, the M2 decisions and the M3 evidence and classification stay readable as they stood, and this section and those after it record what was finally delivered (Final brief, s1 and s8). Where an earlier section is overtaken, the position here is the final one.
+
+## 37.1 Final submission information
+
+| **Item** | **Value** |
+|----|----|
+| Team | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
+| GitHub repository | https://github.com/PVY-Smit/civicconnect |
+| Final commit and tag | [To be completed under #128: the tag v1.0.0, its commit on main, and the date it was made] |
+| PED version | v4.0 Final |
+| Final RTM | s38.2 of this document, the final status of every M1 acceptance criterion with its evidence, and `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM [To be completed under #128: whether the RTM sheet carries CR-006's columns, which depend on Darius Mushi's answer on #126] |
+| Product access | The product runs in the simulated production environment described in s41 and `docs/deployment/simulated-production.md`, at https://localhost:8443 on the presenting member's machine. It is demonstrated live from that environment at the release tag. Seeded accounts for each role are configured there and are not published |
+| Date submitted | [To be completed under #128] |
+
+## 37.2 The final product
+
+CivicConnect is one Node.js 24 application with one PostgreSQL 16 database, as ADR-001 and ADR-002 decided. The final version integrates every module M2 designed. In M3, main held the services but served only its health check (s36.2). The Final release serves all of them through one entry point, over the database, with the built client from the same origin.
+
+| **Module (ADR-001)** | **In the final product** | **Requirements** | **Evidence** |
+|----|----|----|----|
+| identity-access | Sign-in, signed sessions, the permission check, the Manager-assisted reset, and limits on failed sign-ins and resets | FR-001, FR-002, FR-004 | TC-08 to TC-11, TC-36, TC-44 |
+| authorisation-policy | All 60 Access Matrix cells and the request scope for every query | FR-002, FR-012, FR-013 | TC-01, TC-02, TC-22 |
+| request-capture | Submission, validation and the keyed reference (DEC-017) | FR-005 to FR-009 | TC-12 to TC-14, TC-25, TC-26, TC-37 |
+| request-access | The requester's list and detail, and the staff detail with the moves the server allows | FR-010 to FR-012, FR-020 | TC-15 |
+| queue | The scoped staff queue with search, filters, sorts and paging | FR-013, FR-014 | TC-29, TC-40 |
+| workflow-status | Assignment, acceptance, status changes, priority and action entries | FR-015 to FR-021 | TC-05 to TC-07, TC-16 to TC-21, TC-24 |
+| audit | One audit entry per changed field, in the change's transaction, append-only in the database | FR-025, FR-026, NFR-011 | TC-04, TC-18 |
+| notification | The four FR-029 indications, derived from saved history (ADR-008) | FR-029 | TC-41 |
+| reporting | Counts, the breakdown and the overdue list, in the actor's scope | FR-022 to FR-024 | TC-30, TC-42 |
+| administration | Accounts with a setup code, deactivation, and the category list | FR-003, FR-027, FR-028 | TC-31, TC-43 |
+| persistence | The named operations over Prisma that every module's store contract states (s30.4) | ADR-007 | TC-32 |
+
+Every row is verified end to end as well as by module. TC-32 runs the API against PostgreSQL, from submission to closure, including scope, concurrency, audit, the queue, notifications, reports, administration and the reset. The browser journeys TC-33 and TC-34 run the two critical journeys through the real server. TC-45 checks every screen for accessibility.
+
+## 37.3 What changed between M3 and the final version
+
+| **Change** | **Pull request** | **Effect** |
+|----|----|----|
+| The schema and seed (#140), the persistence adapter, and every route wired into the server | #155 | Closes the M3 blocker "no integrated build" (s36.2) |
+| The staff queue, notifications and reports drafts (#141 to #143), finished with their review findings fixed | #155 | FR-013, FR-014, FR-022 to FR-024 and FR-029 are in the product |
+| User and category administration, which was not started in M3 | #155 | FR-003, FR-027 and FR-028 are in the product |
+| Two defects the stand-in had hidden: the staff detail carried no moves, and a rejection's reason never reached the requester | #155 | Found by TC-34 against the real server; FR-020 is met (s39.1) |
+| Limits on failed sign-ins and resets, security headers, and a health check that probes the database | #155 | Closes the missing rate limit s28.2 and s36 record |
+| Simulated production: HTTPS, a least-privilege database role, a runbook, a smoke check, and a tested backup and restore | #155 | The deployment state in s41 |
+| The M3 review follow-ups to the client, the performance scripts, the journeys and the reset | #149, #150, #152, #153 | Merged 17 October 2026 |
+| [To be completed under #128: the API suites (#147), the catalogue follow-ups (#151), PED v3.0 (#145), CI (#110) and the registers (#144), each with its merge or its status at the tag] | | |
+
+# 38. M1 Scope to Final Delivery
+
+## 38.1 The in-scope commitments
+
+The M1 scope baseline (s6, the Scope Baseline sheet) committed thirteen in-scope items. Each is accounted for here, with its requirements' final status in s38.2.
+
+| **M1 item** | **Requirements** | **Final status** | **Conclusion** |
+|----|----|----|----|
+| SC-I-01 Authenticated access with four roles | FR-001 to FR-004 | IMPLEMENTED, with FR-004 PARTIALLY IMPLEMENTED | Every role signs in and is held to its permissions. The reset is Manager-assisted instead of a self-service link, because email is deferred (SC-D-01) |
+| SC-I-02 Submission with a controlled category, description, location and urgency | FR-005 to FR-009 | IMPLEMENTED | Delivered as committed |
+| SC-I-03 A unique, human-readable reference | FR-008 | IMPLEMENTED | CC- and eight digits through a keyed permutation of the sequence (DEC-017) |
+| SC-I-04 Requester visibility of their own requests and history | FR-010 to FR-012 | IMPLEMENTED | Delivered as committed |
+| SC-I-05 Staff queue with search, filter and sort | FR-013, FR-014 | IMPLEMENTED | Delivered as committed |
+| SC-I-06 Assignment and acceptance | FR-015 | IMPLEMENTED | Delivered as committed |
+| SC-I-07 Controlled status transitions | FR-016, FR-018 to FR-020 | IMPLEMENTED | Delivered as committed |
+| SC-I-08 Internal and requester-visible entries | FR-017 | IMPLEMENTED | Delivered as committed |
+| SC-I-09 Coordinator-owned prioritisation | FR-021 | IMPLEMENTED | Delivered as committed |
+| SC-I-10 Management counts by category and status | FR-022 to FR-024 | IMPLEMENTED | The overdue target is configuration whose value the organisation sets (FEC-02) |
+| SC-I-11 Append-only audit trail | FR-025, FR-026 | IMPLEMENTED | Enforced in the application and by the database's privileges |
+| SC-I-12 Category maintenance and user deactivation | FR-027, FR-028 | IMPLEMENTED | Delivered as committed |
+| SC-I-13 In-application notification | FR-009, FR-029 | IMPLEMENTED | Delivered as committed |
+
+## 38.2 Final status of every M1 acceptance criterion
+
+This is the final RTM's status column: each of the 42 baselined requirements, 29 functional and 13 non-functional, with its acceptance criterion's final status, the evidence and the reason for any variance. Met counts 1.0, Partially met 0.5 and Not met 0.0 (Final brief, Scope Completion Calculation). Every criterion is still in the baseline: no change request removed or changed one, so the denominator is 42.
+
+| **Requirement** | **M1 priority** | **Final status** | **Criterion** | **Evidence** | **Conclusion or reason for variance** |
+|----|----|----|----|----|----|
+| FR-001 Authentication | Must | IMPLEMENTED | Met | TC-08 to TC-11, TC-23, TC-32, TC-33 | Generic failure, 401 with no data, and the client sends the visitor to sign in |
+| FR-002 Role-based access | Must | IMPLEMENTED | Met | TC-01, TC-11, TC-22, TC-32 | Every cell of the Access Matrix decided by the policy and checked on the server |
+| FR-003 Account creation | Must | IMPLEMENTED | Met | TC-43, TC-32 | The new account authenticates with only its role's permissions; a non-Manager is refused |
+| FR-004 Credential reset | Should | PARTIALLY IMPLEMENTED | Partially met | TC-36, TC-32 | The code is single-use, expires, and every failure gets one answer, as the criterion asks of a link. The reset is Manager-assisted, not self-service, because the email channel is deferred (SC-D-01). Recorded as TD-004 and in s28.2, but not changed through a change request |
+| FR-005 Submission | Must | IMPLEMENTED | Met | TC-14, TC-32, TC-33 | |
+| FR-006 Controlled category | Must | IMPLEMENTED | Met | TC-13, TC-43, TC-32 | A deactivated category is refused, also when deactivated during the submission |
+| FR-007 Validation | Must | IMPLEMENTED | Met | TC-13, TC-25, TC-26, TC-37, TC-32 | |
+| FR-008 Unique reference | Must | IMPLEMENTED | Met | TC-12, TC-32 | From the sequence through the keyed permutation, under the unique constraint |
+| FR-009 Acknowledgement | Must | IMPLEMENTED | Met | TC-14, TC-33 | |
+| FR-010 Requester's list | Must | IMPLEMENTED | Met | TC-15, TC-33 | |
+| FR-011 Detail and history | Must | IMPLEMENTED | Met | TC-03, TC-15, TC-34 | |
+| FR-012 Record isolation | Must | IMPLEMENTED | Met | TC-02, TC-15, TC-23, TC-32 | Another's reference and a missing one get the same 404, in the database too |
+| FR-013 Work queue | Must | IMPLEMENTED | Met | TC-40, TC-32, TC-34 | |
+| FR-014 Search, filter, sort | Must | IMPLEMENTED | Met | TC-29, TC-40, TC-32 | |
+| FR-015 Assignment and acceptance | Must | IMPLEMENTED | Met | TC-16, TC-32, TC-34 | |
+| FR-016 Permitted transitions | Must | IMPLEMENTED | Met | TC-05 to TC-07, TC-24, TC-32 | |
+| FR-017 Action entries | Must | IMPLEMENTED | Met | TC-20, TC-32, TC-34 | |
+| FR-018 Resolution summary | Must | IMPLEMENTED | Met | TC-17, TC-32, TC-34 | |
+| FR-019 Closing | Should | IMPLEMENTED | Met | TC-17, TC-32, TC-34 | |
+| FR-020 Rejection with reason | Should | IMPLEMENTED | Met | TC-15, TC-17, TC-32 | The reason reaches the requester since the Final fix (DEF-006) |
+| FR-021 Urgency and priority | Must | IMPLEMENTED | Met | TC-19, TC-32, TC-34 | |
+| FR-022 Management counts | Must | IMPLEMENTED | Met | TC-30, TC-42, TC-32 | The counts' meaning is stated in `reports/service.js`; the target is configuration (FEC-02) |
+| FR-023 Breakdown | Should | IMPLEMENTED | Met | TC-30, TC-42, TC-32 | |
+| FR-024 Overdue list | Should | IMPLEMENTED | Met | TC-42, TC-32 | |
+| FR-025 Audit entries | Must | IMPLEMENTED | Met | TC-04, TC-18, TC-32 | Checked row by row in the database |
+| FR-026 No audit edit or delete | Must | IMPLEMENTED | Met | TC-04, TC-32, s41.2 | No route exists, and the application's database role is refused UPDATE and DELETE |
+| FR-027 Category maintenance | Should | IMPLEMENTED | Met | TC-43, TC-31, TC-32 | Deactivated, never deleted |
+| FR-028 User deactivation | Could | IMPLEMENTED | Met | TC-43, TC-32 | A deactivated account's session stops at once; what it authored stays attributed |
+| FR-029 Notification | Must | IMPLEMENTED | Met | TC-41, TC-32 | |
+| NFR-001 Queue performance | Must | IMPLEMENTED | Met | TC-35, s41.2 | p95 7.4 ms against 2.0 s with 5,000 requests, on the simulated production build; no network in the path |
+| NFR-002 Submission performance | Must | IMPLEMENTED | Met | TC-35 | p95 7.9 ms against 3.0 s, under the same condition |
+| NFR-003 Availability | Should | NOT IMPLEMENTED | Not met | /health (TC-44) | The probe target exists, but 98% across a month of service hours cannot be measured without a hosted service running for a month (s41) |
+| NFR-004 Password storage | Must | IMPLEMENTED | Met | TC-36, the RSK-01 test | argon2id with a per-user salt; no other storage |
+| NFR-005 Negative access matrix | Must | IMPLEMENTED | Partially met | TC-01, TC-22, TC-32 | All 60 cells are decided by the policy; through the endpoints, 48 cells are called and 12 are checked at the permission check their routes use (#147). [To be completed under #128: whether the remaining 12 are called through the endpoints that #155 adds] |
+| NFR-006 HTTPS | Must | IMPLEMENTED | Met | Smoke check, s41.2 | Every request over HTTPS, plain HTTP redirected, HSTS, and a content security policy allowing only the same origin, in simulated production |
+| NFR-007 Secret scanning | Must | IMPLEMENTED | Met | s30.3 | [To be completed under #128: the full-history Gitleaks run at the tag] |
+| NFR-008 Personal data | Must | [To be completed under #128: from the Personal Data Inventory (#144)] | | | |
+| NFR-009 First-time usability | Should | [To be completed under #128: Met only if the five-participant task test is run] | | | |
+| NFR-010 Accessibility | Should | IMPLEMENTED | Met | TC-45 | No WCAG 2.1 A or AA violation on any screen, keyboard reachable with a visible focus indicator; it found and fixed one defect (DEF-009) |
+| NFR-011 Audit completeness | Must | IMPLEMENTED | Met | TC-18, TC-32 | |
+| NFR-012 Tests gate every merge | Must | [To be completed under #128: Met only once the CI workflow (#110) is a required check on main] | | | |
+| NFR-013 Zero running cost | Must | IMPLEMENTED | Partially met | s24, s41 | Simulated production costs nothing. The free-tier limits are documented (s24); [To be completed under #128: the projected cost beyond the educational context] |
+
+## 38.3 Scope Completion Percentage
+
+[To be completed under #128: the sum, the percentage and its band, once the five open rows above are final. With them as they stand on 17 October 2026, before NFR-008, NFR-009 and NFR-012 are decided, the 29 functional criteria give 28.5 and the 13 non-functional criteria give at least 8.5 (seven Met, three Partially met), so at least 37 of 42, 88.1 percent]
+
+## 38.4 Must-have criteria not fully met
+
+[To be completed under #128: each Must criterion still Partially met or Not met at the tag, with the reason from the evidence and its consequence for stakeholders]
+
+## 38.5 Deferred and out-of-scope items
+
+These were outside the committed scope at M1 and stayed outside it. They are not failed commitments, and none was quietly added or dropped.
+
+| **Item** | **M1 status** | **Final status** | **Conclusion** |
+|----|----|----|----|
+| SC-D-01 Email or SMS notification | Deferred | Still deferred | The in-application indication (FR-029) meets the commitment. A channel needs a background worker the free tier does not give (FEC-03), and its absence is why the reset is Manager-assisted (FR-004) |
+| SC-D-02 Attachments | Deferred | Still deferred | Storage, scanning and cost were never resolved |
+| SC-D-03 Per-category targets | Deferred | Still deferred | One organisation-wide target, as configuration (FR-022) |
+| SC-D-04 Analytics and export | Deferred | Still deferred | The counts and breakdown meet the management need |
+| SC-D-05 Multi-site separation | Deferred | Still deferred | The scope rule in the policy is the one place it would change (FEC-01) |
+| SC-D-06 Bulk import | Deferred | Still deferred | Depends on SC-O-01 |
+| SC-O-01 to SC-O-06 | Out of scope | Out of scope | Migration, channel integration, native apps, payments, anonymous submission and vendor SLAs remained excluded |
+
+## 38.6 Controlled and uncontrolled change
+
+Every change to the baseline went through change control (s29) except one. FR-004's reset became Manager-assisted in M3, agreed on #109 and #146 and recorded as TD-004 and in s28.2, but no change request changed the criterion. It is therefore counted against the unchanged criterion, as Partially met, and not treated as an approved change. CR-002 changed the Access Matrix, and CR-004 the bootstrap's merge conditions; neither changed an acceptance criterion. DEC-017 fixed what the baseline left open without changing any criterion.
+
+# 39. M3 Issues to Final Closure
+
+## 39.1 Defects
+
+The Defect Register (#125) holds each defect with how it was found, its fix and its regression test. [To be completed under #128: the Defect Register's final rows from Tristan Roets, with DEF-001 to DEF-005 from M3 and the defects found in the Final]
+
+The Final's defects were found by running the product as a whole, which the stand-in of M3 could not do:
+
+| **Defect** | **Found by** | **Fix** | **Regression test** |
+|----|----|----|----|
+| A rejection's reason never reached the requester (FR-020) | TC-34 against the real server | #155 | TC-15, TC-32 |
+| The staff detail carried no moves, so the staff screen offered no actions | TC-34 against the real server | #155 | TC-15 |
+| The account-event check constraint refused the administration events | TC-32 | #155, a migration | TC-32 |
+| The queue's date fields showed no focus ring on their calendar button (NFR-010) | TC-45 | #155 | TC-45 |
+
+## 39.2 The M3 blockers and failed checks
+
+s36.2 classified the M3 candidate NOT READY on four blockers. Their final status:
+
+| **M3 blocker** | **Final status** | **Evidence** |
+|----|----|----|
+| No integrated build | Resolved | Every module served through one entry point over PostgreSQL (s37.2), TC-32 |
+| No CI test gate | [To be completed under #128: resolved if #110 is a required check on main at the tag] | |
+| No deployed candidate on which a critical journey has completed | Resolved in simulated production | TC-33 and TC-34 pass against it over HTTPS (s41) |
+| No verification against PostgreSQL | Resolved | TC-32, and the journeys against the database |
+
+## 39.3 Residual risks
+
+The Risk Register holds each risk's final status. [To be completed under #128: the final status of each risk from its owner, with Tristan Roets's fifteen from Tristan Roets's closure and the others from Jean Smit and Darius Mushi]
+
+## 39.4 Technical debt
+
+| **Debt** | **Final status** |
+|----|----|
+| No rate limit by address on sign-in and the reset (s28.2, s36) | Repaid in #155 (TC-44) |
+| [To be completed under #128: TD-001 to TD-004 and the debt found in the Final, from the Technical Debt Register] | |
+
+# 40. Final Acceptance Evidence
+
+## 40.1 Critical requirements traced to the final product
+
+The final trace, from the stakeholder's need to the final outcome (Final brief, s9), for three requirements on which the platform's purpose depends.
+
+**FR-012, record isolation.** *Need:* a requester's report about their street or property is not seen by another requester (STK-01, RSK-05). *Criterion:* requester A cannot retrieve B's request by any route. *Decision:* ADR-006 applies the scope in the query, so a request outside it is never loaded. *Implementation:* `scopedWhere` in the policy, used by every lookup in request-access, the workflow, the queue and the reports. *Evidence:* TC-02 and TC-15 at component level, TC-23 for calls without a session, TC-32 through PostgreSQL, where another requester and Staff outside the category get exactly the answer a missing reference gets. *Status:* Met.
+
+**FR-016, permitted transitions.** *Need:* every request moves through one agreed model, so its status means the same to everyone (FEC-02). *Criterion:* every allowed move succeeds for an authorised role and every other move is refused. *Decision:* ADR-005's declarative table, tested against the Status Model register. *Implementation:* `transition-table.js` and the workflow service, with the conditional update that refuses a move made from a state that has changed. *Evidence:* TC-05 against the register, TC-24 through the endpoint for every pair, TC-32 for two concurrent moves of which exactly one is written. *Status:* Met.
+
+**FR-025, the audit trail.** *Need:* the municipality can show who changed what and when (STK-04, NFR-011). *Criterion:* each change of status, assignee or priority creates exactly one complete audit entry. *Decision:* ADR-001 rule 3, the entry in the change's transaction, and ADR-007's audit immutability. *Implementation:* `audit.js` builds the entries and the persistence module writes them in the same transaction; the application's database role cannot update or delete them. *Evidence:* TC-18, TC-32 row by row through PostgreSQL, and the role's refusal in simulated production (s41.2). *Status:* Met.
+
+## 40.2 Re-verification at the final version
+
+[To be completed under #128: the runs at the tag. The server, client and performance-script tests; the catalogue's strict check; TC-32 against PostgreSQL; the smoke check, TC-33, TC-34 and TC-45 against simulated production at the tag; npm audit; and the full-history Gitleaks scan]
+
+# 41. Final Deployment and Go-Live Decision
+
+## 41.1 Final deployment state
+
+**Simulated production.** The final release runs in a production-like environment separate from development, with release identification, production-like configuration, controlled secrets and deployment verification, as the Final brief describes for that state. It is not deployed to a hosted production service. The decision and its evidence follow.
+
+## 41.2 The simulated production environment
+
+| **Brief asks for** | **What the environment has** | **Evidence** |
+|----|----|----|
+| Separated from development | A fresh clone at the release tag, its own database used by nothing else, its own address, and its own secrets | `docs/deployment/simulated-production.md` |
+| Release identification | `RELEASE` set to the tag, shown by `/health` | Smoke check |
+| Production-like configuration | `NODE_ENV=production`; HTTPS only, with plain HTTP redirected and HSTS; Secure cookies; the server connecting as `civicconnect_app`, which has no DELETE anywhere and only SELECT and INSERT on the audit, history, entry and event tables | Smoke check; as `civicconnect_app`, UPDATE and DELETE on `audit_entries` are refused with permission denied |
+| Controlled secrets | Generated for this environment, held outside every working tree, never used elsewhere | Runbook, step 2 |
+| Deployment verification | A backup before each deployment; the smoke check (seven checks) and the journeys after it | 17 October 2026: smoke check 7 of 7, TC-33, TC-34 and TC-45 pass, as the restricted role, over HTTPS |
+| Recovery | A backup restored into an empty database matched the original row for row, and served the journeys | `tools/backup.mjs`, 17 October 2026 |
+
+The rehearsals found two deployment faults, both now handled in the runbook. Under `NODE_ENV=production`, `npm ci` skips the build tools. A running server holds its native modules open, so the install must follow stopping it.
+
+## 41.3 The go-live decision: no-go for hosted production
+
+The team does not release to a hosted production service. The product is integrated and verified (s37, s40), so remaining at simulated production is a decision on the evidence below. The blocking concerns:
+
+| **Blocking concern** | **Requirement or risk** | **Likely consequence of releasing** | **What must be resolved before go-live** |
+|----|----|----|----|
+| The free-tier host DEC-010 chose sleeps after 15 minutes idle and takes about a minute to wake (s24) | NFR-002, NFR-003, RSK-02 | The first requester after a quiet period waits about a minute to submit, twenty times NFR-002's limit, and may submit twice (STK-01) | A host that does not sleep within service hours, which has a cost (NFR-013) |
+| No production database was decided. Render's free PostgreSQL, the one evaluated, expires 30 days after creation, is deleted 14 days later, and has no automated backups (s24, DEC-010) | ADR-007, RSK-20, NFR-008 | Every request, with the personal information in it, is lost when the database expires or fails | A managed database with backups and a tested restore, and its cost agreed |
+| The cost beyond the educational context is not agreed with the sponsor | NFR-013, CON-03 | A service the municipality cannot fund is withdrawn after go-live | The projected cost recorded and accepted |
+| [To be completed under #128: CI as a merge gate (NFR-012), if it is not a required check at the tag] | NFR-012 | | |
+| First-time usability is unmeasured | NFR-009 | Residents who cannot complete a submission return to the phone and WhatsApp channels the platform exists to replace | The five-participant task test |
+
+Releasing on the free tier would meet the deadline at the cost of the stakeholders the platform serves: requesters who wait or give up, and an organisation whose records can be lost. The product is ready to deploy. What is missing is a production environment that meets NFR-002, NFR-003 and NFR-013.
+
+## 41.4 What would change the decision
+
+A paid host that stays awake in service hours, a managed PostgreSQL 16 database with automated backups, the projected cost accepted by the sponsor, and the usability test passed. With those, the release at the tag would deploy by the same runbook, with a certificate from the host in place of the self-signed one.
+
+# 42. Project Reflection and Conclusion
+
+## 42.1 The original problem
+
+M1 described an organisation whose service requests arrived through email, telephone calls, WhatsApp messages, spreadsheets and paper records, with no single controlled record, no accountability for who held a request, and residents who could not see what had happened to their report (s3). The final product addresses each of those directly: one controlled record per request with an unguessable reference; a queue that shows every request in the staff member's scope; assignment, status and priority changes that are each audited; and a requester who sees their request's history and is notified of each change that concerns them. What it does not yet do is reach a resident by email or SMS (SC-D-01), or run where residents can reach it (s41).
+
+## 42.2 Scope
+
+[To be completed under #128: the Scope Completion Percentage from s38.3 and what it shows]
+
+## 42.3 Quality
+
+The strongest evidence is the integrated product verified end to end: TC-32 through PostgreSQL and the three browser journeys through the real server, each shown to fail when the behaviour it guards is broken. Every behaviour that decides who sees what, how a request moves, and whether a change is recorded is tested at more than one level. What remains uncertain is everything the environment decides: behaviour on a hosted service, availability over a month, and real users' first experience.
+
+## 42.4 Engineering decisions and their consequences
+
+**ADR-001, the modular monolith.** Each module was built and tested against a stated store contract while the database was still a draft. That let the modules be finished in parallel in M3, and it made integration in the Final mostly a matter of writing the persistence adapter once; the services ran unchanged against PostgreSQL. The cost was visible too: building against an in-memory store and a stand-in API hid two defects until the real server ran (s39.1). The team would keep the decision and integrate earlier.
+
+**ADR-006, authorisation as a policy with query scopes.** One module decides every permission and every scope, so the queue, the reports and the notifications, added late, inherited correct scoping by calling `scopedWhere`. The one gap, reports ignoring a Manager's scope, was found in review and closed by the same call. It also kept CR-002's correction to four cells a change to data rather than code.
+
+**ADR-007, data and persistence.** [To be completed under #128: Tristan Roets's paragraph]
+
+**ADR-008, notifications.** [To be completed under #128: Tristan Roets's paragraph]
+
+## 42.5 Team and project execution
+
+What most affected delivery was integration timing, and behind it review capacity. The two-approval rule (DEC-012) worked as a control: reviews changed the bootstrap four times and found real defects in every module. With three members it also meant one member's absence stopped every merge, which is RSK-04 and RSK-07 materialising, and it is why the M3 candidate was not integrated. The Final integrated every module once another member took over the schema, with its author's commits kept and the result reviewed by its author (#155).
+
+## 42.6 Future work
+
+If the project continued: host it on a paid service with a managed database and automated backups (s41.4); run the usability test (NFR-009) and measure availability for a month (NFR-003); add the email channel (SC-D-01), which also gives a self-service reset (FR-004); and move the failure limits to a shared store before running a second instance (RSK-26).
+
+## 42.7 Conclusion
+
+[To be completed under #128: one evidence-based paragraph on what the project achieved and what remains, written once the percentage and the final runs are in]
