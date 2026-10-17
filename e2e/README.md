@@ -35,6 +35,8 @@ machine. The run reads its target and accounts from the environment, never from 
 | `E2E_STAFF_EMAIL`, `E2E_STAFF_PASSWORD` | A seeded Staff member |
 | `E2E_STAFF_NAME` | That Staff member's name as the assign list shows it |
 | `E2E_CATEGORY` | An active category's name, one the Staff member is authorised for (FR-015) |
+| `E2E_MANAGER_EMAIL`, `E2E_MANAGER_PASSWORD` | A seeded Manager, read only by the accessibility journey for the users and categories screens |
+| `E2E_IGNORE_HTTPS_ERRORS` | `true` only against a target with a self-signed certificate, such as simulated production |
 
 On a failure, `test-results/` holds the trace and screenshots, and `playwright-report/` the HTML report
 (`npx playwright show-report`). Neither is committed.

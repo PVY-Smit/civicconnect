@@ -22,3 +22,7 @@ export const accounts = () => ({
 });
 
 export const category = () => required("E2E_CATEGORY");
+
+// A seeded Manager, for the screens only a Manager has (users and categories). Read only by the journeys
+// that visit them, so the other journeys do not need it set.
+export const manager = () => account("Manager");

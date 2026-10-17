@@ -1079,6 +1079,28 @@ runs the same operations against PostgreSQL.
 
 - `e2e/journeys/staff-new-to-closed.spec.js`: TC-34: a request goes from New to Closed through the Coordinator and Staff, and the requester sees the outcome [#138]
 
+### TC-45 Accessibility of every screen
+
+| Field | Value |
+|---|---|
+| Test basis | NFR-010 |
+| Why selected | Staff use the system all day and requesters include people who use the keyboard or a screen reader; NFR-010 sets keyboard operation with a visible focus indicator, labelled controls and text contrast |
+| Technique and level | Automated WCAG 2.1 A and AA scan (axe-core 4.13.0) and a keyboard walk, end to end in the browser against the deployed product, as each role |
+| Input or precondition | The deployed product with seed data; Requester, Coordinator and Manager accounts (`E2E_MANAGER_*`) |
+| Expected result | No WCAG 2.1 A or AA violation on the sign-in, reset, my requests, submit, request detail (requester and staff), notifications, queue, reports, users and categories screens; on each, the skip link is the first control and every control reached by Tab shows a focus indicator |
+| Actual result | As expected after one fix: the queue's two date fields showed no focus ring on their calendar button, because focus inside a date field leaves the field itself unfocused; `input[type="date"]:focus-within` now draws the ring |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, against the integrated server (#155): 4 of 4, with no axe violations on any screen; the run before the fix failed on the queue's date fields |
+| Traceability | NFR-010, #155 |
+| Interpretation | What a tool can check holds on every screen. Whether the labels and messages make sense to a first-time user is NFR-009's usability check, which needs people |
+
+**Automated by**
+
+- `e2e/journeys/accessibility.spec.js`: TC-45: the signed-out screens meet WCAG 2.1 AA and work by keyboard [#155]
+- `e2e/journeys/accessibility.spec.js`: TC-45: the requester's screens meet WCAG 2.1 AA and work by keyboard [#155]
+- `e2e/journeys/accessibility.spec.js`: TC-45: the staff and management screens meet WCAG 2.1 AA and work by keyboard [#155]
+- `e2e/journeys/accessibility.spec.js`: TC-45: the Manager's administration screens meet WCAG 2.1 AA and work by keyboard [#155]
+
 ### TC-35 Performance: the staff queue and request submission
 
 | Field | Value |
