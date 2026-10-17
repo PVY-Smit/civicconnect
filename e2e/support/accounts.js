@@ -3,6 +3,8 @@
 // these accounts; E2E_STAFF_NAME and E2E_CATEGORY must match them: a Staff member authorised for that
 // category, so the Coordinator can assign a request in it to them (FR-015).
 
+import { fileURLToPath } from "node:url";
+
 function required(name) {
   const value = process.env[name];
   if (!value) throw new Error(`Set ${name}. The journeys read the seeded accounts from the environment; see e2e/README.md.`);
@@ -22,6 +24,10 @@ export const accounts = () => ({
 });
 
 export const category = () => required("E2E_CATEGORY");
+
+// Where journeys/sign-in.setup.js saves a role's signed-in state, and where each journey starts from it.
+// The folder is ignored by git: the files hold session tokens.
+export const stateFile = (role) => fileURLToPath(new URL(`../.auth/${role.toLowerCase()}.json`, import.meta.url));
 
 // A seeded Manager, for the screens only a Manager has (users and categories). Read only by the journeys
 // that visit them, so the other journeys do not need it set.

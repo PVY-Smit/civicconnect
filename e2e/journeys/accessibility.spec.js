@@ -9,8 +9,7 @@
 
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { accounts, manager } from "../support/accounts.js";
-import { signIn } from "../support/app.js";
+import { startAs } from "../support/app.js";
 
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 const TABS = 30;
@@ -62,8 +61,9 @@ test("TC-45: the signed-out screens meet WCAG 2.1 AA and work by keyboard", asyn
   await audit(page, "Reset password");
 });
 
-test("TC-45: the requester's screens meet WCAG 2.1 AA and work by keyboard", async ({ page }) => {
-  await signIn(page, accounts().requester);
+// Each role starts from the session journeys/sign-in.setup.js saved, so no password is typed here or traced.
+test("TC-45: the requester's screens meet WCAG 2.1 AA and work by keyboard", async ({ browser }) => {
+  const { context, page } = await startAs(browser, "Requester");
   for (const name of ["My requests", "Submit a request", "Notifications"]) await visit(page, name);
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "My requests", exact: true }).click();
   const first = page.getByRole("table").getByRole("link").first();
@@ -71,18 +71,21 @@ test("TC-45: the requester's screens meet WCAG 2.1 AA and work by keyboard", asy
     await first.click();
     await audit(page, "Request detail (requester)");
   }
+  await context.close();
 });
 
-test("TC-45: the staff and management screens meet WCAG 2.1 AA and work by keyboard", async ({ page }) => {
-  await signIn(page, accounts().coordinator);
+test("TC-45: the staff and management screens meet WCAG 2.1 AA and work by keyboard", async ({ browser }) => {
+  const { context, page } = await startAs(browser, "Coordinator");
   await visit(page, "Queue");
   const first = page.getByRole("table").getByRole("link").first();
   await first.click();
   await audit(page, "Request detail (staff)");
   await visit(page, "Reports");
+  await context.close();
 });
 
-test("TC-45: the Manager's administration screens meet WCAG 2.1 AA and work by keyboard", async ({ page }) => {
-  await signIn(page, manager());
+test("TC-45: the Manager's administration screens meet WCAG 2.1 AA and work by keyboard", async ({ browser }) => {
+  const { context, page } = await startAs(browser, "Manager");
   for (const name of ["Users", "Categories"]) await visit(page, name);
+  await context.close();
 });

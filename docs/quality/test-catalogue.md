@@ -206,7 +206,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Why selected | A screen that offers a move the server refuses, or hides one it allows, misleads the user even though the server is right |
 | Technique and level | Every transition in the table; unit (server) and component logic (client) |
 | Input or precondition | The transition table; each role; the server's moves and capabilities as the client receives them |
-| Expected result | The server offers exactly the table's moves for the actor, with their inputs. The client labels every move, gives every guard input a labelled field of the right kind with an id unique across the table, sends only the inputs the move asks for, keeps Assign and Close disabled until chosen and confirmed, shows priority and entry forms only when the server's capabilities allow, and marks only the rejection reason as visible to the requester |
+| Expected result | The server offers exactly the table's moves for the actor, with their inputs. The client labels every move, gives every guard input a labelled field of the right kind with an id unique across the table, sends only the inputs the move asks for, with the assignee id in the form the staff list gave it, keeps Assign and Close disabled until chosen and confirmed, shows priority and entry forms only when the server's capabilities allow, and marks only the rejection reason as visible to the requester |
 | Actual result | As expected |
 | Status | Pass |
 | Evidence | Local run, 7 October 2026: main at b10c3e0, 1 test; client at 7948369, 7 tests |
@@ -219,9 +219,10 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `client/test/staff-screens.test.js`: ADR-005: every move in the status model has its own button label
 - `client/test/staff-screens.test.js`: every input a guard requires gets a labelled form input of the right kind
 - `client/test/staff-screens.test.js`: FR-020: of the reason inputs, only the rejection reason's hint says the requester will see it
-- `client/test/staff-screens.test.js`: a move sends its target and only the inputs it asked for, typed for the server
+- `client/test/staff-screens.test.js`: a move sends its target and only the inputs it asked for, with the assignee id as the list gave it
 - `client/test/staff-screens.test.js`: each move input gets an id unique across the whole transition table
 - `client/test/staff-screens.test.js`: Assign cannot be sent until a staff member is chosen, nor Close until it is confirmed
+- `client/test/staff-screens.test.js`: the assignee chosen in the list is kept as the id the list gave, whatever its form
 - `client/test/staff-screens.test.js`: FR-021: the priority form and the entry form appear only when the server's capabilities allow them
 
 ## Identity and access (#111)
@@ -832,7 +833,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Why selected | A reset path is a second way into an account. If its failures can be told apart, a code can be guessed, works twice or for ever, or an attacker's session survives the reset, it undoes what FR-001 and NFR-004 protect |
 | Technique and level | Equivalence partitions of failure, boundary values (expiry, password length, the fifth wrong try), negative tests, concurrent cases (two uses of one code, five wrong tries at once); component, and the routes at the handler boundary |
 | Input or precondition | Active and deactivated accounts; codes issued, replaced, expired, withdrawn and used; codes typed in other forms; new passwords at 7, 8, 128 and 129 characters and equal to the current one; sessions made before and after a reset, and a token from before session versions |
-| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account, with a lifetime of 24 hours unless the caller chooses up to 7 days; issuing is recorded with who, for whom and when, never the code; the code is stored only as a hash; it sets a new password that then signs in, works once even when used twice at once, expires, and is replaced by a new one; five wrong tries withdraw it, four do not, and wrong tries at once all count; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup, and a password equal to the current one is refused without spending the code; a reset ends every earlier session; the reset succeeds only when exactly one row is written |
+| Expected result | Only a role with manageUsers issues a code, never for a missing or deactivated account, with a lifetime of 24 hours unless the caller chooses up to 7 days; issuing is recorded with who, for whom and when, never the code; the code is stored only as a hash; it sets a new password that then signs in, works once even when used twice at once, expires, and is replaced by a new one; five wrong tries withdraw it, four do not, and wrong tries at once all count; every failed reset gets one message, with the code checked against the dummy hash when there is no usable account; the password length is checked before any lookup, and a password equal to the current one is refused without spending the code; a reset ends every earlier session; the reset succeeds only when exactly one row is written; the reset fails if the wrong tries have reached the limit when it is written, even with the code still in place; a caller who may not issue codes is refused before the lifetime is checked; across sign-in and the reset, at most 4 argon2 checks run at once, and a failed check frees its place |
 | Actual result | As expected |
 | Status | Pass |
 | Evidence | Local run, 12 October 2026, #146 at 6fa5e85: 27 of 27 tests. Nine deliberate faults each failed a test |
@@ -868,6 +869,14 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/password-reset.test.js`: a session token from before session versions counts as version 0, and any other version is refused [#146]
 - `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409 [#146]
 - `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message [#146]
+
+**Automated by**, the follow-ups from the review of #146 (#148):
+
+- `tests/password-reset.test.js`: a caller who may not issue codes is refused before the lifetime is checked, whatever lifetime they pass
+- `tests/password-reset.test.js`: a right code checked while wrong tries are counted fails once they reach the limit, even with the code not yet withdrawn
+- `tests/password-reset.test.js`: the limiter runs at most its limit at once, in arrival order, and frees a place when a check throws
+- `tests/password-reset.test.js`: a place handed to a waiting check still counts as taken, so a check arriving later waits
+- `tests/password-reset.test.js`: sign-in and reset share one cap of 4 argon2 checks at once, however many calls arrive
 
 ## Integrated modules (#155)
 
@@ -1048,17 +1057,23 @@ runs the same operations against PostgreSQL.
 | Test basis | FR-001, FR-005 to FR-011 |
 | Why selected | The most common journey, across the client, the server and the database |
 | Technique and level | End to end in the browser (Playwright) against the deployed product |
-| Input or precondition | Staging (#122) with seed data (#109): a requester account and an active category, named in the environment (`e2e/README.md`) |
-| Expected result | The requester signs in and lands on their requests; an empty form is refused with all five fields named; a complete submission gets a reference in the agreed format; the detail shows what was typed, the status New and its first history entry; the list holds the request once, with its title and status |
+| Input or precondition | The deployed product with seed data (#109): Requester, Coordinator and Staff accounts and an active category, named in the environment (`e2e/README.md`); the host's health check answering before the run starts |
+| Expected result | Each seeded user signs in through the form, with nothing of it traced, and lands on their start screen; the signed-in requester starts on their requests; an empty form is refused with all five fields named; a complete submission gets a reference in the agreed format; the detail shows what was typed, the status New and its first history entry; the list holds the request once, with its title and status |
 | Actual result | As expected, against the integrated server on PostgreSQL and against simulated production over HTTPS |
 | Status | Pass |
-| Evidence | The journey is #138. Local run against the stand-in, 7 October 2026, client at 7948369: passed; removing the form's error summary failed it. 17 October 2026: passed against the integrated server (#155), and against simulated production at rc-8f72f99 over HTTPS with Secure cookies, as the least-privilege database role (`docs/deployment/simulated-production.md`) |
+| Evidence | The journey is #138. Local run against the stand-in, 14 October 2026, with the follow-ups of #148: the three sign-in steps and the journey passed, and a run with `--trace on` holds none of the passwords. Earlier, 7 October 2026, client at 7948369: passed; removing the form's error summary failed it. 17 October 2026: passed against the integrated server (#155), and against simulated production at rc-8f72f99 over HTTPS with Secure cookies, as the least-privilege database role (`docs/deployment/simulated-production.md`) |
 | Traceability | #123, #138, #122, #109, #155 |
 | Interpretation | The requester's journey works end to end through the real API and database |
 
 **Automated by**
 
 - `e2e/journeys/requester-submits-and-follows.spec.js`: TC-33: a requester submits a request, gets its reference, and finds it in their list and its detail [#138]
+
+**Automated by**, the sign-in steps TC-33 and TC-34 start from:
+
+- `e2e/journeys/sign-in.setup.js`: FR-001: the Requester signs in through the form and lands on My requests
+- `e2e/journeys/sign-in.setup.js`: FR-001: the Coordinator signs in through the form and lands on Queue
+- `e2e/journeys/sign-in.setup.js`: FR-001: the Staff signs in through the form and lands on Queue
 
 ### TC-34 Journey: staff take a request from New to Closed
 
@@ -1067,11 +1082,11 @@ runs the same operations against PostgreSQL.
 | Test basis | FR-011, FR-013 to FR-021, FR-025 |
 | Why selected | The workflow journey, with three users acting on one request, each with their own session |
 | Technique and level | End to end in the browser (Playwright) against the deployed product, with three browser contexts |
-| Input or precondition | Staging (#122) with seed data (#109): Requester, Coordinator and Staff accounts, and an active category the Staff member is authorised for |
+| Input or precondition | The deployed product with seed data (#109): Requester, Coordinator and Staff accounts, and an active category the Staff member is authorised for |
 | Expected result | The requester reports Low urgency; the Coordinator finds the request in the queue and sets the priority to High, with the reported urgency still Low beside it, and assigns it, with Assign disabled until a staff member is chosen; the Staff member starts work, adds an internal note and a visible update, and resolves it with a summary; the Coordinator closes it, with Close disabled until confirmed, and no moves remain; the history shows each step and who made it; the requester sees Closed, the resolution, the visible update and their own urgency, and not the internal note or the priority |
 | Actual result | As expected, against the integrated server on PostgreSQL and against simulated production over HTTPS. Its first run against the real server failed: the staff detail had no moves, and a rejection's reason never reached the requester; both were fixed in #155 (TC-15) |
 | Status | Pass |
-| Evidence | The journey is #138. Local run against the stand-in, 12 October 2026, #138 at 29f0005, client at f9fe939: passed, and passed with CI set. Enabling Assign before a choice, sending internal notes to the requester (7 October), and setting the priority overwriting the reported urgency (12 October, which the journey before 29f0005 passed) each failed it. 17 October 2026: passed against the integrated server (#155), and against simulated production at rc-8f72f99 over HTTPS, as the least-privilege database role |
+| Evidence | The journey is #138. Local run against the stand-in, 14 October 2026, with the follow-ups of #148, each user starting from the saved sign-in: passed. Local run against the stand-in, 12 October 2026, #138 at 29f0005, client at f9fe939: passed, and passed with CI set. Enabling Assign before a choice, sending internal notes to the requester (7 October), and setting the priority overwriting the reported urgency (12 October, which the journey before 29f0005 passed) each failed it. 17 October 2026: passed against the integrated server (#155), and against simulated production at rc-8f72f99 over HTTPS, as the least-privilege database role |
 | Traceability | #123, #138, #122, #109, #155 |
 | Interpretation | The workflow journey works end to end with three users on the real API and database; the stand-in had hidden two defects the journey then found |
 
@@ -1112,7 +1127,7 @@ runs the same operations against PostgreSQL.
 | Expected result | NFR-001: the 95th percentile of 20 retrievals of the first queue page under 2.0 s, the distribution recorded. NFR-002: the 95th percentile of 20 submissions under 3.0 s. Concurrent run (10 clients, 30 s): no target set; latency, throughput and errors recorded |
 | Actual result | Against the simulated production build at rc-f47d054 on its own database, 17 October 2026, with 5,000 requests seeded through the API (500 rejected, 1,500 assigned, none failed): NFR-001, 20 of 20 retrievals of the first page of a 5,003-request queue, p50 5.7 ms, p95 7.4 ms, meets. NFR-002, 20 of 20 submissions, p50 6.7 ms, p95 7.9 ms, meets. Concurrent run, 10 clients for 30 s: 16,237 retrievals, 554.7 a second, no errors, p95 24.5 ms, p99 28 ms. The earlier trials against the stand-in were marked invalid, as designed |
 | Status | Pass, on the simulated production build. Client and server share one machine, so no network time is included |
-| Evidence | The scripts and method are #139 (`docs/quality/performance/README.md`). The statistics, the outcome rules (exactly the first page, at least 20 samples, the unrounded verdict) and the client (non-JSON answers, ended sessions): local run, 12 October 2026, #139 at 3ccee48, 13 of 13 tests. Results from staging go to `docs/quality/performance/results/` |
+| Evidence | The scripts and method are #139 (`docs/quality/performance/README.md`). The statistics, the outcome rules (exactly the first page, at least 20 samples, the unrounded verdict), the seed's spread, the wait for the host, the evidence rule and the client (non-JSON answers, network errors, ended sessions shared by concurrent calls): local run, 14 October 2026, the follow-ups from #148, 19 of 19 tests. Results from staging go to `docs/quality/performance/results/` |
 | Traceability | #124, #139, NFR-001, NFR-002, ASR-02 |
 | Interpretation | Not yet available. The README records what a result will not show: production scale, dates spread over months, writes during reads, screen drawing time, and other hosts |
 
@@ -1122,6 +1137,7 @@ runs the same operations against PostgreSQL.
 - `perf/test/lib.test.js`: a reported percentile is always a value that was measured, never an interpolation [#139]
 - `perf/test/lib.test.js`: one slow sample in 20 does not move the 95th percentile, and two do [#139]
 - `perf/test/lib.test.js`: no samples, or a percentile outside 0 to 100, is an error rather than a number [#139]
+- `perf/test/lib.test.js`: the percentile's rank is exact for every sample count and percentile, with no floating-point step
 - `perf/test/lib.test.js`: the summary reports the distribution, with the mean beside it, not instead of it [#139]
 - `perf/test/lib.test.js`: a result meets its target only when it is under it, as NFR-001 and NFR-002 say [#139]
 - `perf/test/lib.test.js`: the verdict is taken on the unrounded 95th percentile, so 1999.96 ms meets a 2,000 ms target [#139]
@@ -1129,5 +1145,10 @@ runs the same operations against PostgreSQL.
 - `perf/test/lib.test.js`: NFR-001: only an answer holding exactly the first page counts; an empty page or the whole queue does not [#139]
 - `perf/test/lib.test.js`: a command-line number that is not a whole number at its minimum is refused, naming the option [#139]
 - `perf/test/lib.test.js`: a response body that is not JSON is kept as text rather than ending the run [#139]
-- `perf/test/lib.test.js`: the seed's mix rejects one in ten and assigns three in ten of the saved requests [#139]
+- `perf/test/lib.test.js`: the seed gives every category every urgency equally
+- `perf/test/lib.test.js`: the seed's mix rejects a tenth and assigns three tenths, the same on every run, spread across every category
 - `perf/test/lib.test.js`: the client signs in again once when the session ends, repeats the call, and keeps a non-JSON answer [#139]
+- `perf/test/lib.test.js`: a call that fails before an answer is recorded as status 0 with its cause, and the run carries on
+- `perf/test/lib.test.js`: calls running together share one sign-in when the session ends
+- `perf/test/lib.test.js`: the scripts wait for the health check before timing anything, and give up with a message
+- `perf/test/lib.test.js`: a result is evidence only if its scripts were committed and the server named its release

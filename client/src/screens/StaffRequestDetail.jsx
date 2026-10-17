@@ -5,12 +5,12 @@
 // whether they may set the priority or record an entry (ADR-006). The screen offers exactly those. The
 // server checks every action again when it arrives, so hiding a control is a convenience, not the control.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "../api.js";
 import { Link } from "../components/Link.jsx";
 import { Page } from "../components/Page.jsx";
 import { formatDateTime } from "../format.js";
-import { detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../workflow-ui.js";
+import { chosenAssignee, detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../workflow-ui.js";
 
 const PRIORITIES = ["Low", "Medium", "High"];
 
@@ -82,7 +82,7 @@ function MoveForm({ move, from, reference, api, onDone, onConflict, staffOptions
               ) : input.kind === "staff" ? (
                 <>
                   <label htmlFor={id(input.field)}>{input.label}</label>
-                  <select id={id(input.field)} value={values.assigneeId ?? ""} onChange={(e) => setValues((v) => ({ ...v, assigneeId: e.target.value }))}>
+                  <select id={id(input.field)} value={values.assigneeId ?? ""} onChange={(e) => setValues((v) => ({ ...v, assigneeId: chosenAssignee(staffOptions, e.target.value) }))}>
                     <option value="">{staffOptions ? "Choose a staff member" : "Loading staff…"}</option>
                     {(staffOptions ?? []).map((s) => (
                       <option key={s.id} value={s.id}>
@@ -215,11 +215,15 @@ export function StaffRequestDetail({ api, navigate, reference }) {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [staffOptions, setStaffOptions] = useState(null);
+  const latest = useRef(0);
 
+  // Only the newest read is used. A read for a reference the screen has left, or a reload overtaken by a
+  // later one after an action, is dropped when it answers.
   const load = useCallback(() => {
+    const n = ++latest.current;
     api.request(reference).then(
-      (data) => setRequest(data.request),
-      (e) => setError(e.status === 404 ? "notFound" : e.message),
+      (data) => n === latest.current && setRequest(data.request),
+      (e) => n === latest.current && setError(e.status === 404 ? "notFound" : e.message),
     );
   }, [api, reference]);
 
@@ -227,13 +231,24 @@ export function StaffRequestDetail({ api, navigate, reference }) {
     setRequest(null);
     setError(null);
     setMessage(null);
+    setStaffOptions(null); // the list is for one request, so another request starts without it
     load();
+    return () => {
+      latest.current++;
+    };
   }, [load]);
 
   const needsStaff = request?.moves?.some((m) => m.requires.includes("assigneeId"));
   useEffect(() => {
     if (!needsStaff) return;
-    api.assignableStaff(reference).then((d) => setStaffOptions(d.staff), () => setStaffOptions([]));
+    let ignore = false;
+    api.assignableStaff(reference).then(
+      (d) => !ignore && setStaffOptions(d.staff),
+      () => !ignore && setStaffOptions([]),
+    );
+    return () => {
+      ignore = true;
+    };
   }, [api, reference, needsStaff]);
 
   // After any action the request is read again, so the screen shows what the server now holds.
