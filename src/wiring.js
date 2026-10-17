@@ -16,6 +16,9 @@ function required(env, name) {
 export async function createDependencies({ prisma, env = process.env, clientDir, log } = {}) {
   const sessionSecret = required(env, "SESSION_SECRET");
   const formatReference = createReferenceFormatter(required(env, "REFERENCE_KEY"));
+  // FR-022, FEC-02: the organisation-wide response target in whole days. Its value is the organisation's
+  // to give, so it is configuration; reports/http.js refuses to start without a whole number of at least 1.
+  const overdueTargetDays = Number(required(env, "OVERDUE_TARGET_DAYS"));
   // FR-001, FR-004: sign-in and reset check a dummy hash when there is no usable account, so the answer
   // takes as long either way. It is made with the same function and parameters as a real hash.
   const dummyHash = await argon2.hash(randomBytes(32).toString("hex"));
@@ -31,6 +34,7 @@ export async function createDependencies({ prisma, env = process.env, clientDir,
     },
     dummyHash,
     sessionSecret,
+    overdueTargetDays,
     formatReference,
     // NFR-006: the cookie is Secure wherever the service runs over HTTPS.
     secureCookies: env.COOKIE_SECURE === "true",

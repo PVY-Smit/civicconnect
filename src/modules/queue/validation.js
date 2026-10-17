@@ -3,6 +3,7 @@
 // 400 and its own message, so a filter is never silently dropped: a dropped filter would show the whole
 // scope as if it were the filtered result.
 
+import { isCalendarDate as validDate } from "../../shared/days.js";
 import { STATUSES } from "../workflow-status/transition-table.js";
 
 export const QUEUE_SORTS = Object.freeze([
@@ -23,14 +24,7 @@ export const MAX_PAGE = 100_000;
 // The search is matched with contains across four fields, so its length is capped.
 export const Q_MAX = 200;
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const POSITIVE_INT_RE = /^[1-9]\d{0,18}$/;
-
-function validDate(value) {
-  if (!DATE_RE.test(value)) return false;
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
 
 export function validateQueueQuery(raw = {}) {
   const errors = {};

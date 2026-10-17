@@ -11,6 +11,7 @@ import { createIdentityAccess } from "./modules/identity-access/http.js";
 import { createNotificationsHandler } from "./modules/notifications/http.js";
 import { InactiveCategoryError } from "./modules/persistence/store.js";
 import { createQueueHandlers } from "./modules/queue/http.js";
+import { createReportHandlers } from "./modules/reports/http.js";
 import { createRequestAccessHandlers } from "./modules/request-access/http.js";
 import { createSubmissionHandler } from "./modules/request-capture/http.js";
 import { createWorkflowHandlers } from "./modules/workflow-status/http.js";
@@ -32,7 +33,7 @@ export function createApp(deps) {
 }
 
 function mountApi(app, deps) {
-  const { users, categories, requests, notificationSources, store } = deps.store;
+  const { users, categories, requests, notificationSources, reports, store } = deps.store;
   const identity = createIdentityAccess({
     users,
     verifyPassword: deps.verifyPassword,
@@ -45,6 +46,7 @@ function mountApi(app, deps) {
   const submit = createSubmissionHandler({ categories, requests, formatReference: deps.formatReference });
   const workflow = createWorkflowHandlers({ requests, users, store });
   const queue = createQueueHandlers({ requests, users });
+  const report = createReportHandlers({ reports, overdueTargetDays: deps.overdueTargetDays });
   const { authenticate, requirePermission } = identity;
 
   const api = express.Router();
@@ -74,6 +76,10 @@ function mountApi(app, deps) {
 
   // The requester's notifications (FR-029, ADR-008)
   api.get("/notifications", authenticate, createNotificationsHandler({ notificationSources }));
+
+  // Management reporting (FR-022 to FR-024)
+  api.get("/reports/summary", authenticate, report.summary);
+  api.get("/reports/overdue", authenticate, report.overdue);
 
   // The workflow (FR-015 to FR-021, FR-025)
   api.get("/requests/:reference/assignable-staff", authenticate, workflow.assignableStaff);

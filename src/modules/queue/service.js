@@ -5,24 +5,13 @@
 // module's query: it returns the page of rows and the total that match, both read in one transaction, so
 // the count and the page cannot disagree.
 //
-// Dates. The client shows dates in South African time, UTC+02:00 all year with no daylight saving, so a
-// day filter means that day there. from is the start of that day, and to ends before the start of the
-// next day, so a time between .999 and the next second, which PostgreSQL's microseconds allow, is never
-// missed.
+// Dates are South African days (src/shared/days.js).
 
 import { permits, scopedWhere } from "../authorisation-policy/policy.js";
+import { dayRange } from "../../shared/days.js";
 import { validateQueueQuery } from "./validation.js";
 
-export const ZONE_OFFSET = "+02:00";
-
-export function startOfDay(day) {
-  return new Date(`${day}T00:00:00.000${ZONE_OFFSET}`);
-}
-
-export function startOfNextDay(day) {
-  const start = startOfDay(day);
-  return new Date(start.getTime() + 24 * 60 * 60 * 1000);
-}
+export { startOfDay, startOfNextDay } from "../../shared/days.js";
 
 function searchCondition(q) {
   if (!q) return null;
@@ -40,12 +29,7 @@ export function buildFilterWhere(actor, filters) {
   if (filters.assigneeId === "none") parts.push({ assigneeId: null });
   else if (filters.assigneeId === "me") parts.push({ assigneeId: actor.id });
   else if (filters.assigneeId) parts.push({ assigneeId: filters.assigneeId });
-  if (filters.from || filters.to) {
-    const createdAt = {};
-    if (filters.from) createdAt.gte = startOfDay(filters.from);
-    if (filters.to) createdAt.lt = startOfNextDay(filters.to);
-    parts.push({ createdAt });
-  }
+  if (filters.from || filters.to) parts.push({ createdAt: dayRange(filters.from, filters.to) });
   return parts.length > 0 ? { AND: parts } : {};
 }
 

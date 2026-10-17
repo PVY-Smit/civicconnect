@@ -21,7 +21,7 @@ import { REFERENCE_PATTERN } from "../src/modules/request-capture/reference.js";
 
 const run = randomBytes(4).toString("hex");
 const PASSWORD = `tc32-${randomBytes(8).toString("hex")}`;
-const env = { SESSION_SECRET: randomBytes(32).toString("hex"), REFERENCE_KEY: randomBytes(32).toString("hex") };
+const env = { SESSION_SECRET: randomBytes(32).toString("hex"), REFERENCE_KEY: randomBytes(32).toString("hex"), OVERDUE_TARGET_DAYS: "10" };
 
 async function makeUser(name, role, categoryIds = []) {
   const user = await prisma.user.create({
@@ -237,6 +237,20 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   assert.deepEqual(mineOnly(reference), ["accepted", "completed", "updated"]);
   assert.deepEqual(mineOnly(none), ["rejected"]);
   assert.deepEqual((await strangerCall("GET", "/notifications")).body.notifications, []);
+
+  // FR-022, FR-023: today's report counts this run's four requests in its category by their status now;
+  // a Manager with no categories sees none of them (scope), and a Requester is refused.
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg" }).format(new Date());
+  const report = await coord("GET", `/reports/summary?from=${today}&to=${today}`);
+  assert.equal(report.status, 200);
+  const ourRows = report.body.breakdown.filter((r) => r.category === category.name).map((r) => [r.status, r.count]);
+  assert.deepEqual(ourRows, [["Closed", 1], ["New", 2], ["Rejected", 1]]);
+  const managerReport = await (await as(manager))("GET", `/reports/summary?from=${today}&to=${today}`);
+  assert.equal(managerReport.body.breakdown.some((r) => r.category === category.name), false);
+  assert.equal((await req("GET", "/reports/summary")).status, 403);
+  const overdueList = await coord("GET", "/reports/overdue");
+  assert.equal(overdueList.body.targetDays, 10);
+  assert.equal(overdueList.body.requests.some((r) => more.includes(r.reference)), false, "requests made today are not overdue");
 
   // FR-004: a Manager issues a code; the reset sets the password and ends the earlier session.
   const mgr = await as(manager);

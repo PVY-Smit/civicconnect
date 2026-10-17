@@ -231,6 +231,27 @@ export function createStore(prisma) {
     },
   };
 
+  // reports/service.js (FR-022 to FR-024): the requests a report counts, already limited by the caller's
+  // where (the period and the actor's scope).
+  const reports = {
+    async forSummary({ where }) {
+      return fromDb(
+        await prisma.request.findMany({
+          where: toDbWhere(where),
+          select: { reference: true, status: true, createdAt: true, category: { select: { name: true } } },
+        }),
+      );
+    },
+    async openRequests({ where }) {
+      return fromDb(
+        await prisma.request.findMany({
+          where: toDbWhere(where),
+          select: { reference: true, status: true, createdAt: true, category: { select: { name: true } }, assignee: { select: { id: true, name: true } } },
+        }),
+      );
+    },
+  };
+
   // notifications/service.js (FR-029, ADR-008): the requester's own requests with their status history and
   // their requester-visible entries, which is all the indications are derived from.
   const notificationSources = {
@@ -289,5 +310,5 @@ export function createStore(prisma) {
     },
   };
 
-  return { users, categories, requests, notificationSources, store };
+  return { users, categories, requests, notificationSources, reports, store };
 }
