@@ -73,11 +73,33 @@ own connection goes in `.env`.
 
    Then run the two journeys against it (`e2e/`, with `E2E_BASE_URL=http://localhost:8080`).
 
+## Backup and restore
+
+Take a backup before every deployment, and keep it outside every working tree, because a dump holds
+personal data (NFR-008). `PG_BIN` names the PostgreSQL 16 bin directory if it is not on the PATH.
+
+```bash
+RELEASE=v1.0.0 node tools/backup.mjs backup "$OWNER_DATABASE_URL" <backup directory>
+```
+
+It prints the file's size and SHA-256. A backup is trusted only once it has been restored and checked.
+1. Restore it into an empty database.
+2. Compare the restored copy's rows with the original.
+3. Start a server on the restored copy and run the smoke check and the journeys against it.
+
+```bash
+createdb civicconnect_restore
+node tools/backup.mjs restore <backup file> "postgres://.../civicconnect_restore"
+node tools/backup.mjs compare "$OWNER_DATABASE_URL" "postgres://.../civicconnect_restore"
+```
+
+The grants travel with the backup, so the application's role works on the restored copy as before.
+
 ## Rolling back
 
-Stop the server and repeat steps 1, 2, 5, 6 and 7 with the previous tag. A release whose migration
-has run cannot be rolled back by redeploying alone: restore the database from its backup first. There
-is no backup in this environment, which is one of the gaps below.
+1. Stop the server.
+2. If the release being rolled back ran a migration, restore the backup taken before it.
+3. Repeat steps 1, 2, 5, 6 and 7 with the previous tag.
 
 ## What it does not have
 
@@ -85,7 +107,7 @@ These separate it from a real production deployment, and the go-live decision in
 
 - **No TLS.** It is served over HTTP on localhost. NFR-006 needs HTTPS, and `COOKIE_SECURE=true` once it
   has it.
-- **No backup or restore.** DEC-010's production database was not decided, so there is no tested
-  restore. A failed migration or a lost disk loses every request.
+- **Backups are manual,** and they live on the same machine as the database. There is no schedule and
+  no off-site copy, so a lost disk loses the backups too.
 - **No hosting.** It runs on one member's machine, not the Render web service DEC-010 chose.
 - **No monitoring** beyond `/health`.
