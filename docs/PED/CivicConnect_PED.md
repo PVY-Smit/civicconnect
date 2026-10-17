@@ -2,16 +2,16 @@
 
 **CivicConnect**
 
-Project Engineering Document (PED) v2.0
+Project Engineering Document (PED) v3.0
 
-*Architecture, Technology and Initial Design Baseline*
+*Controlled Construction, Integration, Quality and Release Readiness*
 
 | **Project** | CivicConnect - Community Service Request Management Platform |
 |----|----|
-| **Milestone** | Milestone 2 - Architecture, Technology and Initial Design Baseline |
-| **Document** | PED v2.0, evolved from PED v1.0, which is kept unchanged in the repository as the M1 record. This document evolves through v3.0 and v4.0; it is not recreated per milestone (Master Brief, s6). |
+| **Milestone** | Milestone 3 - Controlled Construction, Integration, Quality and Release Readiness |
+| **Document** | PED v3.0, continued from PED v2.0, which evolved from PED v1.0. PED v1.0 is kept unchanged in the repository as the M1 record. This document evolves through v4.0; it is not recreated per milestone (Master Brief, s6). |
 | **Team** | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
-| **Baseline status** | v2.0 PROPOSED FOR BASELINE. The team signed it off on 30 September 2026 and recommends it as conditionally accepted (s26.3, #69); it becomes the baseline when #95 merges, and the M2 gate decision is the assessor's. The team signed off v1.0 on the same date, after the M1 submission, with the same recommendation (s16, #69); the M1 gate decision is also the assessor's (#7). |
+| **Baseline status** | v3.0 SUBMITTED for M3 on 16 October 2026 (#127); its submission information is in s27. v2.0 is the team's M2 baseline, merged on 9 October 2026 (#95). The M1 and M2 gate decisions are the assessor's, and the team's sign-off of v1.0 and v2.0 is recorded in s16 and s26.3. |
 | **Controlled artefacts** | This document, plus the registers workbook (Requirements, RTM, Risk, Decision Log, Forward Considerations, AI Usage, Change Requests, Status Model, Access Matrix, Working Agreement, Governance, Sign-off). |
 | **Repository** | https://github.com/PVY-Smit/civicconnect |
 | **Referencing** | Harvard, applied in-text and in the reference list (s17). |
@@ -40,6 +40,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 0.2 | 8 September 2026 | Jean Smit, Darius Mushi | Evidence completion: AI Usage Register entries, the GitHub Governance evidence column, forward-consideration to decision links, and correction of the page layout so that no table or figure is truncated. | Reviewed through Pull Request by Darius Mushi and Tristan Roets, against issues \#5, \#6, \#10, \#17, \#20 and \#21. | Superseded |
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
+| 3.0 | 16 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | | In progress |
 
 # 2. Purpose and How to Read This Document
 
@@ -263,7 +264,7 @@ Every target below states a number and the method by which it is measured. A qua
 
 This matrix is the authoritative statement of FR-002. Every entry marked No is a negative test case in M3, which is how NFR-005 becomes verifiable rather than aspirational.
 
-*Reading note from v2.0: four cells below grant what the requirements refuse. The Manager may assign, reject and set priority, and the Coordinator may accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denies all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69). The Access Matrix in the registers workbook is now corrected for all four cells, and the test fixtures are exported from it (#92, #136); this table is shown as at the M1 baseline.*
+*Reading note, corrected in v3.0 under CR-002: in v1.0 and v2.0, four cells of this table granted what the requirements refuse. The Manager could assign, reject and set priority, and the Coordinator could accept an unassigned request, where FR-015, FR-020 and FR-021, with the Status Model that FR-016 makes authoritative for transitions, give those moves to other roles. The authorisation policy built in M2 denied all four (s22.2). On 30 September 2026 the team decided to correct the matrix to the requirements (CR-002, #69). The Access Matrix in the registers workbook was corrected for all four cells and the test fixtures are exported from it (#92, #136), and in v3.0 the four cells below read No to match. v1.0 in the repository keeps the table as it was baselined.*
 
 | **Function** | **Requester** | **Staff** | **Coordinator** | **Manager** |
 |----|----|----|----|----|
@@ -271,13 +272,13 @@ This matrix is the authoritative statement of FR-002. Every entry marked No is a
 | View own requests | Yes | Yes | Yes | Yes |
 | View any request in authorised categories | No | Yes | Yes | Yes |
 | View internal action entries | No | Yes | Yes | Yes |
-| Assign a request to another user | No | No | Yes | Yes |
-| Accept an unassigned request in scope | No | Yes | Yes | No |
+| Assign a request to another user | No | No | Yes | No |
+| Accept an unassigned request in scope | No | Yes | No | No |
 | Record an action entry | No | Yes | Yes | Yes |
 | Change status (model-permitted transitions) | No | Yes | Yes | Yes |
 | Move Resolved to Closed | No | No | Yes | Yes |
-| Reject a request | No | No | Yes | Yes |
-| Set or change priority | No | No | Yes | Yes |
+| Reject a request | No | No | Yes | No |
+| Set or change priority | No | No | Yes | No |
 | View management counts and breakdowns | No | No | Yes | Yes |
 | Maintain the category list | No | No | No | Yes |
 | Create or deactivate a user account | No | No | No | Yes |
@@ -731,6 +732,8 @@ Milestone 2 requires at least two final project-specific design decisions inform
 
 **What the tests found.** Four cells of the Access Matrix grant what the requirements refuse: the Manager assigning, rejecting and setting priority, and the Coordinator accepting an unassigned request. FR-016 makes the Status Model authoritative for transitions, and the Status Model gives assigning to the Coordinator and accepting to Staff (FR-015), and rejecting to the Coordinator (FR-020). FR-021 gives priority to the Coordinator only. The policy denies all four, and #92 takes the conflict to change control.
 
+*Resolved in M3 (13 October 2026): CR-002 corrected the four cells in the Access Matrix register and in s8.3, the test fixtures are exported from the register, and the policy's list of conflicts is empty (#92, #136). See s29.*
+
 **Complexity accepted.** A query that does not use the scope bypasses it. Until a check enforces this, it rests on review, and the M3 negative tests at the endpoints are what catch a miss.
 
 ## 22.3 Where the two decisions meet
@@ -839,6 +842,8 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 
 **CR-002, the Access Matrix**: four cells grant what FR-015, FR-016, FR-020 and FR-021 refuse (#92). On 30 September 2026 the team decided to correct the matrix to the requirements for all four cells (#69). The correction of the Access Matrix sheet, s8.3 and the test fixture is M3 work; the authorisation policy already denies the four cells, so no code depends on it.
 
+*Resolved in M3 (13 October 2026): CR-002 is implemented. The Access Matrix sheet and the test fixtures are corrected (#136), and the s8.3 table is corrected in PED v3.0. Nothing of CR-002 remains open.*
+
 **#65, the end-to-end path**: moves to M3. It needs the bootstrap (#90), whose merge is gated on the DEC-008 conditions, and the data model (#97). The two design decisions and their tests are merged (#93, #94), so M3 wires them into a working path rather than designing them.
 
 **FEC-01**: whether staff and management scope stays by category, moves to site or becomes global. Only the policy module changes when it is answered.
@@ -883,3 +888,445 @@ These are recorded separately from the baseline, as the M2 brief requires, each 
 | Team approval - Tristan Roets | Approved, 30 September 2026 (#69) |
 | Team approval - Darius Mushi | Approved, 30 September 2026 (#69) |
 | Assessor / client gate decision | For the assessor to complete |
+
+# 27. Milestone 3 Overview and Release Candidate
+
+Milestone 3 builds the M1 scope on the M2 baseline and shows, with evidence, how ready the release candidate is. It is recorded in sections 27 to 36, after section 26, for the reason given in s2 for M2: sections 1 to 26 keep their numbers because the registers and the repository cite them.
+
+## 27.1 Submission information
+
+The M3 brief, s5.3, asks for this block so that the assessor can find the submitted baseline.
+
+| **Item** | **Value** |
+|----|----|
+| Team | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
+| Repository | https://github.com/PVY-Smit/civicconnect |
+| Release candidate | None tagged, because the classification is NOT READY (s36.2). The submitted baseline is main at commit d1af49a (15 October 2026); pull requests still in review are named where their evidence is cited |
+| PED version | v3.0 |
+| RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM. The M3 columns CR-006 proposes are not added, because CR-006 still waits for Darius Mushi's answer (#126, s36.1). The workbook keeps its M1 file name, which the registers, the PED and the pull requests cite, and holds the registers for every milestone |
+| Test catalogue | `docs/quality/test-catalogue.md` (#126) |
+| CI and test evidence | No CI workflow runs the tests (#110 not done). The secret scan runs on every pull request. The test evidence is the local runs recorded in the test catalogue, on main at d1af49a on 15 October 2026, Node 24.14.0 on Windows 11 (s32.3) |
+| Staging or demonstration | No staging environment (#122 not done). To run the tests locally, follow the repository README: with PostgreSQL 16 and `DATABASE_URL` set in `.env` from `.env.example`, run `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test` in the repository root for the server, and `npm ci` and `node --test` in `client/` and in `perf/`. The client screens start with `npm run dev` in `client/`, but the server on main serves only its health check, so they have no API to call. The screens were built and checked against a stand-in of the API contract, which is not part of the repository |
+| Date submitted | 16 October 2026 |
+
+## 27.2 Overview
+
+M3 builds the M1 scope on the M2 baseline, one module at a time, each in its own pull request with its tests (ADR-001). The table gives each area's state on 16 October 2026, the day of submission. "On main" means merged; every other area is in an open pull request, a draft, or not started.
+
+| **Area** | **Requirements** | **Server** | **Client** | **State, 16 October 2026** |
+|----|----|----|----|----|
+| Sign-in, sessions and the permission check | FR-001, FR-002, NFR-004, NFR-005 | #130 | #133 | On main |
+| Password reset | FR-004 | #146 | #134 | On main; review follow-ups in #153 |
+| Submission and the requester's views | FR-005 to FR-012 | #131 | #133 | On main (15 October), after DEC-017 was recorded (#154) |
+| Workflow, priority, action entries and audit | FR-015 to FR-021, FR-025, FR-026 | #132, folded into #131 | #134 | On main, with #131 |
+| Access Matrix correction | CR-002 | #136 | | On main |
+| Staff queue | FR-013, FR-014 | #141 (draft) | #134 | Draft |
+| Requester notifications | FR-029 | #142 (draft) | #133 | Draft |
+| Management reports | FR-022 to FR-024 | #143 (draft) | #134 | Draft |
+| User and category administration | FR-003, FR-027, FR-028 | #115, no pull request | #134 | Not started on the server |
+| Schema, migrations and seed data | ADR-007 | #140 (draft) | | Draft. Its migrations and seed stand up on a fresh PostgreSQL 16 database (checked 15 October) |
+| Bootstrap | ADR-001, ADR-002, CR-004 | #90 | | On main (14 October): the Express application with its health check, the Prisma client and the first migration |
+| Persistence adapter and the routes wired into the server | ADR-001, ADR-007 | #108, #109, no pull request | | Not started, so main serves only its health check |
+| CI with a blocking test gate | NFR-012 | #110, no pull request | | Not started; the secret scan (#87) is the only workflow |
+| Simulated staging and release identification | | #122, no pull request | | Not started |
+
+**Release candidate.** None is tagged, because the classification is NOT READY (s36.2). The submission is main at commit d1af49a, 15 October 2026, which holds the areas marked On main above. Where this document cites evidence from a pull request still in review, it names the pull request.
+
+**Current status.** Each module is built and tested on its own, at component level and through its HTTP handlers (s32, s33). Main holds the authorisation policy, the transition table, sign-in, the password reset, submission, the requester's views, the workflow service, the client screens, and the bootstrap with its first migration. The routes are not wired into the server and the persistence adapter does not exist, so main serves only its health check, and the services run over in-memory stores in their tests. There is no integrated release candidate to deploy, and s36 weighs that.
+
+# 28. M2 Baseline Conformance
+
+**1.** This section compares what main holds at commit d1af49a (15 October 2026, s27.1) with the M2 baseline in s18 to s26. It records what was built as the baseline planned it, what was not built, and each significant deviation with its reference. Minor coding choices are not recorded.
+
+## 28.1 Conformance by module and by decision
+
+**1.** All ten module directories that ADR-001 names exist under `src/modules/`: administration, audit, authorisation-policy, identity-access, notification, persistence, reporting, request-access, request-capture and workflow-status. The table gives what each holds, from s27.2.
+
+| **Module (ADR-001)** | **Responsibility** | **State at d1af49a** | **Evidence** |
+|----|----|----|----|
+| identity-access | Sign-in, sessions, password reset (FR-001, FR-004) | On main: sign-in, session, reset and HTTP handlers | #130, #146 |
+| authorisation-policy | Read scope and action checks (ASR-01) | On main | #94 |
+| request-capture | Submission, reference generation and validation (FR-005 to FR-009) | On main | #131 |
+| request-access | The requester's list and detail (FR-010 to FR-012) | On main | #131 |
+| workflow-status | Transition table and workflow service (FR-015 to FR-021) | On main | #93, #132, #131 |
+| audit | One audit entry per change (FR-025, FR-026) | On main. The entry is written inside the workflow service's transaction, as ADR-001 rule 3 requires | #132 |
+| notification | FR-029 indications | Only the module's index file is on main. The implementation is a draft | #142 |
+| reporting | FR-022 to FR-024 | Only the module's index file is on main. The implementation is a draft | #143 |
+| administration | FR-003, FR-027, FR-028 | Only the module's index file is on main. The server side is not started. The screens are on main | #115, #134, #135 |
+| persistence | Database access and transactions | The module re-exports the Prisma client. The named operations the services expect are not built | #108, #109 |
+
+**2.** The staff queue (FR-013, FR-014) is a draft (#141).
+
+| **M2 decision** | **What the baseline planned** | **State at d1af49a** | **Conforms** |
+|----|----|----|----|
+| ADR-001 rules 2 and 3 | Authorisation decisions only in the policy module. A status change and its audit entry in one transaction | Both hold in the modules and are tested at component level and at the handler boundary (TC-01, TC-04, TC-18, TC-22) | Yes |
+| ADR-001 rules 1 and 5 | Every call enters through the server's entry point. Data access sits behind the persistence module | The route handlers exist per module, but they are not wired into the server, and the persistence module only re-exports the Prisma client. Main serves only its health check, and the services run over in-memory stores that follow the store contract (s30.4) | Not yet shown in a running system |
+| ADR-002 stack | Node.js 24, Express 5, Prisma 7 on PostgreSQL, argon2, `node:test`, React with Vite | As planned. `package.json` pins Express 5.2.1, Prisma and its adapter 7.10.0, pg 8.23.0, argon2 0.45.1 and node-cron 4.6.0 exactly, and `engines` is `>=24 <25` with `engine-strict=true` in `.npmrc`. The two overrides s20 describes are in place, deepmerge-ts 8.0.2 and mysql2 3.24.4. The client is in `client/`. One minor addition: dotenv 18.0.4, pinned exactly, for local configuration, which needs no ADR. The campus check is outstanding (RSK-30) | Yes |
+| ADR-005 transitions | A declarative table with Strategy guards, one set of rules | On main (#93). Checked against the Status Model register (TC-05) and through the endpoint for every status pair (TC-24) | Yes |
+| ADR-006 authorisation | Scope applied at the query for reads, a central policy for actions | On main (#94). Checked against the Access Matrix register (TC-01). 48 of 60 cells are called through their endpoint and 12 at the permission check their routes will use (TC-22) | Yes. Endpoint verification is partial until #115 and #117 |
+| ADR-007 data | Seven entities in PostgreSQL, an atomic reference sequence, each change in one transaction | The first migration on main (`20261011014510_init`) creates only the User table, from the full User model. The other entities, the sequence and the seed data are in a draft (#140), which stands up on a fresh PostgreSQL 16 database (15 October). TC-32 has not run | Partly |
+| ADR-008 notification | An in-process interface that derives FR-029 indications from persisted evidence | Draft (#142), not on main | Not yet |
+| DEC-010 deployment | A Render web service, with the production database deferred to M3 | Nothing is deployed (#122). The production database was not decided in M3 | Not delivered |
+
+## 28.2 Significant deviations
+
+**1. The merge conditions for the bootstrap (CR-004, DEC-016, #129).** *Original:* s20 and s26.2 allowed #90 to merge only after the campus Node check and the RSK-01 proof of concept had passed. *Problem:* the two verification logs on #64 disagreed. The one with a screenshot ran on a member's own machine, on Node 25.9.0 with mock data, and the one reporting a campus run had no output. The proof of concept in #90 also persisted to a table the test created and dropped, which says nothing about the ADR-007 model. *Revised:* a member other than the author runs `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test` from a fresh clone on Node 24 against PostgreSQL 16, and posts the output with the operating system, `node -v` and where PostgreSQL ran on #90. The proof of concept creates a User from the ADR-007 model through Prisma, reads it back, accepts the right password and rejects a wrong one with argon2, and removes it, with no `CREATE TABLE` or `DROP TABLE`. CI repeats the check once #110 merges. Gate 3, the campus check, is not closed: it becomes RSK-30 (probability 3, impact 3, exposure 9, Medium, owner Darius Mushi). *Consequence:* Darius Mushi approved CR-004 on 8 October and Tristan Roets on 12 October, and #129 merged. Both conditions were then shown on #90, which merged from head a109702 as commit 481cda8. The environment check was posted by Jean Smit, the reviewer, since Darius Mushi was the author: a fresh clone with no `node_modules` at commit a109702 on Windows 11 (10.0.26200), Node 24.14.0, npm 11.9.0 and PostgreSQL 16.13 on a local cluster with an empty database. `prisma migrate deploy` applied the first migration, `npm test` passed 41 of 41, `npm audit` reported 0 vulnerabilities, and the database held only `users` and `_prisma_migrations` afterwards, with no rows in `users`. An earlier run by Darius Mushi on PostgreSQL 18.6 was recorded as not an exact match, and under ADR-002's amendment it does not count as the check. The RSK-01 test in `tests/rsk01.test.js` meets condition 2. The reviewer rejected its earlier forms three times: it could not fail, because it passed on any database error, it did not parse, and it used a table the test created and dropped. The campus machines have still not been run, and CI will never test their image, which is why RSK-30 stays open. See s29.
+
+**2. The persistence module is not built.** *Original:* ADR-001 rule 5 and ADR-007 place all database access in the persistence module, behind named operations. *Evidence:* each M3 module was built and tested against a stated store contract before the schema (#140) and the operations (#108, #109) were finished, and the module on main only re-exports the Prisma client. The reviewer of #90 flagged that a bare re-export lets other modules query the database directly, against rules 2 and 5, and the module now states that other modules use its named operations. *Revised decision:* none. This is unfinished work, not a changed design, and it is recorded here so that it is not read as one. *Consequence:* main serves only its health check, TC-32 is blocked, and s36 classifies the candidate NOT READY. The operations must satisfy the contract in s30.4. The reviewer also found that Prisma returns ids as `bigint`, which JSON cannot carry, so any handler that returns an id would answer 500. That rule is settled with the schema on #109.
+
+**3. The Access Matrix (CR-002, #92, #136).** *Original:* s8.3 granted four moves that FR-015, FR-020 and FR-021 refuse. *Evidence:* the M2 policy tests found it (s22.2). *Revised:* the register, the test fixtures and s8.3 are corrected to the requirements. *Consequence:* the code never changed, because the policy already denied the four cells. The baseline text was wrong, not the implementation.
+
+**4. ADR-007's User model.** *Original:* the User entity in ADR-007. *Evidence:* it was incomplete for authentication, which writing the schema (#109) showed. The model on main now holds name, role, active, the password hash, the reset-code fields and both timestamps. *Revised:* the model was corrected through the controlled change process. *Consequence:* the defect and its correction are recorded in s35 and the Defect Register (#125).
+
+**5. How a password is reset (FR-004).** *Original:* FR-004 asks for a controlled reset by a single-use link that expires, with one confirmation message whether or not the account exists. *Evidence:* the team has no email channel, because SC-D-01 is deferred, so a link has no way to reach a user. *Implemented:* a Manager-assisted reset with a one-time code (#146). The code works once, expires and is withdrawn after five wrong tries, and a reset ends every earlier session. Every failed sign-in or reset gets the same answer (TC-08 to TC-11, TC-36). *Consequence:* a Manager must be involved, which is weaker than self-service. The public reset endpoint has no rate limit by address. The Manager-assisted reset is recorded as TD-004 in the Technical Debt Register (#144, in review). The missing rate limit by address is not yet recorded there, and s36 lists it. FR-004 is a Should requirement.
+
+## 28.3 Statements in sections 1 to 26 that M3 has overtaken
+
+Sections 1 to 26 are kept as written, so the current position is given here.
+
+| **Where** | **What it says** | **Position at d1af49a** |
+|----|----|----|
+| s20 and s26.2, DEC-008 | Both ADR-002 conditions must pass before #90 merges | Replaced by the amended conditions of CR-004 (28.2, item 1). Both were shown on #90, which is on main. The campus check is outstanding as RSK-30 |
+| s25.1, first row | #90 is open and its merge is gated | On main |
+| s20, last table row | React and Vite are added with the first client work | The client is on main (#133, #134, #135) |
+| s25.1 and s26.2, #65 | The end-to-end path is not started and moves to M3 | The services behind it are on main and tested at the handler boundary. The routes are not wired and the persistence operations are not built, so the path is incomplete. TC-33 and TC-34 pass only against a stand-in of the API |
+| s26.3, conditions 1 and 2 | The production database is chosen in M3. CR-004 is under review | The production database was not decided in M3, and no environment was deployed (s36). CR-004 is approved and merged (#129) |
+| s26.2, #47 | Met when a check runs on every pull request to main | The secret scan runs on every pull request, but the ruleset requires no status check, so #47 stays open (s31) |
+| s26.2, #27, #36, #37, #48, #49 | Open M1 limitations | All five were still open on 16 October 2026, checked with `gh issue view`. Each is carried forward as s26.2 states it |
+
+## 28.4 What the conformance shows
+
+The decisions that carry the most risk, ADR-005 and ADR-006, are the most closely conformed to and the most heavily tested, each against its register. The weakest conformance is where the pieces join: ADR-007's persistence and ADR-001's rules 1 and 5 hold in design and in component tests, but not yet in a running, integrated system. s36 weighs that.
+
+# 29. Controlled Changes
+
+Five significant changes went through change control in M3 (s12.4). Each is recorded in the Change Requests sheet or the Decision Log of the registers workbook, and each record reached main through a pull request with two approvals. Three are approved and implemented, and two are still proposed. The table gives the state of each on 16 October 2026, and the items below give its reason, its impact and its outcome. Where s16, s26.2 or s26.3 describe one of these changes as it stood in M2, the outcome here is the current position.
+
+| **Change** | **Recorded in** | **Pull requests** | **State at 16 October 2026** |
+|----|----|----|----|
+| CR-002, the Access Matrix | Change Requests | #92, #136 | Approved and implemented |
+| CR-004 and DEC-016, the merge conditions for the bootstrap | Change Requests, Decision Log | #107, #129, #90 | Approved and implemented |
+| DEC-017, the submission and workflow details | Decision Log | #131, #154 | Agreed by all three members and implemented |
+| CR-005, the changes PED v2.0 makes to sections 1 to 17 | Change Requests | #95 | Proposed. Darius Mushi's answer is outstanding |
+| CR-006, five M3 columns in the RTM | Change Requests | #126 | Proposed. Darius Mushi's answer is outstanding, and the columns are not added |
+
+**1. CR-002, the Access Matrix (#92, #136).** *Change:* four cells of the Access Matrix are corrected to the requirements. The Manager may not assign, reject or set priority, and the Coordinator may not accept an unassigned request. *Reason:* the four cells granted what FR-015, FR-020 and FR-021 refuse. The ADR-006 tests found it, because they generate a case from every cell (s22.2). *Impact:* the Access Matrix sheet, s8.3 and the test fixture exported from the register. The policy code did not change, because it already denied the four cells, and its list of conflicts is now empty. Four grants the requirements refuse are removed, in line with deny by default under NFR-005. *Outcome:* approved by all three members on #69 on 30 September 2026, and merged in #136 on 13 October 2026. s28.2 item 3 gives the conformance view.
+
+**2. CR-004 and DEC-016, the merge conditions for the bootstrap (#107, #129, #90).** *Change:* the two conditions ADR-002 set before the bootstrap could merge are amended. The campus Node check becomes an environment check that a member other than the author runs from a fresh clone on Node 24 against PostgreSQL 16, which the CI workflow repeats once #110 merges. The RSK-01 proof of concept must persist a User from the ADR-007 model. DEC-016 records the decision and amends DEC-008, and ADR-002 carries a dated amendment that keeps the original conditions in the record. *Reason:* neither original condition could be shown as met, and every M3 implementation issue waited on the bootstrap. *Impact:* ADR-002, DEC-008, the bootstrap and the issues that depended on it. RSK-30 is added for the campus environment, which is still unverified (exposure 9, Medium). *Outcome:* approved by Darius Mushi on 8 October 2026 and by Tristan Roets on 12 October 2026, and #129 merged on 14 October 2026. Both amended conditions were then shown on #90, which merged the same day. s28.2 item 1 gives the detail, and s30.2 the reviews.
+
+**3. DEC-017, the submission and workflow details (#131, #154).** *Change:* four details the M1 baseline left open are decided. The reference is CC- and eight digits in two groups of four, such as CC-4829-1573, drawn from ADR-007's sequence through a keyed permutation, with the key held in configuration. Reported urgency is Low, Medium or High. The title is limited to 200 characters, the description to 4,000 and the location to 300, each counted after trimming. Priority uses the same scale and is set only by a Coordinator, and a Requester sees only the urgency they reported. *Reason:* FR-008 refers to "the agreed format" for the reference, and no baseline artefact stated one. FR-005 and FR-021 require an urgency and a priority with no scale, and the schema limited only the title. *Impact:* FR-005, FR-008 and FR-021, and the code that holds each value in one place: reference.js, validation.js, views.js and the workflow service. DEC-004 is unchanged, so the reference is still unique, never reused, and not a visible counter. *Outcome:* agreed on #131 by Jean Smit and Tristan Roets on 7 October 2026 and by Darius Mushi on 8 October 2026. It was recorded in the Decision Log through #154 on 15 October 2026, and #131, which implements it, merged the same day.
+
+**4. CR-005, the changes PED v2.0 makes to sections 1 to 17 (#95).** *Change:* records seven changes to the M1 sections that CR-001 to CR-003 do not cover: the cover, a Milestone 2 boundary note, a paragraph in s2, reading notes in s10, s13 and s14.2, four references in s17, the removal of an M1 template instruction, and the team's M1 sign-off in s16. Item 1 was widened on 8 October 2026, so that v3.0 and v4.0 update the same cover rows under this change. *Reason:* the M1 sections must stay readable next to the later ones without being rewritten (Master Brief s6). *Impact:* no M1 table changes its content. `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17, and on v3.0 it lists 68, each one named in the PED README. *Outcome:* proposed. Tristan Roets agreed on #95 on 7 October 2026, and to the widened item 1 on 12 October 2026. Darius Mushi's answer is still to be recorded, so the change request is not approved, and the register says so.
+
+**5. CR-006, five M3 columns in the RTM (#126).** *Change:* adds five columns after column N: the test cases, the expected result, the execution evidence, the defects, and the status of the acceptance criterion. *Reason:* the M3 brief (s12) requires the RTM to carry each implemented requirement through to its test cases, expected result, execution evidence and defect status, and the Final brief (s9) calculates Scope Completion from a status for each acceptance criterion. *Impact:* the RTM sheet only, and every requirement keeps its row. *Outcome:* proposed. Tristan Roets agreed on #126 on 12 October 2026, and Darius Mushi's answer is still to be recorded. The columns are not added, so the RTM at submission does not carry the M3 trace. s27.1 and s36.1 record that.
+
+**What the changes show.** The two approved change requests corrected the baseline where it could not be met or disagreed with the requirements, and each was recorded before the work that depended on it merged. The two that are still proposed show the cost of the two-approval rule: a change one member has not answered stays proposed, and this document reports it as proposed.
+
+# 30. Construction and Configuration
+
+## 30.1 Repository strategy
+
+**1.** The controlled repository is https://github.com/PVY-Smit/civicconnect. Main is protected by the ruleset "Protect main" (id 22248862), read back from the GitHub API on 16 October 2026: enforcement active on `refs/heads/main`, last updated on 4 September 2026, the day it was created, so it has not changed since. It holds a pull request for every change, with two approving reviews and stale approvals dismissed on push, linear history and no force pushes. `current_user_can_bypass` reads `never`, so it binds administrators too (s12.2). The ruleset has no required status check, which s31 states plainly.
+
+**2.** Branches are named `type/issue-number-short-description` (CONTRIBUTING.md), and each pull request covers one issue and uses the pull request template, which asks for the registers touched, the AI-assistance declaration and what the reviewer should focus on. M3 branches follow the convention, for example `feat/111-sign-in-authorisation`, `fix/92-access-matrix-correction`, `test/124-performance` and `docs/107-cr-004-bootstrap-conditions`. Two M2 branches do not: #99 (`docs/ped-s21-s23-tristan-v2`) and #103 (`feature/s24-ped-documentation`) carry no issue number. They are the same limitation as #37, which was still open on 16 October. s27.2 lists each M3 area with its pull requests, so they are not repeated here.
+
+**3.** Contribution evidence in the repository is attributed by GitHub account, and two of the names shown there differ from the registered names, so the accounts are mapped here. The pull requests and reviews cited in this document carry the GitHub names in the last column.
+
+| **Registered member** | **Student number** | **GitHub account** | **Name shown on GitHub** |
+|----|----|----|----|
+| Jean Smit | 600368 | PVY-Smit | J. S. |
+| Tristan Roets | 601764 | Tristan0852 | None set |
+| Darius Mushi | 577982 | MrRobottos | Darius Ramaripa |
+
+## 30.2 Review evidence
+
+**1.** The review of the bootstrap (#90) shows review changing the work. The reviewers requested changes four times before approving, and the findings were real defects:
+
+**1.** *The first review.* `engines` demanded Node `>=24.21.0`, which the reviewer's own Node 24.14.0 and possibly the campus machines fail, `dotenv` was imported in three files but not declared, and "Checks pass" was ticked although no workflow existed. A failed assertion in the health test would also have left the server open and hung the run.
+
+**2.** *The second review.* `npm test` failed from a clean checkout, because a path in `src/lib/prisma.js` was wrong. The RSK-01 test could not fail: it passed on any error from `SELECT 1`, so a database that was not running counted as a pass. The `.env.example` file named a variable the code did not read, so copying it failed.
+
+**3.** *The third and fourth reviews.* The test file did not parse, because every Prisma raw call was written with a backslash before the dollar sign, and the fix commit titled "remove syntax errors" left all four in. The proof of concept still had no authentication step and wrote to a table the test created and dropped.
+
+**4.** *After the rebase.* Both conditions of CR-004 were still unmet: there was no migration, the test did not create a User through `prisma.user`, the User model differed from ADR-007 and from the draft in #140, and `engines` allowed Node 25. The author fixed each, generating the first migration from the full User model and setting `engines` to `>=24 <25` with `engine-strict=true`. Tristan Roets asked for the same Node restriction and for `npm ci` in the README. Both reviewers then approved.
+
+**2.** The review of #129 (CR-004) shows the same control working on a register change. Darius Mushi requested changes twice before approving. He found that ADR-002 called the bootstrap both #64 and #90, that gate 3 still read as a live blocker, that CR-004's register row made the pull request's own merge its approval, that DEC-016 named only one of the two amended conditions, that DEC-008 still stated the original conditions as live, that the proof of concept's timebox had passed, and that RSK-30 claimed a CI control that had not merged. The author fixed each, and CR-004 now records both approvals with their dates.
+
+**3.** The review of this document's own pull request (#145) led to the 3.0 row's date matching the cover, a shorter cover status line, the build refusing to run with `--submission` while any placeholder remains, the expected `--m1-only` count recorded in the PED README, and sections s28 and s29 moving to different owners, in line with the authorship rotation in s12.1 and RSK-07.
+
+**4.** Every M3 change reached main through a pull request, and 52 pull requests had merged by 16 October. The two direct commits to main in s12.2 predate the ruleset.
+
+## 30.3 Configuration and secrets
+
+**1.** No credential, key or token is committed. `.gitignore` excludes `.env`, key and certificate files, and `.env.example` carries placeholder values only, naming `DATABASE_URL` and `PORT`, the variables the code reads (NFR-007, RSK-11). The application reads every environment-specific value through `src/lib/env.js` (s24), and on the hosted service they are injected at the container instance, not held in code. The generated Prisma client in `src/generated/` is git-ignored, since `prisma generate` rebuilds it from the schema.
+
+**2.** Secret scanning and push protection are enabled on the repository. A workflow also runs Gitleaks on every pull request and on every push to main, checking out the full history (`.github/workflows/secret-scan.yml`, #87). NFR-007 asks for a full-history scan before each baseline. Running `gitleaks detect --source . -v` on main on 16 October 2026 scanned 267 commits, about 2.8 MB, and reported no leaks.
+
+**3.** Environment-specific values and where they differ:
+
+| **Setting** | **Held in** | **Development** | **Planned staging** |
+|----|----|----|----|
+| Database connection | `DATABASE_URL`, read through `src/lib/env.js` | A local PostgreSQL 16 database | A hosted database. The production database choice is still open (s28.2) |
+| Session signing secret | Environment variable. The service refuses to start with one shorter than 32 characters | A local value, never committed | A distinct value held on the host |
+| Node version | The `engines` field, `>=24 <25`, with `engine-strict=true` in `.npmrc` so that an install on another version fails | 24 | 24 |
+| Instances | Host setting | 1 | 1, because node-cron needs a single instance (RSK-26, s24) |
+
+No value is recorded here or in the repository.
+
+**4.** Test data is generated, never copied from real people (RSK-10, FEC-04): the seed data (#140) and the 5,000 requests for the performance run are submitted through the API as a seeded Requester (s34.2).
+
+**5.** Dependencies come from a committed lockfile through `npm ci`, and every one is pinned to an exact version, as ADR-002 records. Two packages pinned by Prisma 7 are overridden to their fixed versions, deepmerge-ts 8.0.2 and mysql2 3.24.4 (RSK-12). The reviewer confirmed the reasoning: mysql2 is needed only by the Prisma CLI and is never loaded at runtime, because the application uses the pg adapter, and `npm audit`'s suggested fix of downgrading to Prisma 6 would have undone ADR-002's pin. `npm audit` reported 0 vulnerabilities on main's lockfile on 15 October.
+
+## 30.4 Implementation notes a maintainer needs
+
+**The policy module is the only place that encodes who may see what** (ADR-001 rule 2). The test fixtures are exported from the Access Matrix and Status Model registers, so a change to either register needs the fixture re-exported (`python tools/export_register_fixtures.py --check`) and TC-01 and TC-05 re-run.
+
+**Services state a store contract.** The in-memory stores in the tests satisfy it, and so must the persistence module's named operations: conditional writes, transactions that roll back the change, its history row and its audit entry together, and comparing a stored reset-code hash as it was read (s36.3). Other modules must not import the Prisma client directly.
+
+**A query that does not use the policy's scope bypasses it** (s22.2). Review and the endpoint tests (TC-22) are what catch a miss, so every new read goes through the policy.
+
+**Input limits come from DEC-017.** Lengths are counted in characters as PostgreSQL counts them, and control characters are refused at every endpoint (TC-25, TC-37).
+
+**Setup is `npm ci`, `npx prisma generate`, `npx prisma migrate deploy` and `npm test`,** against PostgreSQL 16, with `DATABASE_URL` set from `.env.example`. The README gives the four commands.
+
+**Tests use `node:test` for the server and the performance scripts, and Playwright for the two browser journeys** (#123, #138). `tools/check_test_catalogue.mjs --strict` keeps the test catalogue and the tests in step (s32).
+
+## 30.5 AI-assisted work
+
+**1.** AI-assisted contributions are recorded in the AI Usage Register in the registers workbook, with the verification performed and the decision taken. #90's description declares AI assistance, and the reviewer's checks on it are the verification (30.2, item 1): the first version of the RSK-01 test, which could not fail, is an example of AI-assisted output that review rejected until it was rewritten to create a User through `prisma.user`, read it back and check argon2 against the right and a wrong password.
+
+**2.** The drafting of s28, s30 and s31 was AI-assisted, and its entry is in the register. Every statement was checked against the repository: the module listing, `package.json`, `.npmrc`, the ruleset read back from the API, the Gitleaks run, the state of issues #27, #36, #37, #48 and #49, the review history of #90 and #129, and the workflow file. An early draft of s28 described the persistence module as an empty directory and the first migration as wider than it is. Checking the reviewer's comments on #90 corrected both.
+
+**3.** A test written with AI assistance is accepted only once it has been seen to fail for the right reason (s32.2).
+
+# 31. CI and Automated Verification
+
+**1.** At submission one workflow runs in CI: the secret scan (#87). No workflow builds the application or runs its tests (#110 is not started), and the ruleset on main requires no status check. The automated tests were run by hand and each pull request records its run. This section states what that does and does not show.
+
+## 31.1 Pipeline
+
+**1.** The workflow is `.github/workflows/secret-scan.yml`, and it is the only file in `.github/workflows/`. It runs on every pull request and on every push to main, with read-only permissions. It checks out the full history and runs Gitleaks (`gitleaks/gitleaks-action`). It has passed on each run, and the checks panel of #90, #129 and #145 each shows it as the one check, passed. GitHub's own secret scanning and push protection are enabled alongside it (NFR-007).
+
+**2.** The checks below are run by hand from the repository root, `client/` and `perf/`, and each pull request records the result. They were last run together on main at d1af49a on 15 October 2026.
+
+## 31.2 Automated checks and results
+
+| **Check** | **How it runs** | **Result** | **Evidence** |
+|----|----|----|----|
+| Secret scan | CI, every pull request and push to main | Passes | #87, #90, #129, #145 |
+| Full-history secret scan, `gitleaks detect` | By hand, on main | 267 commits scanned, no leaks, 16 October 2026 | s30.3 |
+| Environment check under CR-004, fresh clone | By hand, by a member other than the author, posted on #90 | `npm ci`, `prisma generate` and `prisma migrate deploy` succeed, `npm test` 41 of 41, `npm audit` 0. Windows 11, Node 24.14.0, npm 11.9.0, PostgreSQL 16.13, commit a109702 | #90 |
+| Server tests (`node --test`) | By hand | 132 pass | s32.3 |
+| Client tests | By hand | 34 pass | s32.3 |
+| Performance-script tests | By hand | 13 pass | TC-35 |
+| Stack smoke test against PostgreSQL 16.13 | By hand, local database | Passes | TC-39 |
+| API suites at the handler boundary | By hand, on #147's branch rebased on main | 385 pass, 3 todo for endpoints not yet built | s33.2 |
+| Test catalogue check, `--strict` | By hand | Fails on main for one reason: #90's two tests have no record until #151 adds them | s32.3 |
+| Dependency check, `npm audit` | By hand | 0 vulnerabilities, with two overrides (RSK-12) | s36.1 |
+| Static analysis | None configured | | s36.1 |
+| Coverage percentage | Not reported | | s32.4 |
+
+## 31.3 Gate rules
+
+| **Control** | **What it stops** | **State** |
+|----|----|----|
+| Two approvals from non-authors, stale approvals dismissed | A merge nobody else has read | Enforced by the ruleset. Approvals were dismissed and re-given when #129 was rebuilt on main |
+| Linear history, no force pushes to main | Rewriting the controlled history | Enforced by the ruleset |
+| Secret scan | A committed secret | The workflow runs, but it is not a required status check, so a failing scan would not stop a merge (s36.1) |
+| Build and tests | A failing build or test | Not configured (#110) |
+
+**1.** The M3 brief asks for at least one meaningful failure that blocks progression. The only control that blocks a merge today is the approval rule. It did block: the reviewers of #90 withheld approval four times, on a failing `npm test`, a test that could not fail and a test file that did not parse, each found by running the code from a clean checkout. That is evidence that review works as a gate. It is not a configured check, because a person had to notice, and the team's own record shows that it took several rounds. No failing automated check that blocked a merge is cited in this document. This is a gap, and s36 records it as a blocker.
+
+## 31.4 What the evidence shows
+
+**1.** A green secret scan shows that no secret pattern the scanner knows was committed in that change. It does not show that no secret is present, and it says nothing about whether the code works.
+
+**2.** The hand-run suites show that the critical rules hold at component level and at the HTTP boundary, and the fault checks in s32.2 show that each new test fails when the defect it guards against is put back. The environment check on #90 shows that the stack installs and its tests pass on one clean machine, run by a member other than the author. They do not stop a failing change from merging. The assessor can see the runs only through the test catalogue and each pull request's record. They are weaker than CI evidence, and the release classification reflects that.
+
+**3.** Nothing here runs against the real database through the API (TC-32), on a deployed server, or on the campus image (RSK-30). A passing run of these checks would not show that.
+
+**4.** The team's rule for a test that fails intermittently is to find and fix the cause, never to rerun it until it passes.
+
+## 31.5 What would close the gap
+
+A workflow that, on every pull request, installs from the lockfiles, builds, runs the tests in the repository root, `client/` and `perf/` and the strict catalogue check, runs TC-39 against a PostgreSQL 16 service and runs `npm audit`, with the secret scan and the test job set as required status checks in the ruleset (#110, #47). This is also CR-004's condition that CI repeats the environment check. It is the first of the conditions for CONDITIONALLY READY in s36.2.
+
+# 32. Quality Strategy Applied
+
+Verification effort follows what a failure would cost. The behaviour that decides who may see or change a request, how a request moves between statuses, and whether a change leaves its audit entry is tested most heavily, at more than one level. Behaviour whose failure is visible and recoverable, such as the layout of a screen, is tested more lightly.
+
+The test catalogue (`docs/quality/test-catalogue.md`, #126) is the record of this. Each record is one designed test case with the fields the M3 brief lists in s11: test basis, why selected, technique and level, input, expected result, actual result, status, evidence, traceability and interpretation. Under each record are the automated tests that carry it. The brief's Meaningful Test Rule (s9) counts designed cases and excludes tests that only add to a count, so the 60-cell Access Matrix decision table is one record with 60 checks, and the catalogue counts it once. `tools/check_test_catalogue.mjs` runs every listed test and reports, per record, how many pass, fail or are still to do. With `--strict` it fails on a failed test, on a listed test that does not exist in its file, and on a test that no record lists. `--strict` alone reports a missing test file, or a test from a pull request that has not merged, without failing; with `--complete` those fail too. Together the two switches keep the catalogue and the tests in step.
+
+## 32.1 Where verification is strongest, and why
+
+| **Concern** | **Requirements and risks** | **How it is verified** | **Records** |
+|----|----|----|----|
+| Who may do what, and who may see what | NFR-005, FR-002, FR-011, FR-012 (all Must); RSK-05, RSK-17, RSK-23 | The authorisation policy is tested against the Access Matrix register itself, so a change to either is noticed. Every one of the 60 cells is then called through its endpoint, or, for the three functions whose endpoints are not built yet, at the permission check their routes will use. Another person's request and a request that does not exist get the same answer, and an internal entry is withheld even when the store ignores the visibility condition. NFR-005 asks for verification at the endpoint, so until #115 and #117 add those three routes it is verified there for 48 of the 60 cells | TC-01 to TC-03, TC-11, TC-15, TC-22, TC-23 |
+| The status model | FR-016 (Must); RSK-09, RSK-16 | The transition table is compared with the Status Model register. Every ordered pair of the seven statuses is then tried through the endpoint, with what is written checked for each (s33.1) | TC-05 to TC-07, TC-24 |
+| A change and its audit entry | FR-025, FR-026 (Must); RSK-19; ADR-001 rule 3 | A failure while writing the audit entry rolls back the change and its history row. No function edits or deletes an audit entry | TC-04, TC-18 |
+| Signing in and resetting a password | FR-001, NFR-004 (Must); FR-004 (Should) | Every failed sign-in or reset gets one answer, with the password or code checked against a dummy hash when there is no usable account. A reset code works once, expires, and is withdrawn after five wrong tries, and a reset ends every earlier session | TC-08 to TC-11, TC-36 |
+| The request reference | FR-008 (Must); DEC-004, DEC-017 | The keyed permutation is checked on every input of a small domain and on 100,000 consecutive real values, so two sequence values never give the same reference | TC-12 |
+| What a user types | FR-007 (Must); DEC-017 | Each length limit is tested at its boundaries, counted in characters as PostgreSQL counts them. Control characters, which PostgreSQL would refuse after validation had passed, are refused at every endpoint | TC-13, TC-25, TC-26, TC-37 |
+| Urgency and priority | FR-021 (Must); RSK-22 | Only a Coordinator sets the priority, the reported urgency never changes with it, and the Requester sees only their own urgency | TC-19, TC-34 |
+
+The client screens are tested more lightly, as functions of what the server returns (TC-27 to TC-31), because the server makes every decision again and a wrong screen cannot grant anything. The management reports (FR-022 to FR-024) have no record yet, because their endpoint is not built (#117).
+
+## 32.2 How a test is shown to be able to fail
+
+A test that cannot fail shows nothing. For the services, the API suites and the scripts, each new test was checked by putting back the defect it guards against, one at a time, and confirming that a test then failed. The records name the faults used. For example, the browser journey TC-34 failed when the priority was made to overwrite the reported urgency, which the earlier version of the journey had passed. TC-37's tests failed against the services as they were before the fixes of 8 October. This also answers RSK-14: a test written with AI assistance is accepted only once it has been seen to fail for the right reason.
+
+## 32.3 The M3 minimum
+
+A record whose tests are in a pull request that has not merged is counted from the run on that pull request's branch, as its evidence states.
+
+| **Category (M3 brief s9)** | **Minimum** | **Records** | **Status at 15 October 2026** |
+|----|----|----|----|
+| Unit or component | 5 | TC-01 to TC-21, TC-27 to TC-31, TC-36, TC-38 | Pass |
+| Black-box functional | 5 | TC-05, TC-13, TC-22, TC-24 to TC-26, TC-37 | Pass |
+| API or integration | 3 | TC-21 to TC-26 and TC-37 at the handler boundary; TC-39 and TC-32 against PostgreSQL | Pass at the handler boundary; TC-39, a smoke test of the stack, passes against PostgreSQL; TC-32 Blocked until the persistence adapter exists (#109) |
+| End to end | 2 | TC-33, TC-34 | Blocked until staging (#122); both pass against a local stand-in of the API |
+| Negative, failure or unauthorised | 3 | TC-03, TC-04, TC-09, TC-11, TC-18, TC-22 to TC-24, TC-36, TC-37 | Pass |
+| High-priority requirement or risk | 5 | TC-01, TC-05, TC-09 to TC-12, TC-18, TC-22, TC-24 | Pass |
+| Black-box techniques | 2 | Decision table, state transition, boundary values, equivalence partitions (s33) | Pass |
+| Performance | 1 scenario | TC-35 (s34) | Blocked until staging (#122) |
+
+The statuses are from the catalogue check on main at d1af49a, 15 October 2026. Every record whose tests are on main passes: 132 server, 34 client and 13 performance-script tests, and TC-39 against a local PostgreSQL 16.13. The strict check on main fails for one reason: #90's two tests have no record yet. #151 adds them as TC-38 and TC-39, and with it the strict check passes. TC-22 to TC-26 and TC-37 pass on #147's branch, rebased on main at d1af49a. #147 and #151 are in review.
+
+## 32.4 What the evidence does not show
+
+No line-coverage percentage is reported. The brief does not require one. A percentage shows which lines ran and says nothing about whether a test would notice them behaving wrongly; the fault checks in s32.2 are the evidence for that. What the strict catalogue check does show is that every automated test belongs to a designed case and every designed case has tests that run. Until TC-32 runs, the API suites show the behaviour at the HTTP boundary over an in-memory store whose transactions roll back. PostgreSQL's own behaviour, such as its conditional writes and constraints, is shown only once TC-32 runs.
+
+# 33. Black-Box, Integration and System Validation
+
+The techniques were chosen because the behaviour calls for them, as the M3 brief asks in s10. Each is applied where its conditions hold, and the records name the technique used.
+
+## 33.1 The techniques and why each was used
+
+**Decision table (TC-01, TC-22).** Whether an actor may perform a function depends on two conditions together, the role and the function, and for some functions on a third, whether the request is in the actor's scope. The Access Matrix register is that table: 15 functions by 4 roles. TC-01 checks the policy against it, and TC-22 calls 48 of the 60 cells through their endpoint. Three functions have no endpoint of their own yet (#115, #117), so their 12 cells are checked at the permission check their routes will use, and three todo entries stand for the later endpoint calls. Until those routes are built, NFR-005's verification through the endpoints is partial.
+
+**State transition (TC-05, TC-24).** What a request may do next depends on its current status. TC-05 checks the transition table against the Status Model register. TC-24 tries every ordered pair of the seven statuses, 49 in all, through the endpoint: 169 checks. Each of the 37 pairs outside the model is tried by all four roles and must answer 409 and write nothing. Each of the 12 moves in the model must succeed, with its history and audit entries, for every role the model names, 17 in all; TC-22 covers the roles it does not name. Further tests cover a target that is not a status, the two final statuses, and a whole life with reassignment, a hold, a resolution, a reopening and a close.
+
+**Boundary values (TC-13, TC-25).** The field limits that DEC-017 fixes are tested at 1, 2, the maximum less one, the maximum, and the maximum plus one: title 200 characters, description 4,000 and location 300. Lengths are counted in characters as PostgreSQL counts them, so a title of 199 letters and one emoji is accepted. That case was added after the boundary suite found that the first version counted an emoji twice, which #131 fixed (968a44f).
+
+**Equivalence partitions (TC-26, TC-37).** Each way a client can send a bad value is one partition, with one representative: blank, missing, the wrong type, an array or an object where one id belongs, an inactive category, a control character in text. Each must be refused with an error on its own field and nothing saved.
+
+**Negative and unauthorised cases (TC-09, TC-11, TC-23).** Every endpoint is called without a session and must answer 401 and write nothing. Failed sign-ins of every kind must give the same answer.
+
+**API testing at the handler boundary.** The API suites (#121) call the real route handlers behind the real authentication middleware, with a signed session cookie for each role, over an in-memory store that evaluates the policy's query conditions and whose transactions roll back. Only the store changes when they run against PostgreSQL (TC-32).
+
+**End-to-end journeys (TC-33, TC-34).** The two journeys the service exists for are driven in a browser with Playwright (#123, #138): a requester submits a request and follows it, and staff take a request from New to Closed with three people each in their own session. They use visible labels and roles, so they fail when what a user sees changes.
+
+## 33.2 Critical scenarios and results
+
+| **Scenario** | **Records** | **Result at 15 October 2026** | **Evidence** |
+|----|----|----|----|
+| Every role and function through its endpoint | TC-22 | 61 checks pass: 48 cells through their endpoint, 12 at the permission check, and the coverage check; 3 todo for endpoints not yet built | #147 at 9fea651, rebased on main at d1af49a |
+| Every status pair through the endpoint | TC-24 | 169 of 169 pass | #147 at 9fea651, rebased on main at d1af49a |
+| Field limits and input partitions through the endpoint | TC-25, TC-26, TC-37 | Pass | #147 at 9fea651, rebased on main at d1af49a |
+| Calls without a session | TC-23 | Pass | #147 at 9fea651, rebased on main at d1af49a |
+| The API suites against PostgreSQL | TC-32 | Blocked: the persistence adapter does not exist (#109) | |
+| A requester submits and follows a request | TC-33 | Blocked until staging; passes against a local stand-in of the API | #138 |
+| Staff take a request from New to Closed | TC-34 | Blocked until staging; passes against a local stand-in of the API | #138 |
+
+There is no CI run (#110), TC-32 has not run because there is no persistence adapter, and TC-33 and TC-34 have not run against staging (#122). The results above are therefore the M3 evidence for these scenarios.
+
+## 33.3 What the results show
+
+At the handler boundary every built endpoint enforces its Access Matrix cells, every status change outside the model is refused without a write, and no malformed input reaches the store. The end-to-end journeys show that the client follows the server's contract, because the stand-in implements that contract. They do not yet show the real server, its database or its hosting together, which is what TC-32 and the staging run of TC-33 and TC-34 are for, and what s36 weighs if they have not run by submission.
+
+# 34. Performance and Reliability
+
+M3 asks for one small performance exercise that the team can design and interpret (M3 brief s13). The full method is in `docs/quality/performance/README.md` (#124, #139), and each run's raw result, with the environment it ran in, is written to `docs/quality/performance/results/`.
+
+## 34.1 What is measured, and why
+
+**The staff queue (NFR-001, Must).** Staff and Coordinators work from the queue all day, and it reads more data than any other screen. The Coordinator's queue holds every request (FR-013), the largest scope any user has, so it is measured as the Coordinator. Target: the 95th percentile of 20 retrievals of the first page under 2.0 seconds, with 5,000 requests stored.
+
+**Request submission (NFR-002, Must).** A requester who waits too long submits again, and the municipality receives duplicates. Target: the 95th percentile of 20 submissions under 3.0 seconds, from submit to acknowledgement.
+
+**A small concurrent run.** Ten clients read the first queue page in a loop for 30 seconds, to show whether the queue slows or fails under concurrent reads. No requirement sets a target for concurrent use, so none is invented: NFR-001's single-user target is shown beside the result for comparison only.
+
+## 34.2 Workload, data and method
+
+The 5,000 requests are submitted through the API as a seeded Requester, so each gets its reference and its first history row as a real request does. They are spread across the active categories and the three urgency levels, and the Coordinator then rejects one in ten and assigns three in ten, rotating through each category's staff, so the queue holds New, Assigned and Rejected requests.
+
+Each time is taken from just before the request is sent until the whole answer has been read, with Node's high-resolution timer. That is the server's time plus the network between the measuring machine and staging. It does not include the time the browser takes to draw the screen. The 95th percentile is taken by the nearest rank, so the value reported is one that was measured. A run is reported as invalid, and given no verdict, if any operation failed, if an NFR-001 answer was not exactly the first page of the queue, or if it took fewer than the 20 operations the requirements state. Otherwise the unrounded 95th percentile is compared with the target. The tests in `perf/test/lib.test.js` hold these rules in place (TC-35).
+
+## 34.3 Results
+
+No run against the system was possible in M3. There is no staging environment (#122), and the server on main does not yet serve the queue or submission, because the routes and the persistence adapter are not built. NFR-001 and NFR-002 are therefore not measured, and s36 records that.
+
+Before staging exists the scripts were run against the local stand-in of the API used for the client screens, to check the scripts; the system itself was not measured. Those results were written outside the repository and are not evidence. NFR-001 marked its own run invalid, because the stand-in returns the whole queue where NFR-001 times one page, which is the check in s34.2 working as intended. The follow-ups in #150 (in review) make a run wait for the host's health check, record network errors as failed calls, and mark every result as not evidence unless the server names the release it runs.
+
+## 34.4 What this does not show
+
+**Municipal production scale.** 5,000 requests is NFR-001's baselined volume. A municipality accumulates far more over years, and has more staff than ten clients represent.
+
+**Dates spread over time.** The seeded requests are all submitted on the day of the run, so sorting and filtering by date across months is not exercised.
+
+**Writes and reads together.** The concurrent run only reads. Contention between staff changing requests and the queue being read is not measured.
+
+**The screen.** Times are for the API's answer.
+
+**Other hosts and networks.** A result holds for the staging host and the network path recorded with it. A free-tier host that sleeps after a period without requests can answer its first request more slowly than the warm-up shows (s24).
+
+# 35. Defects and Quality Interpretation
+
+The Defect Register records the main defects found during Milestone 3 and links each one to the requirement or evidence it affected, its impact, its fix and any regression evidence.
+
+Several defects were found in the controlled project artefacts rather than only in the running software. These included an incomplete User model in ADR-007 and incorrect permissions in the Access Matrix. The permission defects affected actions such as assigning requests, accepting unassigned requests, rejecting requests and setting priority. These findings were corrected through the controlled change process and are recorded in the Defect Register under #125.
+
+The project also records technical debt separately from defects. Current technical debt includes the controlled fixture re-export, the deferred production database, temporary Prisma advisory overrides and the Manager-assisted password-reset limitations. These items are not treated as completed defects because they are known limitations or work that has deliberately been deferred.
+
+The quality evidence shows that review and testing are finding real problems before release. A passing build or unit test result is therefore not treated as enough evidence by itself. Integration, security, performance and review findings are also considered before a change is accepted.
+
+Where a defect has been fixed, the related test or review evidence should be used to show that the problem has not returned. Any open defect or technical-debt item that can still affect release readiness must remain visible in the registers and be considered again in the final release decision in s36.
+
+Evidence: Technical Debt Register and Defect Register under #125, controlled Access Matrix correction under #136, and the related review and test evidence in the repository.
+
+# 36. Release Readiness
+
+This section brings the evidence of s27 to s35 together into one judgement, as the M3 brief asks in s15. It is written as at 16 October 2026, the day of submission.
+
+**Gate summary.** The design evidence is strong: the services enforce the Access Matrix, the status model and the input rules, and every new test was shown able to fail (s32.2). The integration evidence is weak: nothing has yet run against PostgreSQL, on a deployed server, or through CI.
+
+**Blockers.** Four gaps would each stop a release on their own:
+- **No integrated build.** The bootstrap (#90) has merged, but the routes are not wired into it and the persistence adapter does not exist, and the schema (#140) is a draft. Main serves only its health check.
+- **No CI test gate.** No workflow builds the application or runs its tests (#110), and the ruleset requires no status check, so neither a failing test nor a failing secret scan blocks a merge.
+- **No deployed candidate.** There is no staging environment (#122), so neither critical journey (TC-33, TC-34) nor the performance exercise (TC-35) has run on the integrated system.
+- **No verification against PostgreSQL.** The API suites have not run against the database (TC-32), so its conditional writes, constraints and id handling are unverified.
+
+**Accepted limitations.** These do not block a release. The Manager-assisted password reset is recorded as TD-004 in the Technical Debt Register, which is in review (#144). Two further limitations are not yet recorded there and are to be added under #125: rate limiting by address on the public reset endpoint, and a check against common passwords. Production-scale performance is also not shown, and M3 does not ask for it.
+
+## 36.1 Release Evidence Summary
+
+| **Evidence area** | **Result** | **Interpretation** | **Concern or action** |
+|----|----|----|----|
+| Build and CI | Partial. One workflow runs on every pull request: the secret scan (#87), which passes. No workflow builds the application or runs its tests (#110 not started). The ruleset on main requires two approvals, linear history and no force pushes, and no status check | A committed secret fails the scan, which reviewers see, but no check is required, so a failing check does not block a merge. The only blocking gate is the two-approval rule | Make the secret scan, and the build and tests once #110 adds them, required status checks in the ruleset. Until then the suites and the strict catalogue check are run by hand, and each pull request records its run |
+| Automated regression | Pass on main at d1af49a (15 October 2026): 132 server, 34 client and 13 performance-script tests, and the RSK-01 test against PostgreSQL. On #147's branch, rebased on main, 385 server tests pass with 3 todo for endpoints not yet built | The critical rules are protected at component level and at the HTTP boundary, and each new test was shown able to fail (s32.2) | They run together only once the pull requests merge and CI runs them (#110) |
+| API and integration | Pass at the handler boundary (TC-21 to TC-26, TC-37). Blocked against PostgreSQL (TC-32) | Every built endpoint enforces its Access Matrix cells, every move outside the status model is refused without a write, and no malformed input reaches the store | Run TC-32 once the persistence adapter exists (#109, #140). The database's conditional writes and the id rule are untested until then |
+| System and end to end | Blocked. TC-33 and TC-34 pass against a local stand-in of the API; the system itself has not run them | The client follows the server's contract. Nothing yet shows the integrated system completing a journey | Release-blocking until one journey completes on a deployed candidate (#122) |
+| Static and security | Secret scan: passes on every pull request. npm audit: 0 vulnerabilities on main's lockfile (15 October 2026), with two overrides for advisories Prisma 7 has not fixed (RSK-12). No static-analysis tool is configured | No secret is committed. The dependency advisories are mitigated by the overrides; there is no upstream fix yet | Add a static check with the CI workflow (#110). Remove the overrides when Prisma fixes issue #30295 |
+| Performance | Not measured. The scripts and their method are ready and tested (TC-35) | There is no evidence yet against NFR-001 or NFR-002 | Run on staging with the seeded 5,000 requests (#122, #109); record the limitation if it cannot run |
+| Known defects | Defects found in M3 review and testing are fixed in their pull requests with a regression test, for example the character count (968a44f), a NUL character causing a server error (0efac6a), and the assignee id's form (c84b7c1). The Access Matrix defect is corrected under CR-002 (#136). The Defect Register is in #144 (draft) | No open defect is known to block a release; the blockers above are gaps in integration | Record each defect, its fix and its regression test in the Defect Register (#125) |
+| Acceptance evidence | Not yet recorded. CR-006's five RTM columns, which give each acceptance criterion its tests, evidence and status, wait for Darius Mushi's answer on #126 | The test catalogue traces each designed case to its requirements, but no criterion has a recorded status yet | Add and fill the CR-006 columns once CR-006 is agreed, from the catalogue's records |
+
+## 36.2 Classification
+
+**At 16 October 2026: NOT READY.** The brief defines NOT READY as one or more important gates, critical behaviours or release-blocking risks unresolved. Four are unresolved: no integrated build, no CI test gate, no deployed candidate on which a critical journey has completed, and no verification against the database. The evidence for each module on its own is strong, but a release is the integrated system, and that has not yet run.
+
+**What would change it.** CONDITIONALLY READY needs, at least, #140 merged, the persistence adapter built and the services wired into the running server; TC-32 passing against PostgreSQL; a CI workflow that runs the tests and blocks a merge on failure (#110); and TC-33 completing on a simulated staging environment (#122). The performance exercise, the CR-006 statuses and the open drafts would then be stated as conditions.
+
+**At submission: NOT READY, and no release candidate is tagged.** Between 13 and 16 October, #90, #129, #131 and #154 merged, so the bootstrap, the request and workflow services, CR-004 and DEC-017 are on main. None of the four blockers closed: the services are still not wired to a database, nothing is deployed, CI runs no tests, and TC-32 has not run. Tagging a release candidate would claim an integrated build that does not exist, so the submission is main at d1af49a, named as such.
+
+## 36.3 Residual Risks
+
+Testing does not show that no defect exists. These are the uncertainties that remain after M3's verification, each from the Risk Register or the evidence above.
+
+| **Residual risk** | **Why it remains** | **Current mitigation** | **Next action and owner** |
+|----|----|----|----|
+| The services behave differently against PostgreSQL than against the in-memory store (RSK-21) | The schema is a draft (#140) and the persistence adapter does not exist, so TC-32 has not run | The services state their store contract, including conditional writes and comparing the stored code hash as read; the API suites check the behaviour at the HTTP boundary | Run TC-32 once the adapter exists. Jean Smit |
+| The queue and submission are slower on the hosted service than NFR-001 and NFR-002 allow (RSK-02, RSK-18) | There is no staging environment, so neither has been measured; a free-tier host can sleep and answer its first request slowly (s24) | Scripts and method ready and tested (TC-35); the queue reads one page | Run the measurements on staging (#122). Jean Smit |
+| The application does not install or run on the BC Desktop campus machines (RSK-30) | The campus check has not been run; CI never tests the campus image | npm ci from a committed lockfile; the engines field to limit Node to version 24 (#90) | Run the campus check when lab access allows and record it on #64. Darius Mushi |
+| A dependency advisory affects the build (RSK-12) | Prisma 7 pins two packages with high-severity advisories that no 7.x release has fixed | npm overrides, with npm audit reporting 0 vulnerabilities | Remove the overrides when Prisma fixes issue #30295; add npm audit to CI (#110). Darius Mushi |
+| A reset code is guessed by many requests from one address | The public reset endpoint has no rate limit by address | A code is withdrawn after five wrong tries on its account, and every check is a deliberately slow argon2 comparison | Add rate limiting by address, and record it in the Technical Debt Register (#125, #144), where it is not yet entered. Jean Smit |
