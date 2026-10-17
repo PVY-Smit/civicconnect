@@ -2,12 +2,20 @@ import "dotenv/config";
 import argon2 from "argon2";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/client/client.ts";
+import { createStore } from "../src/modules/persistence/store.js";
+import { createReferenceFormatter } from "../src/modules/request-capture/reference.js";
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
+
+// Seeded requests are created and assigned through the persistence module's own operations, so each one
+// takes its reference from request_reference_seq through REFERENCE_KEY's permutation (DEC-017), exactly as
+// a submission does, and a later submission can never be given a seeded reference.
+const store = createStore(prisma);
+let formatReference;
 
 function requiredEnv(name) {
   const value = process.env[name];
@@ -37,11 +45,6 @@ function assertSafeVolumeMode() {
   return true;
 }
 
-function referenceFor(index) {
-  const value = String(index).padStart(8, "0");
-  return `CC-${value.slice(0, 4)}-${value.slice(4)}`;
-}
-
 async function upsertUser({ name, email, role, passwordHash }) {
   return prisma.user.upsert({
     where: { email },
@@ -60,94 +63,29 @@ async function upsertUser({ name, email, role, passwordHash }) {
   });
 }
 
-async function createNewRequest({
-  reference,
-  requesterId,
-  categoryId,
-  title,
-  description,
-  location,
-  reportedUrgency,
-}) {
-  return prisma.request.create({
-    data: {
-      reference,
-      requesterId,
-      categoryId,
-      title,
-      description,
-      location,
-      reportedUrgency,
-      status: "New",
-      priority: null,
-      statusHistory: {
-        create: {
-          fromStatus: null,
-          toStatus: "New",
-          actorId: requesterId,
-          reason: null,
-        },
-      },
-    },
-  });
+async function createNewRequest({ requesterId, categoryId, title, description, location, reportedUrgency }) {
+  const { reference } = await store.requests.create(
+    { requesterId, categoryId, title, description, location, reportedUrgency, status: "New", priority: null },
+    { formatReference },
+  );
+  return store.requests.findOne({ where: { reference } });
 }
 
-async function assignRequest({
-  request,
-  coordinatorId,
-  staffId,
-  priority = "Medium",
-}) {
-  await prisma.$transaction([
-    prisma.request.update({
-      where: { id: request.id },
-      data: {
-        status: "Assigned",
-        assigneeId: staffId,
-        priority,
-      },
-    }),
-
-    prisma.requestStatusHistory.create({
-      data: {
-        requestId: request.id,
-        fromStatus: "New",
-        toStatus: "Assigned",
-        actorId: coordinatorId,
-        reason: null,
-      },
-    }),
-
-    prisma.auditEntry.create({
-      data: {
-        requestId: request.id,
-        actorId: coordinatorId,
-        fieldChanged: "status",
-        previousValue: "New",
-        newValue: "Assigned",
-      },
-    }),
-
-    prisma.auditEntry.create({
-      data: {
-        requestId: request.id,
-        actorId: coordinatorId,
-        fieldChanged: "assigneeId",
-        previousValue: null,
-        newValue: String(staffId),
-      },
-    }),
-
-    prisma.auditEntry.create({
-      data: {
-        requestId: request.id,
-        actorId: coordinatorId,
-        fieldChanged: "priority",
-        previousValue: null,
-        newValue: priority,
-      },
-    }),
-  ]);
+// A Coordinator assigning a New request and setting its priority, written as the workflow service writes
+// it: the change, its status history row and one audit entry per changed field, in one transaction.
+async function assignRequest({ request, coordinatorId, staffId, priority = "Medium" }) {
+  await store.store.transaction(async (tx) => {
+    const updated = await tx.updateRequest(
+      { id: request.id, expect: { status: "New", assigneeId: null, priority: null } },
+      { status: "Assigned", assigneeId: staffId, priority },
+    );
+    if (!updated) throw new Error(`Seed request ${request.reference} was not New.`);
+    await tx.appendStatusHistory({ requestId: request.id, fromStatus: "New", toStatus: "Assigned", actorId: coordinatorId, reason: null });
+    for (const [field, newValue] of [["status", "Assigned"], ["assigneeId", staffId], ["priority", priority]]) {
+      const previousValue = field === "status" ? "New" : null;
+      await tx.appendAudit({ requestId: request.id, actorId: coordinatorId, fieldChanged: field, previousValue, newValue });
+    }
+  });
 }
 
 async function main() {
@@ -155,6 +93,7 @@ async function main() {
   const staffPassword = requiredEnv("SEED_STAFF_PASSWORD");
   const coordinatorPassword = requiredEnv("SEED_COORDINATOR_PASSWORD");
   const managerPassword = requiredEnv("SEED_MANAGER_PASSWORD");
+  formatReference = createReferenceFormatter(requiredEnv("REFERENCE_KEY"));
 
   const [
     requesterHash,
@@ -196,6 +135,15 @@ async function main() {
     passwordHash: managerHash,
   });
 
+  // A second Manager, because a Manager's reset code has to come from another Manager (FR-004), so one
+  // Manager who forgets their password would otherwise have no way back in.
+  await upsertUser({
+    name: "Seed Manager Two",
+    email: "manager2@civicconnect.test",
+    role: "Manager",
+    passwordHash: managerHash,
+  });
+
   const roads = await prisma.category.upsert({
     where: { name: "Roads" },
     update: { active: true },
@@ -233,12 +181,11 @@ async function main() {
   const volumeMode = assertSafeVolumeMode();
 
   if (volumeMode) {
-    await prisma.$transaction([
-      prisma.auditEntry.deleteMany(),
-      prisma.requestStatusHistory.deleteMany(),
-      prisma.actionEntry.deleteMany(),
-      prisma.request.deleteMany(),
-    ]);
+    // Audit entries can only be appended (FR-026, ADR-007), so volume mode deletes nothing. It needs a
+    // database with no requests: npx prisma migrate reset first.
+    if ((await prisma.request.count()) > 0) {
+      throw new Error("SEED_VOLUME=5000 needs a database with no requests. Run npx prisma migrate reset first.");
+    }
 
     const categories = [roads, water, electricity];
     const urgencies = ["Low", "Medium", "High"];
@@ -247,7 +194,6 @@ async function main() {
       const category = categories[(i - 1) % categories.length];
 
       const request = await createNewRequest({
-        reference: referenceFor(i),
         requesterId: requester.id,
         categoryId: category.id,
         title: `Seed request ${i}`,
@@ -280,7 +226,6 @@ async function main() {
 
   if (existing === 0) {
     const first = await createNewRequest({
-      reference: referenceFor(1),
       requesterId: requester.id,
       categoryId: roads.id,
       title: "Seed pothole request",
@@ -290,7 +235,6 @@ async function main() {
     });
 
     const second = await createNewRequest({
-      reference: referenceFor(2),
       requesterId: requester.id,
       categoryId: water.id,
       title: "Seed water leak request",
@@ -307,7 +251,6 @@ async function main() {
     });
 
     await createNewRequest({
-      reference: referenceFor(3),
       requesterId: requester.id,
       categoryId: electricity.id,
       title: "Seed street light request",
