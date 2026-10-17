@@ -205,7 +205,7 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Why selected | A screen that offers a move the server refuses, or hides one it allows, misleads the user even though the server is right |
 | Technique and level | Every transition in the table; unit (server) and component logic (client) |
 | Input or precondition | The transition table; each role; the server's moves and capabilities as the client receives them |
-| Expected result | The server offers exactly the table's moves for the actor, with their inputs. The client labels every move, gives every guard input a labelled field of the right kind with an id unique across the table, sends only the inputs the move asks for, keeps Assign and Close disabled until chosen and confirmed, shows priority and entry forms only when the server's capabilities allow, and marks only the rejection reason as visible to the requester |
+| Expected result | The server offers exactly the table's moves for the actor, with their inputs. The client labels every move, gives every guard input a labelled field of the right kind with an id unique across the table, sends only the inputs the move asks for, with the assignee id in the form the staff list gave it, keeps Assign and Close disabled until chosen and confirmed, shows priority and entry forms only when the server's capabilities allow, and marks only the rejection reason as visible to the requester |
 | Actual result | As expected |
 | Status | Pass |
 | Evidence | Local run, 7 October 2026: main at b10c3e0, 1 test; client at 7948369, 7 tests |
@@ -218,9 +218,10 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `client/test/staff-screens.test.js`: ADR-005: every move in the status model has its own button label
 - `client/test/staff-screens.test.js`: every input a guard requires gets a labelled form input of the right kind
 - `client/test/staff-screens.test.js`: FR-020: of the reason inputs, only the rejection reason's hint says the requester will see it
-- `client/test/staff-screens.test.js`: a move sends its target and only the inputs it asked for, typed for the server
+- `client/test/staff-screens.test.js`: a move sends its target and only the inputs it asked for, with the assignee id as the list gave it
 - `client/test/staff-screens.test.js`: each move input gets an id unique across the whole transition table
 - `client/test/staff-screens.test.js`: Assign cannot be sent until a staff member is chosen, nor Close until it is confirmed
+- `client/test/staff-screens.test.js`: the assignee chosen in the list is kept as the id the list gave, whatever its form
 - `client/test/staff-screens.test.js`: FR-021: the priority form and the entry form appear only when the server's capabilities allow them
 
 ## Identity and access (#111)
