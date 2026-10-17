@@ -1,0 +1,80 @@
+﻿name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: civicconnect
+          POSTGRES_PASSWORD: ci-test-password
+          POSTGRES_DB: civicconnect_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U civicconnect -d civicconnect_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Test values only, no real secrets. Mirrors every variable in .env.example.
+    env:
+      DATABASE_URL: postgresql://civicconnect:ci-test-password@localhost:5432/civicconnect_test
+      PORT: "3000"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            perf/package-lock.json
+
+      - name: Install (root)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Prisma migrate deploy
+        run: npx prisma migrate deploy
+
+      - name: Tests (root)
+        run: npm test
+
+      - name: Install (client)
+        working-directory: client
+        run: npm ci
+
+      - name: Tests (client)
+        working-directory: client
+        run: node --test
+
+      - name: Install (perf)
+        working-directory: perf
+        run: npm ci
+
+      - name: Tests (perf)
+        working-directory: perf
+        run: node --test
