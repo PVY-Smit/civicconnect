@@ -2,6 +2,7 @@
 //
 //   node tools/check_test_catalogue.mjs                          # from the repository root
 //   node tools/check_test_catalogue.mjs --catalogue <path> --strict
+//   node tools/check_test_catalogue.mjs --strict --complete        # once every listed pull request is merged
 //
 // Each catalogue record lists the automated tests that carry it, one per line under "Automated by":
 //
@@ -16,11 +17,20 @@
 // pull requests.
 // The browser journeys in e2e/ need a deployed instance, so they are listed with Playwright's --list rather
 // than run, and counted as listed. Their results come from the run against staging (#122, #123).
+// A test file that reaches PostgreSQL through src/lib/prisma.js runs only where a database is configured
+// (DATABASE_URL, set or in a .env file) and the Prisma client is generated (npx prisma generate). Elsewhere
+// it is not run, and its lines are reported as needing a database, as a missing file is reported.
+// A test file that is found and run but runs none of its tests, because it crashed on import or declares
+// none, is a problem whatever its lines' tags say: node:test reports such a file as one test named after
+// the file itself.
 //
 // The per-record line counts the record's tests by result: pass, fail, todo and skip (node:test's TODO and
 // SKIP directives, so a test that is switched off is shown, never silently dropped), listed (browser journeys
 // found by --list, not run) and the lines not on this branch.
 // With --strict it exits 1 on a failed test, a line that matches nothing, or an uncatalogued test.
+// --strict alone passes when a listed test file has been deleted, because a missing file is reported as not
+// on this branch. With --complete, every line not on this branch is named with its reason and the tool
+// exits 1, so a deleted file, a tagged test that never merged, or journeys that could not be listed fail.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -28,6 +38,7 @@ import { join } from "node:path";
 
 const args = process.argv.slice(2);
 const strict = args.includes("--strict");
+const complete = args.includes("--complete");
 const at = args.indexOf("--catalogue");
 const catalogue = at >= 0 ? args[at + 1] : "docs/quality/test-catalogue.md";
 
@@ -58,8 +69,9 @@ for (const line of readFileSync(catalogue, "utf-8").split(/\r?\n/)) {
 
 // ---- the tests, by running each referenced file and every test file in the usual places ----
 // Playwright's list: "  [chromium] › file.spec.js:10:1 › name", paths relative to the journeys folder.
+const PLAYWRIGHT = "e2e/node_modules/@playwright/test/cli.js";
 function journeysIn(files) {
-  if (files.length === 0 || !existsSync("e2e/node_modules/@playwright/test/cli.js")) return {};
+  if (files.length === 0 || !existsSync(PLAYWRIGHT)) return {};
   let out = "";
   try {
     out = execFileSync(process.execPath, ["node_modules/@playwright/test/cli.js", "test", "--list"], {
@@ -80,6 +92,7 @@ function journeysIn(files) {
   return found;
 }
 
+const brokenFiles = new Map(); // file -> why none of its tests ran
 function testsIn(file) {
   const cwd = file.startsWith("client/") ? "client" : ".";
   const rel = file.startsWith("client/") ? file.slice("client/".length) : file;
@@ -94,6 +107,14 @@ function testsIn(file) {
     const m = l.match(/^(not ok|ok) \d+ - (.*?)(?: # (TODO|SKIP)\b.*)?$/); // top level only: no indentation
     if (m) tests.push({ name: m[2].replace(/\\#/g, "#"), result: m[3] ? m[3].toLowerCase() : m[1] === "ok" ? "pass" : "fail" });
   }
+  // A file that ran none of its tests appears as one test named after the file (backslashes escaped in
+  // TAP on Windows): failing if it crashed, passing if it declares no tests. No TAP at all is the same.
+  const slashes = (path) => path.replace(/\\\\/g, "/").replace(/\\/g, "/");
+  const self = tests.find((t) => slashes(t.name) === slashes(rel));
+  if (tests.length === 0 || (tests.length === 1 && self)) {
+    brokenFiles.set(file, self?.result === "fail" ? "crashed before any test ran" : "ran no tests");
+    return [];
+  }
   return tests;
 }
 
@@ -102,9 +123,17 @@ const listSpecs = (dir) => (existsSync(dir) ? readdirSync(dir).filter((f) => f.e
 const files = [...new Set([...listDir("tests"), ...listDir("client/test"), ...listDir("perf/test"), ...listSpecs("e2e/journeys"), ...records.flatMap((r) => r.refs.map((x) => x.file))])].filter((f) =>
   existsSync(join(".", f)),
 );
+const NO_DATABASE = "needs a database: set DATABASE_URL and run npx prisma generate";
+const needsDatabase = (file) => /lib\/prisma\.js/.test(readFileSync(file, "utf-8"));
+// The detection reads the test file's own imports, so a test that reaches the database through a helper
+// (tests/support/api.js once it uses the adapter, for TC-32) must import src/lib/prisma.js itself or be
+// added here.
+const envFileHasUrl = existsSync(".env") && /^\s*DATABASE_URL\s*=/m.test(readFileSync(".env", "utf-8"));
+const databaseReady = Boolean(process.env.DATABASE_URL || envFileHasUrl) && existsSync("src/generated/client");
+const notRun = new Set(databaseReady ? [] : files.filter((f) => !f.startsWith("e2e/") && needsDatabase(f)));
 const journeyFiles = files.filter((f) => f.startsWith("e2e/"));
 const results = {
-  ...Object.fromEntries(files.filter((f) => !f.startsWith("e2e/")).map((f) => [f, testsIn(f)])),
+  ...Object.fromEntries(files.filter((f) => !f.startsWith("e2e/") && !notRun.has(f)).map((f) => [f, testsIn(f)])),
   ...journeysIn(journeyFiles),
 };
 
@@ -112,19 +141,40 @@ const results = {
 const matches = (pattern, name) => (pattern.endsWith("*") ? name.startsWith(pattern.slice(0, -1)) : name === pattern);
 const catalogued = new Set();
 const problems = [];
+const absent = [];
 let failed = 0;
+
+// Why a line is not on this branch, for --complete.
+function absence(ref) {
+  if (!existsSync(join(".", ref.file))) return `${ref.file} is not in this checkout`;
+  if (notRun.has(ref.file)) return `${ref.file} ${NO_DATABASE}`;
+  if (ref.file.startsWith("e2e/") && !existsSync(PLAYWRIGHT)) return `${ref.file} cannot be listed: run npm ci in e2e`;
+  return `${ref.file} has no test "${ref.pattern}" from ${ref.pr}`;
+}
 
 console.log("record   pass  fail  todo  skip  listed  absent");
 for (const r of records) {
-  const count = { pass: 0, fail: 0, todo: 0, skip: 0, listed: 0, absent: 0 };
+  const count = { pass: 0, fail: 0, todo: 0, skip: 0, listed: 0, absent: 0, database: 0 };
   for (const ref of r.refs) {
+    if (notRun.has(ref.file)) {
+      count.database += 1;
+      absent.push({ id: r.id, reason: absence(ref) });
+      continue;
+    }
+    if (brokenFiles.has(ref.file)) {
+      count.fail += 1;
+      problems.push(`${r.id}: ${ref.file} ${brokenFiles.get(ref.file)}`);
+      continue;
+    }
     if (!results[ref.file]) {
       count.absent += 1;
+      absent.push({ id: r.id, reason: absence(ref) });
       continue;
     }
     const hit = results[ref.file].filter((t) => matches(ref.pattern, t.name));
     if (hit.length === 0 && ref.pr) {
       count.absent += 1;
+      absent.push({ id: r.id, reason: absence(ref) });
       continue;
     }
     if (hit.length === 0) problems.push(`${r.id}: no test in ${ref.file} matches "${ref.pattern}"`);
@@ -134,14 +184,20 @@ for (const r of records) {
     }
   }
   failed += count.fail;
-  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.skip).padStart(4)}  ${String(count.listed).padStart(6)}  ${count.absent ? `${count.absent} line(s) not on this branch` : ""}`);
+  console.log(`${r.id.padEnd(8)} ${String(count.pass).padStart(4)}  ${String(count.fail).padStart(4)}  ${String(count.todo).padStart(4)}  ${String(count.skip).padStart(4)}  ${String(count.listed).padStart(6)}  ${[count.absent && `${count.absent} line(s) not on this branch`, count.database && `${count.database} line(s) need a database`].filter(Boolean).join("; ")}`);
 }
 
 for (const [file, tests] of Object.entries(results)) {
   for (const t of tests) if (!catalogued.has(`${file}\u0000${t.name}`)) problems.push(`not in the catalogue: ${file}: ${t.name}`);
 }
+for (const [file, why] of brokenFiles) if (!records.some((r) => r.refs.some((x) => x.file === file))) problems.push(`${file} ${why}`);
 
 const total = Object.values(results).flat();
 console.log(`\n${files.length} test files, ${total.length} tests: ${total.filter((t) => t.result === "pass").length} pass, ${failed} fail in catalogued records`);
 for (const p of problems) console.log(p);
-if (strict && (failed > 0 || problems.length > 0)) process.exit(1);
+if (complete) {
+  const byReason = new Map();
+  for (const a of absent) byReason.set(a.reason, [...new Set([...(byReason.get(a.reason) ?? []), a.id])]);
+  for (const [reason, ids] of byReason) console.log(`not on this branch: ${reason} (${ids.join(", ")})`);
+}
+if ((strict && (failed > 0 || problems.length > 0)) || (complete && absent.length > 0)) process.exit(1);
