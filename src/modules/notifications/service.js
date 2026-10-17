@@ -1,4 +1,25 @@
+// The requester's notifications (FR-029, ADR-008): derived from the saved status history and the
+// requester-visible action entries, so there is no separate store to fall out of step (DEC-015).
+//
+// notificationSources.forRequester(requesterId) is the persistence module's query: the requester's own
+// requests, each with its status history and its requester-visible entries. The requester id comes only
+// from the session.
+//
+// Order. Times can tie, so the history is ordered by time and then by row id, which is the order the rows
+// were written, and the list by time, newest first, then by reference and event, so it is the same on
+// every refresh.
+
 import { permits } from "../authorisation-policy/policy.js";
+import { VISIBILITIES } from "../workflow-status/service.js";
+
+// The one visibility a requester may see (DEC-003), taken from the workflow's own list, not retyped.
+const REQUESTER_VISIBLE = VISIBILITIES.find((v) => v === "requester-visible");
+const byTimeThenId = (a, b) => new Date(occurredAt(a)) - new Date(occurredAt(b)) || compareIds(a.id, b.id);
+const compareIds = (a, b) => {
+  if (a === undefined || b === undefined) return 0;
+  const [x, y] = [String(a), String(b)];
+  return /^\d+$/.test(x) && /^\d+$/.test(y) ? (BigInt(x) < BigInt(y) ? -1 : BigInt(x) > BigInt(y) ? 1 : 0) : x.localeCompare(y);
+};
 
 function occurredAt(entry) {
   return entry.createdAt ?? entry.occurredAt;
@@ -8,11 +29,7 @@ function statusNotifications(request) {
   const notifications = [];
   let acceptedRecorded = false;
 
-  const history = [...(request.statusHistory ?? [])].sort(
-    (a, b) =>
-      new Date(occurredAt(a)).getTime() -
-      new Date(occurredAt(b)).getTime(),
-  );
+  const history = [...(request.statusHistory ?? [])].sort(byTimeThenId);
 
   for (const entry of history) {
     const at = occurredAt(entry);
@@ -56,7 +73,7 @@ function updateNotifications(request) {
   return (request.actionEntries ?? [])
     .filter(
       (entry) =>
-        entry.visibility === "requester-visible",
+        entry.visibility === REQUESTER_VISIBLE,
     )
     .map((entry) => ({
       reference: request.reference,
@@ -91,7 +108,8 @@ export async function getRequesterNotifications(
   for (const request of requests) {
     // Defence in depth: even if the persistence adapter accidentally
     // returns another requester's record, never expose it.
-    if (request.requesterId !== actor.id) {
+    // Compared as text, since the session and the store may give the same id as a string and a number.
+    if (String(request.requesterId) !== String(actor.id)) {
       continue;
     }
 
@@ -103,8 +121,9 @@ export async function getRequesterNotifications(
 
   notifications.sort(
     (a, b) =>
-      new Date(b.at).getTime() -
-      new Date(a.at).getTime(),
+      new Date(b.at) - new Date(a.at) ||
+      a.reference.localeCompare(b.reference) ||
+      a.event.localeCompare(b.event),
   );
 
   return {

@@ -231,6 +231,24 @@ export function createStore(prisma) {
     },
   };
 
+  // notifications/service.js (FR-029, ADR-008): the requester's own requests with their status history and
+  // their requester-visible entries, which is all the indications are derived from.
+  const notificationSources = {
+    async forRequester(requesterId) {
+      return fromDb(
+        await prisma.request.findMany({
+          where: { requesterId: toDbId(requesterId) },
+          select: {
+            reference: true,
+            requesterId: true,
+            statusHistory: { select: { id: true, fromStatus: true, toStatus: true, createdAt: true }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] },
+            actionEntries: { where: { visibility: "requester-visible" }, select: { id: true, visibility: true, createdAt: true } },
+          },
+        }),
+      );
+    },
+  };
+
   // service.js: one transaction for a change, its status history row and its audit entries (ADR-001 rule 3).
   // If the function throws, Prisma rolls every write back.
   const store = {
@@ -271,5 +289,5 @@ export function createStore(prisma) {
     },
   };
 
-  return { users, categories, requests, store };
+  return { users, categories, requests, notificationSources, store };
 }

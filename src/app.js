@@ -8,6 +8,7 @@
 
 import express from "express";
 import { createIdentityAccess } from "./modules/identity-access/http.js";
+import { createNotificationsHandler } from "./modules/notifications/http.js";
 import { InactiveCategoryError } from "./modules/persistence/store.js";
 import { createQueueHandlers } from "./modules/queue/http.js";
 import { createRequestAccessHandlers } from "./modules/request-access/http.js";
@@ -31,7 +32,7 @@ export function createApp(deps) {
 }
 
 function mountApi(app, deps) {
-  const { users, categories, requests, store } = deps.store;
+  const { users, categories, requests, notificationSources, store } = deps.store;
   const identity = createIdentityAccess({
     users,
     verifyPassword: deps.verifyPassword,
@@ -70,6 +71,9 @@ function mountApi(app, deps) {
   // The staff queue (FR-013, FR-014)
   api.get("/queue", authenticate, queue.queue);
   api.get("/staff", authenticate, queue.staff);
+
+  // The requester's notifications (FR-029, ADR-008)
+  api.get("/notifications", authenticate, createNotificationsHandler({ notificationSources }));
 
   // The workflow (FR-015 to FR-021, FR-025)
   api.get("/requests/:reference/assignable-staff", authenticate, workflow.assignableStaff);

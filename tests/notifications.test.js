@@ -437,3 +437,38 @@ test("notifications use the #133 response fields and newest appears first", asyn
     ],
   );
 });
+
+// From the reviews of #142.
+
+test("an actor whose role grants no view of own requests is refused before persistence is read", async () => {
+  const fake = source([]);
+  const result = await getRequesterNotifications({ actor: { id: 1, role: "Visitor", categoryIds: [] } }, fake);
+  assert.deepEqual(result, { ok: false, code: "not-authorised" });
+  assert.equal(fake.calls.length, 0);
+});
+
+test("the requester id matches whether the session and the store give it as a string or a number", async () => {
+  const at = new Date("2026-10-06T10:00:00Z");
+  const request = { reference: "CC-0000-0001", requesterId: "1", statusHistory: [{ fromStatus: "New", toStatus: "Assigned", createdAt: at }], actionEntries: [] };
+  const result = await getRequesterNotifications({ actor: REQUESTER }, source([request]));
+  assert.deepEqual(result.notifications.map((n) => n.event), ["accepted"]);
+});
+
+test("indications with the same time are listed in the same order on every refresh", async () => {
+  const at = new Date("2026-10-06T10:00:00Z");
+  // Every row has the same time, and the store gives the requests in a different order each call.
+  const history = [
+    { id: "3", fromStatus: "In Progress", toStatus: "Resolved", createdAt: at },
+    { id: "2", fromStatus: "New", toStatus: "In Progress", createdAt: at },
+  ];
+  const a = { reference: "CC-0000-0002", requesterId: 1, statusHistory: history, actionEntries: [] };
+  const b = { reference: "CC-0000-0001", requesterId: 1, statusHistory: [{ id: "9", fromStatus: "New", toStatus: "Assigned", createdAt: at }], actionEntries: [] };
+  const first = await getRequesterNotifications({ actor: REQUESTER }, source([a, b]));
+  const second = await getRequesterNotifications({ actor: REQUESTER }, source([b, a]));
+  assert.deepEqual(first.notifications.map((n) => `${n.reference} ${n.event}`), [
+    "CC-0000-0001 accepted",
+    "CC-0000-0002 accepted",
+    "CC-0000-0002 completed",
+  ]);
+  assert.deepEqual(second.notifications, first.notifications);
+});

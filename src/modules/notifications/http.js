@@ -1,3 +1,4 @@
+import { NOT_PERMITTED } from "../identity-access/http.js";
 import {
   getRequesterNotifications,
 } from "./service.js";
@@ -26,8 +27,7 @@ export function createNotificationsHandler(deps) {
 
     if (result.code === "not-authorised") {
       return res.status(403).json({
-        error:
-          "You are not authorised to view these notifications.",
+        error: NOT_PERMITTED,
       });
     }
 

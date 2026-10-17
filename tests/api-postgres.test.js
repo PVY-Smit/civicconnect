@@ -229,6 +229,15 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   const staffList = await coord("GET", "/staff");
   assert.ok(staffList.body.staff.some((s) => s.id === String(staff.id) && s.name === staff.name));
 
+  // FR-029, ADR-008: the requester's notifications come from the saved history and the visible entries:
+  // accepted once, updated for the visible entry only, completed on Resolved, rejected on Rejected.
+  const notes = await req("GET", "/notifications");
+  assert.equal(notes.status, 200);
+  const mineOnly = (ref) => notes.body.notifications.filter((n) => n.reference === ref).map((n) => n.event).sort();
+  assert.deepEqual(mineOnly(reference), ["accepted", "completed", "updated"]);
+  assert.deepEqual(mineOnly(none), ["rejected"]);
+  assert.deepEqual((await strangerCall("GET", "/notifications")).body.notifications, []);
+
   // FR-004: a Manager issues a code; the reset sets the password and ends the earlier session.
   const mgr = await as(manager);
   assert.equal((await coord("POST", `/users/${requester.id}/reset-code`)).status, 403);
