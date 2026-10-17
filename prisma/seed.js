@@ -128,7 +128,7 @@ async function main() {
     passwordHash: coordinatorHash,
   });
 
-  await upsertUser({
+  const manager = await upsertUser({
     name: "Seed Manager",
     email: "manager@civicconnect.test",
     role: "Manager",
@@ -137,7 +137,7 @@ async function main() {
 
   // A second Manager, because a Manager's reset code has to come from another Manager (FR-004), so one
   // Manager who forgets their password would otherwise have no way back in.
-  await upsertUser({
+  const managerTwo = await upsertUser({
     name: "Seed Manager Two",
     email: "manager2@civicconnect.test",
     role: "Manager",
@@ -162,20 +162,16 @@ async function main() {
     create: { name: "Electricity" },
   });
 
-  for (const category of [roads, water, electricity]) {
-    await prisma.userCategory.upsert({
-      where: {
-        userId_categoryId: {
-          userId: staff.id,
-          categoryId: category.id,
-        },
-      },
-      update: {},
-      create: {
-        userId: staff.id,
-        categoryId: category.id,
-      },
-    });
+  // The Staff member and both Managers cover all three categories. A Manager's request scope, and so their
+  // reports, is by category (ADR-006) until FEC-01 decides otherwise.
+  for (const user of [staff, manager, managerTwo]) {
+    for (const category of [roads, water, electricity]) {
+      await prisma.userCategory.upsert({
+        where: { userId_categoryId: { userId: user.id, categoryId: category.id } },
+        update: {},
+        create: { userId: user.id, categoryId: category.id },
+      });
+    }
   }
 
   const volumeMode = assertSafeVolumeMode();
