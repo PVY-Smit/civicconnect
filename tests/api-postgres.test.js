@@ -219,6 +219,13 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   assert.equal((await coord("GET", "/queue?status=New&status=Closed")).status, 400);
   const closed = await coord("GET", `/queue?status=Closed&q=${encodeURIComponent("Pothole on Main Road")}`);
   assert.ok(closed.body.requests.some((r) => r.reference === reference));
+  // FR-020: a rejection's reason reaches the Requester; staff also see who rejected it.
+  assert.equal((await coord("POST", `/requests/${none}/status`, { to: "Rejected", reason: "Duplicate of an earlier report." })).status, 200);
+  const rejected = await req("GET", `/requests/${none}`);
+  assert.deepEqual(rejected.body.request.statusHistory.at(-1), { ...rejected.body.request.statusHistory.at(-1), to: "Rejected", reason: "Duplicate of an earlier report." });
+  assert.equal("by" in rejected.body.request.statusHistory.at(-1), false);
+  assert.equal((await coord("GET", `/requests/${none}`)).body.request.statusHistory.at(-1).by, coordinator.name);
+
   const staffList = await coord("GET", "/staff");
   assert.ok(staffList.body.staff.some((s) => s.id === String(staff.id) && s.name === staff.name));
 

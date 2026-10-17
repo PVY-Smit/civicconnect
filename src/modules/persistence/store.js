@@ -222,8 +222,9 @@ export function createStore(prisma) {
         where: toDbWhere(where),
         include: {
           category: true,
-          statusHistory: { orderBy: { createdAt: "asc" } },
-          actionEntries: { where: toDbWhere(entryWhere ?? {}), orderBy: { createdAt: "asc" } },
+          assignee: { select: { id: true, name: true } },
+          statusHistory: { orderBy: { createdAt: "asc" }, include: { actor: { select: { name: true } } } },
+          actionEntries: { where: toDbWhere(entryWhere ?? {}), orderBy: { createdAt: "asc" }, include: { author: { select: { name: true } } } },
         },
       });
       return row ? fromDb(row) : null;
