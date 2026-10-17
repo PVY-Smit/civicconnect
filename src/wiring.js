@@ -24,6 +24,8 @@ export async function createDependencies({ prisma, env = process.env, clientDir,
   const dummyHash = await argon2.hash(randomBytes(32).toString("hex"));
   return {
     store: createStore(prisma),
+    checkDatabase: () => prisma.$queryRaw`SELECT 1`,
+    https: Boolean(env.TLS_CERT_FILE && env.TLS_KEY_FILE),
     hashPassword: (secret) => argon2.hash(secret),
     verifyPassword: async (hash, secret) => {
       try {

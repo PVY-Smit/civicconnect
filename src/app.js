@@ -9,6 +9,7 @@
 import express from "express";
 import { createAdministrationHandlers } from "./modules/administration/http.js";
 import { createIdentityAccess } from "./modules/identity-access/http.js";
+import { createFailureLimiter, SIGN_IN_LIMITS } from "./modules/identity-access/rate-limit.js";
 import { createNotificationsHandler } from "./modules/notifications/http.js";
 import { InactiveCategoryError } from "./modules/persistence/store.js";
 import { createQueueHandlers } from "./modules/queue/http.js";
@@ -17,15 +18,40 @@ import { createRequestAccessHandlers } from "./modules/request-access/http.js";
 import { createSubmissionHandler } from "./modules/request-capture/http.js";
 import { createWorkflowHandlers } from "./modules/workflow-status/http.js";
 
+// Headers on every answer. The client is built with no inline script or style, so the content security
+// policy allows only this origin; no page may frame it; types are not guessed; no referrer leaves the
+// site. HSTS is sent only when the server itself runs over HTTPS (NFR-006), since a browser that saw it over
+// plain HTTP on localhost would refuse the address afterwards.
+function securityHeaders({ https }) {
+  return (req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    if (https) res.setHeader("Strict-Transport-Security", "max-age=31536000");
+    next();
+  };
+}
+
 export function createApp(deps) {
   const app = express();
   app.disable("x-powered-by");
+  app.use(securityHeaders({ https: Boolean(deps?.https) }));
   app.use(express.json({ limit: "64kb" }));
 
   // NFR-003's availability measurement needs a health endpoint to probe. release names the build that is
-  // running, so a measurement can say which release it measured (#150).
-  app.get("/health", (req, res) => {
-    res.status(200).json({ status: "ok", ...(deps?.release ? { release: deps.release } : {}) });
+  // running, so a measurement can say which release it measured (#150). With a database the check
+  // includes it, so a server that is up but cannot reach its data answers 503, not ok.
+  app.get("/health", async (req, res) => {
+    const release = deps?.release ? { release: deps.release } : {};
+    if (deps?.checkDatabase) {
+      try {
+        await deps.checkDatabase();
+      } catch {
+        return res.status(503).json({ status: "unavailable", ...release });
+      }
+    }
+    return res.status(200).json({ status: "ok", ...release });
   });
 
   if (deps) mountApi(app, deps);
@@ -54,10 +80,10 @@ function mountApi(app, deps) {
   const api = express.Router();
 
   // Identity and access (FR-001, FR-002, FR-004)
-  api.post("/auth/sign-in", identity.signIn);
+  api.post("/auth/sign-in", createFailureLimiter(deps.rateLimits ?? SIGN_IN_LIMITS), identity.signIn);
   api.post("/auth/sign-out", identity.signOut);
   api.get("/auth/me", authenticate, identity.currentUser);
-  api.post("/auth/reset", identity.resetPassword);
+  api.post("/auth/reset", createFailureLimiter(deps.rateLimits ?? SIGN_IN_LIMITS), identity.resetPassword);
   api.post("/users/:id/reset-code", authenticate, requirePermission("manageUsers"), identity.issueResetCode);
 
   // FR-006: the active categories a Requester chooses from; with ?all=true, the whole list for a Manager
