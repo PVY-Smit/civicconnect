@@ -54,6 +54,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #138 (#123) | `e2e/journeys/*.spec.js` | 29f0005 |
 | #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 3ccee48 |
 | #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
+| #155 (#108, #109, #114 to #117) | `tests/api-postgres.test.js` (TC-32, needs PostgreSQL), `tests/queue.test.js`, `tests/notifications.test.js`, `tests/reports.test.js`, `tests/administration.test.js`, `tests/http-hardening.test.js` | f5453f6 |
 
 The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 
@@ -401,10 +402,10 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 | Why selected | The answer for another person's reference must not differ from the answer for a reference that does not exist, or references can be probed |
 | Technique and level | Negative tests and equivalence partitions (own, another's, missing, no actor); component |
 | Input or precondition | Requests from two requesters; the first requester signed in, no actor, and an actor with an unknown role; a store that returns the history and entries in reverse |
-| Expected result | The list holds every request the requester submitted, once, with six fields, and nobody else's. Another's reference and a missing one get the same 404 and body. The lookup is made with the policy's scope, so another's request is never loaded. Without an actor every entry point refuses with 401. The status history and the entries are in time order whatever order the store returns them in. An unknown role sees nothing and nothing is loaded, and the policy's scope for it matches nothing |
+| Expected result | The list holds every request the requester submitted, once, with six fields, and nobody else's. Staff get the moves the transition table and the policy allow them, and capabilities, and a Requester gets neither. A Requester sees a rejection's reason (FR-020) and no hold reason or staff name; staff see every reason and who acted. Another's reference and a missing one get the same 404 and body. The lookup is made with the policy's scope, so another's request is never loaded. Without an actor every entry point refuses with 401. The status history and the entries are in time order whatever order the store returns them in. An unknown role sees nothing and nothing is loaded, and the policy's scope for it matches nothing |
 | Actual result | As expected |
 | Status | Pass |
-| Evidence | Local run, 9 October 2026, #131 at 0efac6a: 7 of 7 tests |
+| Evidence | Local run, 9 October 2026, #131 at 0efac6a: 7 of 7 tests. Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6: 9 of 9, with the staff detail's moves and capabilities and FR-020's reasons, which the journeys against the real server showed missing |
 | Traceability | FR-010, FR-011, FR-012, NFR-005, ADR-006, #112 |
 | Interpretation | Not found and not permitted cannot be told apart, at the service and at the route |
 
@@ -417,6 +418,8 @@ The local runs on 7 October 2026 used Node 24.14.0 on Windows 11.
 - `tests/request-submission.test.js`: without a signed-in actor every entry point refuses, and the routes answer 401
 - `tests/request-submission.test.js`: FR-011: the status history and the entries are in time order even when the store returns them in reverse [#131]
 - `tests/request-submission.test.js`: NFR-005: an actor with an unknown role sees nothing, and nothing is loaded [#131]
+- `tests/request-submission.test.js`: staff get the moves and capabilities the server allows them, and a Requester gets neither [#155]
+- `tests/request-submission.test.js`: FR-020: the Requester sees a rejection's reason but not a hold's; staff see every reason and who acted [#155]
 
 ## Workflow (#113)
 
@@ -866,7 +869,158 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/password-reset.test.js`: POST /api/users/:id/reset-code answers 200 with the code and expiry, 403, 404 or 409 [#146]
 - `tests/password-reset.test.js`: POST /api/auth/reset answers 204, 400 with the password's error, or 400 with the one generic message [#146]
 
-## Not yet runnable
+## Integrated modules (#155)
+
+The modules Tristan Roets drafted (#141 to #143) and the administration (#115), each with the review findings
+on its draft fixed, and the server's hardening. Each store is the in-memory one its contract states; TC-32
+runs the same operations against PostgreSQL.
+
+### TC-40 The staff queue
+
+| Field | Value |
+|---|---|
+| Test basis | FR-013, FR-014, FR-021, NFR-001; ADR-006 |
+| Why selected | The queue is where staff work all day, and its filters must narrow the actor's scope, never widen it. The reviews of #141 found UTC days, dropped repeated parameters and no page cap |
+| Technique and level | Equivalence partitions and boundary values (day edges in Johannesburg, page and search caps); a fake store that evaluates the where clause against rows; component and handler |
+| Input or precondition | Rows across categories, statuses, assignees and times; Staff, Coordinator and Requester actors |
+| Expected result | Staff see their own and their categories' requests and a filter cannot widen that; a Coordinator sees all; me, none and an id filter the assignee; the search covers four fields ignoring case; a day is a South African day and to includes its own last millisecond; a repeated parameter, a page past 100,000 and a search over 200 characters answer 400; a missing category is a fault; 401, 403 and 400 at the handler |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6: 17 of 17. A UTC day, an off-by-one end of day, a dropped repeated parameter and an uncapped page each failed it. TC-32 runs the queue against PostgreSQL |
+| Traceability | FR-013, FR-014, #114, #141, #155 |
+| Interpretation | The queue's scope and filters hold at component level and in the database |
+
+**Automated by**
+
+- `tests/queue.test.js`: defaults: page 1, the default sort, the fixed page size [#155]
+- `tests/queue.test.js`: each invalid value is refused with its own field error [#155]
+- `tests/queue.test.js`: to before from is refused [#155]
+- `tests/queue.test.js`: a repeated parameter is refused, never dropped (Express 5 gives an array) [#155]
+- `tests/queue.test.js`: the page is capped, so skip stays a safe integer [#155]
+- `tests/queue.test.js`: the search is capped at Q_MAX characters [#155]
+- `tests/queue.test.js`: day bounds are South African days: from is the day's start, to ends before the next day's start [#155]
+- `tests/queue.test.js`: 00:30 on 6 October in Johannesburg is in from=6 October and not in to=5 October [#155]
+- `tests/queue.test.js`: Staff see only their own and their categories' requests, whatever the filters [#155]
+- `tests/queue.test.js`: a Coordinator sees every category, and the filters narrow it [#155]
+- `tests/queue.test.js`: assignee filters: me is the actor, none is unassigned, an id stays the id [#155]
+- `tests/queue.test.js`: the search covers reference, title, description and location, ignoring case [#155]
+- `tests/queue.test.js`: the page, its size and the sort reach the store [#155]
+- `tests/queue.test.js`: the response is the contract the client's queue reads [#155]
+- `tests/queue.test.js`: a row without its category is a data fault, not a blank cell [#155]
+- `tests/queue.test.js`: a Requester and a missing actor are refused before any query [#155]
+- `tests/queue.test.js`: handler: 401, 403, 400 and 200, and the staff list only for queue users [#155]
+
+### TC-41 The requester's notifications
+
+| Field | Value |
+|---|---|
+| Test basis | FR-029; ADR-008; DEC-015 |
+| Why selected | Indications are derived, not stored, so the mapping from history to indication is the whole feature, and an internal entry must never produce one |
+| Technique and level | State-based mapping cases and negative tests; component |
+| Input or precondition | Requests with status histories and entries of both visibilities; ids as strings and numbers; equal times |
+| Expected result | accepted once, for the first New to Assigned or In Progress; updated for requester-visible entries only; rejected and completed for each move to Rejected and Resolved, none for Closed; another requester's records never shown; the same order on every refresh; a role without its own view refused before any read |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6: 15 of 15. Text comparison of ids, the stable order and the permission check each failed it when removed. TC-32 checks the four indications through PostgreSQL |
+| Traceability | FR-029, ADR-008, #116, #142, #155 |
+| Interpretation | The requester is told of each change that concerns them, and of nothing internal |
+
+**Automated by**
+
+- `tests/notifications.test.js`: missing actor is refused before persistence is read [#155]
+- `tests/notifications.test.js`: New to Assigned produces accepted [#155]
+- `tests/notifications.test.js`: New to In Progress also produces accepted [#155]
+- `tests/notifications.test.js`: only the first qualifying acceptance transition produces accepted [#155]
+- `tests/notifications.test.js`: requester-visible action entry produces updated [#155]
+- `tests/notifications.test.js`: internal action entry produces no notification [#155]
+- `tests/notifications.test.js`: transition to Rejected produces rejected [#155]
+- `tests/notifications.test.js`: each transition to Resolved produces completed [#155]
+- `tests/notifications.test.js`: Closed does not create another completed notification [#155]
+- `tests/notifications.test.js`: another requester's request is never returned [#155]
+- `tests/notifications.test.js`: authenticated actor id is passed to persistence [#155]
+- `tests/notifications.test.js`: notifications use the #133 response fields and newest appears first [#155]
+- `tests/notifications.test.js`: an actor whose role grants no view of own requests is refused before persistence is read [#155]
+- `tests/notifications.test.js`: the requester id matches whether the session and the store give it as a string or a number [#155]
+- `tests/notifications.test.js`: indications with the same time are listed in the same order on every refresh [#155]
+
+### TC-42 Management reports
+
+| Field | Value |
+|---|---|
+| Test basis | FR-022, FR-023, FR-024; FEC-01, FEC-02; ADR-006 |
+| Why selected | FR-022 is accepted against independently calculated counts, so each count's rule must be pinned, including the edges the reviews of #143 found untested |
+| Technique and level | Boundary values (age equal to the target, the last day of the period), worked examples, negative tests; component and handler |
+| Input or precondition | Requests of known ages and statuses; a target of 10 days; Coordinator, Manager and Staff actors |
+| Expected result | Counts equal the values worked out by hand, with an age equal to the target not overdue; the period is South African days and includes the to day; the breakdown reconciles to the total; the overdue list holds every open request older than the target, oldest first, with four fields; a Manager's reports cover only what they may open; a missing category is a fault; a missing target stops the handlers being made |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6: 11 of 11. An age equal to the target counted, Resolved and Closed swapped, the to day dropped and the scope removed each failed it. TC-32 checks the breakdown and the Manager's scope through PostgreSQL |
+| Traceability | FR-022 to FR-024, #117, #143, #155 |
+| Interpretation | The counts mean the requests submitted in the period by their status now, as `reports/service.js` states; the target's value is the organisation's to set (FEC-02) |
+
+**Automated by**
+
+- `tests/reports.test.js`: the period: optional dates, refused when invalid, reversed or repeated [#155]
+- `tests/reports.test.js`: FR-022: each count equals the value worked out by hand, with an age equal to the target not overdue [#155]
+- `tests/reports.test.js`: FR-022: the period is South African days, and the to date's own day is included [#155]
+- `tests/reports.test.js`: FR-023: the breakdown reconciles to the period's total and is in a stable order [#155]
+- `tests/reports.test.js`: a request with no category is a data fault, not an Unknown row [#155]
+- `tests/reports.test.js`: FR-024: every open request older than the target, oldest first, with its four fields [#155]
+- `tests/reports.test.js`: age is in whole days, rounded down [#155]
+- `tests/reports.test.js`: scope: a Manager's reports cover only the requests they may open [#155]
+- `tests/reports.test.js`: Staff and a missing actor are refused before any query [#155]
+- `tests/reports.test.js`: the target must be a whole number of days, at least 1, or the handlers are not made [#155]
+- `tests/reports.test.js`: handler: 401, 403, 400 and 200, with the time taken from the injected clock [#155]
+
+### TC-43 User and category administration
+
+| Field | Value |
+|---|---|
+| Test basis | FR-003, FR-006, FR-027, FR-028; FR-004 |
+| Why selected | Accounts and categories decide who can do anything at all; a deactivated user with open requests, or a Manager locking themselves out, would strand work |
+| Technique and level | Equivalence partitions of the account fields, negative tests on permission and state; component and handler |
+| Input or precondition | Existing accounts and categories, one inactive; a Staff member with open assigned requests |
+| Expected result | A new account has no password and its setup code is shown once, valid for a week, with only its hash stored; each invalid field has its own message; a taken email is refused ignoring case; Staff need an active category; deactivation is refused with open requests assigned and for one's own account; categories are unique ignoring case and are deactivated, never deleted; only a Manager may do any of it |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6: 7 of 7. Removing the open-request check, the own-account check, the role check on categories or the active-category check each failed it. TC-32 runs the Manager's flow through PostgreSQL, from a setup code to deactivation ending the session |
+| Traceability | FR-003, FR-027, FR-028, #115, #155 |
+| Interpretation | Administration keeps history intact and cannot strand open work |
+
+**Automated by**
+
+- `tests/administration.test.js`: FR-003: a Manager creates an account with no password and gets a setup code once [#155]
+- `tests/administration.test.js`: FR-003: each invalid field gets its own message, and nothing is created [#155]
+- `tests/administration.test.js`: a Requester and a Coordinator are created without categories [#155]
+- `tests/administration.test.js`: only a Manager may administer accounts and categories [#155]
+- `tests/administration.test.js`: FR-028: deactivation is refused while open requests are assigned, and for one's own account [#155]
+- `tests/administration.test.js`: FR-027: categories are added, renamed and deactivated, with names unique ignoring case [#155]
+- `tests/administration.test.js`: handler: the status codes and bodies the screens read [#155]
+
+### TC-44 Server hardening
+
+| Field | Value |
+|---|---|
+| Test basis | FR-001, FR-004, NFR-003, NFR-006; s36's missing rate limit |
+| Why selected | Without a limit by address, sign-in and reset codes can be guessed as fast as the server answers; a health check that ignores the database reports a broken service as up |
+| Technique and level | Behaviour through a real Express app; component |
+| Input or precondition | A limiter with small limits and an injected clock; the application with a database check that fails and one that succeeds |
+| Expected result | Failures past the limit answer 429 with Retry-After and the handler does not run, until the window ends; successes do not count; the address limit holds across accounts; every answer carries the content security policy and frame, sniffing and referrer headers, and HSTS only over HTTPS; /health answers 503 when the database is unreachable |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6: 5 of 5. Counting successes, never blocking, ignoring the address limit and skipping the database probe each failed it |
+| Traceability | FR-001, FR-004, NFR-003, NFR-006, #111, #122, #155 |
+| Interpretation | Closes the missing rate limit recorded in s28.2 and s36; the counts are per process, which suits the single instance (RSK-26) |
+
+**Automated by**
+
+- `tests/http-hardening.test.js`: failures past the limit answer 429 with Retry-After, and the handler is not run [#155]
+- `tests/http-hardening.test.js`: successes do not count, so an honest user is never held back [#155]
+- `tests/http-hardening.test.js`: the address limit holds across accounts [#155]
+- `tests/http-hardening.test.js`: every answer carries the security headers; HSTS only over HTTPS [#155]
+- `tests/http-hardening.test.js`: NFR-003: the health check answers 503 when the database cannot be reached [#155]
+
+## Against PostgreSQL and the deployed product
 
 ### TC-32 The API suites against PostgreSQL
 
@@ -875,17 +1029,17 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Test basis | FR-008, FR-016, FR-025, FR-026, NFR-005; ADR-007 |
 | Why selected | The in-memory store imitates the database; the sequence, the unique constraint, real transactions and the audit table's privileges only exist in PostgreSQL |
 | Technique and level | API and integration against PostgreSQL 16 |
-| Input or precondition | The Prisma schema and seed data (#109) and the adapter (#108); TC-22 to TC-26 run with the store in `tests/support/api.js` replaced by the adapter |
-| Expected result | The same results as TC-22 to TC-26, plus: references unique under concurrent submission; a failed audit write rolls back the change; the application's database role cannot update or delete audit rows |
-| Actual result | Not run |
-| Status | Blocked: needs #108 and #109 |
-| Evidence | None yet |
-| Traceability | #121, #108, #109, ADR-007 |
-| Interpretation | Not yet available |
+| Input or precondition | A migrated PostgreSQL 16 database (#109) and the adapter (#108); the application built as the server builds it (`src/app.js`, `src/wiring.js`); its own users, categories and requests, removed afterwards |
+| Expected result | Through HTTP with a session per user: the reference comes from the sequence; invalid input writes nothing; another requester and Staff outside the category get the same 404 as a missing reference; two concurrent moves from one state write exactly one; one audit entry per changed field, row by row; the queue's scope, search and priority sorts; a rejection's reason reaches the requester; the four notification kinds; the report breakdown and a Manager's scope; a new account's setup code, its deactivation ending its session; a reset that ends the earlier session. The application's database role cannot update or delete audit rows |
+| Actual result | As expected |
+| Status | Pass |
+| Evidence | Local run, 17 October 2026, Node 24.14.0 on Windows 11, #155 at f5453f6, PostgreSQL 16.13: 1 of 1 (one test, every step above). Removing the conditional update, dropping an audit entry, and leaving the session version unchanged on reset each failed it, and it found the account-event check constraint refusing the administration events, fixed by a migration. The audit privilege: in simulated production, as `civicconnect_app`, UPDATE and DELETE on `audit_entries` and `request_status_history` answer permission denied (`docs/deployment/app-role.sql`) |
+| Traceability | #121, #108, #109, ADR-007, #155 |
+| Interpretation | The services keep their contracts over the real database; the conditional writes and the sequence hold under PostgreSQL |
 
 **Automated by**
 
-(none yet)
+- `tests/api-postgres.test.js`: TC-32: the API against PostgreSQL [#155]
 
 ### TC-33 Journey: a requester submits and follows a request
 
@@ -893,14 +1047,14 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 |---|---|
 | Test basis | FR-001, FR-005 to FR-011 |
 | Why selected | The most common journey, across the client, the server and the database |
-| Technique and level | End to end in the browser (Playwright) against staging |
+| Technique and level | End to end in the browser (Playwright) against the deployed product |
 | Input or precondition | Staging (#122) with seed data (#109): a requester account and an active category, named in the environment (`e2e/README.md`) |
 | Expected result | The requester signs in and lands on their requests; an empty form is refused with all five fields named; a complete submission gets a reference in the agreed format; the detail shows what was typed, the status New and its first history entry; the list holds the request once, with its title and status |
-| Actual result | Not run against staging. Against a local stand-in of the API contract: as expected |
-| Status | Blocked: needs staging (#122) and the seed data (#109) |
-| Evidence | The journey is #138. Local run against the stand-in, 7 October 2026, client at 7948369: passed. Removing the form's error summary failed it |
-| Traceability | #123, #138, #122, #109 |
-| Interpretation | The journey is ready and its steps match the client; it shows nothing about the real server until it runs on staging |
+| Actual result | As expected, against the integrated server on PostgreSQL and against simulated production over HTTPS |
+| Status | Pass |
+| Evidence | The journey is #138. Local run against the stand-in, 7 October 2026, client at 7948369: passed; removing the form's error summary failed it. 17 October 2026: passed against the integrated server (#155), and against simulated production at rc-8f72f99 over HTTPS with Secure cookies, as the least-privilege database role (`docs/deployment/simulated-production.md`) |
+| Traceability | #123, #138, #122, #109, #155 |
+| Interpretation | The requester's journey works end to end through the real API and database |
 
 **Automated by**
 
@@ -912,14 +1066,14 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 |---|---|
 | Test basis | FR-011, FR-013 to FR-021, FR-025 |
 | Why selected | The workflow journey, with three users acting on one request, each with their own session |
-| Technique and level | End to end in the browser (Playwright) against staging, with three browser contexts |
+| Technique and level | End to end in the browser (Playwright) against the deployed product, with three browser contexts |
 | Input or precondition | Staging (#122) with seed data (#109): Requester, Coordinator and Staff accounts, and an active category the Staff member is authorised for |
 | Expected result | The requester reports Low urgency; the Coordinator finds the request in the queue and sets the priority to High, with the reported urgency still Low beside it, and assigns it, with Assign disabled until a staff member is chosen; the Staff member starts work, adds an internal note and a visible update, and resolves it with a summary; the Coordinator closes it, with Close disabled until confirmed, and no moves remain; the history shows each step and who made it; the requester sees Closed, the resolution, the visible update and their own urgency, and not the internal note or the priority |
-| Actual result | Not run against staging. Against a local stand-in of the API contract: as expected |
-| Status | Blocked: needs staging (#122) and the seed data (#109) |
-| Evidence | The journey is #138. Local run against the stand-in, 12 October 2026, #138 at 29f0005, client at f9fe939: passed, and passed with CI set. Enabling Assign before a choice, sending internal notes to the requester (7 October), and setting the priority overwriting the reported urgency (12 October, which the journey before 29f0005 passed) each failed it |
-| Traceability | #123, #138, #122, #109 |
-| Interpretation | The journey is ready and its steps match the client; it shows nothing about the real server until it runs on staging |
+| Actual result | As expected, against the integrated server on PostgreSQL and against simulated production over HTTPS. Its first run against the real server failed: the staff detail had no moves, and a rejection's reason never reached the requester; both were fixed in #155 (TC-15) |
+| Status | Pass |
+| Evidence | The journey is #138. Local run against the stand-in, 12 October 2026, #138 at 29f0005, client at f9fe939: passed, and passed with CI set. Enabling Assign before a choice, sending internal notes to the requester (7 October), and setting the priority overwriting the reported urgency (12 October, which the journey before 29f0005 passed) each failed it. 17 October 2026: passed against the integrated server (#155), and against simulated production at rc-8f72f99 over HTTPS, as the least-privilege database role |
+| Traceability | #123, #138, #122, #109, #155 |
+| Interpretation | The workflow journey works end to end with three users on the real API and database; the stand-in had hidden two defects the journey then found |
 
 **Automated by**
 
@@ -934,8 +1088,8 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 | Technique and level | Performance against staging: two timed scenarios with the requirements' own methods, and one small concurrent run |
 | Input or precondition | Staging (#122) with 5,000 requests seeded through the API by `perf/seed.mjs`, a tenth rejected and three tenths assigned; the Requester and Coordinator accounts (#109); the paged queue endpoint (#114) |
 | Expected result | NFR-001: the 95th percentile of 20 retrievals of the first queue page under 2.0 s, the distribution recorded. NFR-002: the 95th percentile of 20 submissions under 3.0 s. Concurrent run (10 clients, 30 s): no target set; latency, throughput and errors recorded |
-| Actual result | Not run against staging. The statistics, the outcome rules and the client are tested; trials against the API stand-in on 7 and 12 October completed, and NFR-001 marked them invalid, with the reason, because the stand-in returns the whole queue rather than one page |
-| Status | Blocked: needs staging (#122), the seed data (#109) and the queue endpoint (#114) |
+| Actual result | Against the simulated production build at rc-f47d054 on its own database, 17 October 2026, with 5,000 requests seeded through the API (500 rejected, 1,500 assigned, none failed): NFR-001, 20 of 20 retrievals of the first page of a 5,003-request queue, p50 5.7 ms, p95 7.4 ms, meets. NFR-002, 20 of 20 submissions, p50 6.7 ms, p95 7.9 ms, meets. Concurrent run, 10 clients for 30 s: 16,237 retrievals, 554.7 a second, no errors, p95 24.5 ms, p99 28 ms. The earlier trials against the stand-in were marked invalid, as designed |
+| Status | Pass, on the simulated production build. Client and server share one machine, so no network time is included |
 | Evidence | The scripts and method are #139 (`docs/quality/performance/README.md`). The statistics, the outcome rules (exactly the first page, at least 20 samples, the unrounded verdict) and the client (non-JSON answers, ended sessions): local run, 12 October 2026, #139 at 3ccee48, 13 of 13 tests. Results from staging go to `docs/quality/performance/results/` |
 | Traceability | #124, #139, NFR-001, NFR-002, ASR-02 |
 | Interpretation | Not yet available. The README records what a result will not show: production scale, dates spread over months, writes during reads, screen drawing time, and other hosts |
