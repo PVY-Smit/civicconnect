@@ -13,8 +13,9 @@
 // An actor whose role grants neither view is refused before any query (NFR-005, deny by default). The
 // policy's scope for an unknown role also matches nothing, so the query would load nothing either.
 
-import { actionEntryScope, ownRequests, permits, scopedWhere } from "../authorisation-policy/policy.js";
+import { actionEntryScope, authoriseTransition, ownRequests, permits, scopedWhere } from "../authorisation-policy/policy.js";
 import { isReference } from "../request-capture/reference.js";
+import { allowedMoves } from "../workflow-status/transitions.js";
 
 // Oldest first. Array sort is stable, so entries with the same time keep the store's order.
 const inTimeOrder = (rows) => [...rows].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -43,6 +44,7 @@ export async function getRequestDetail(actor, reference, { requests }) {
   if (!permits(actor, "viewOwnRequests") && !permits(actor, "viewRequestsInScope")) return { ok: false, code: "not-found" };
   if (!isReference(reference)) return { ok: false, code: "not-found" };
   const entries = actionEntryScope(actor);
+  const staffView = permits(actor, "viewRequestsInScope");
   const r = await requests.findOne({ where: scopedWhere(actor, { reference }), entryWhere: entries.where });
   if (!r) return { ok: false, code: "not-found" };
 
@@ -57,16 +59,37 @@ export async function getRequestDetail(actor, reference, { requests }) {
     resolutionSummary: r.resolutionSummary ?? null,
     submittedAt: r.createdAt,
     updatedAt: r.updatedAt,
-    statusHistory: inTimeOrder(r.statusHistory).map((h) => ({ from: h.fromStatus ?? null, to: h.toStatus, at: h.createdAt })),
+    // FR-020: the Requester sees the reason for a rejection. Other reasons (a hold, a reopening) are
+    // working notes, so only staff see them, with who made each change and who wrote each entry.
+    statusHistory: inTimeOrder(r.statusHistory).map((h) => ({
+      from: h.fromStatus ?? null,
+      to: h.toStatus,
+      at: h.createdAt,
+      ...(h.reason && (staffView || h.toStatus === "Rejected") ? { reason: h.reason } : {}),
+      ...(staffView && h.actor?.name ? { by: h.actor.name } : {}),
+    })),
     actionEntries: inTimeOrder(r.actionEntries)
       .filter((e) => entries.matches(e))
-      .map((e) => ({ body: e.body, at: e.createdAt, ...(e.visibility === "internal" ? { visibility: "internal" } : {}) })),
+      .map((e) => ({
+        body: e.body,
+        at: e.createdAt,
+        ...(e.visibility === "internal" ? { visibility: "internal" } : {}),
+        ...(staffView && e.author?.name ? { author: e.author.name } : {}),
+      })),
   };
   // Staff, Coordinators and Managers also see the operational fields. FR-021 keeps priority separate from
   // the urgency the Requester reported, and the Requester's view shows only what they supplied.
-  if (permits(actor, "viewRequestsInScope")) {
+  //
+  // They also get what the staff screen offers, decided here and never by the client (ADR-005, ADR-006):
+  // moves lists the status changes the transition table and the policy allow this actor on this request,
+  // with the inputs each needs, and capabilities says whether the actor may set the priority or record an
+  // entry. The workflow service checks every one again when it is sent.
+  if (staffView) {
     detail.priority = r.priority ?? null;
     detail.assigneeId = r.assigneeId ?? null;
+    detail.assignee = r.assignee ? { id: r.assignee.id, name: r.assignee.name } : null;
+    detail.moves = allowedMoves({ actor, request: r, authorise: authoriseTransition }).map((m) => ({ to: m.to, requires: [...m.requires] }));
+    detail.capabilities = { setPriority: permits(actor, "setPriority"), recordActionEntry: permits(actor, "recordActionEntry") };
   }
   return { ok: true, request: detail };
 }

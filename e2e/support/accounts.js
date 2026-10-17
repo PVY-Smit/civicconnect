@@ -28,3 +28,7 @@ export const category = () => required("E2E_CATEGORY");
 // Where journeys/sign-in.setup.js saves a role's signed-in state, and where each journey starts from it.
 // The folder is ignored by git: the files hold session tokens.
 export const stateFile = (role) => fileURLToPath(new URL(`../.auth/${role.toLowerCase()}.json`, import.meta.url));
+
+// A seeded Manager, for the screens only a Manager has (users and categories). Read only by the journeys
+// that visit them, so the other journeys do not need it set.
+export const manager = () => account("Manager");
