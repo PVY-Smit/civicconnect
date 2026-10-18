@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     services:
@@ -49,7 +49,6 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             client/package-lock.json
-            perf/package-lock.json
 
       - name: Install (root)
         run: npm ci
@@ -70,10 +69,6 @@ jobs:
       - name: Tests (client)
         working-directory: client
         run: node --test
-
-      - name: Install (perf)
-        working-directory: perf
-        run: npm ci
 
       - name: Tests (perf)
         working-directory: perf
