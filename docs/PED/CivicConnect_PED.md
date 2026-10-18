@@ -1588,7 +1588,17 @@ The Risk Register holds each risk's final status, set by its owner.
 | RSK-28 Derived notification queries get slow as history grows | Accepted | Notification performance has not been measured and the implementation reads each requester's requests with their history; the known limitation is accepted at the current scale. |
 | RSK-29 External notification delivery is added without retry or idempotency | Closed | No external notification channel is included in the delivered scope and SC-D-01 remains deferred, so this failure mode is not present in the delivered system. |
 
-[To be completed under #128: the final status of Darius Mushi's nine risks, from their owner]
+| **Risk (owner Darius Mushi)** | **Final status** | **Reason** |
+|----|----|----|
+| RSK-03 The formal client change request arrives against an unchanged baseline | Closed | The M3 changes (CR-002, CR-004 with DEC-016 and DEC-017, CR-005, CR-006) all went through change control (PED s29), and CR-005 and CR-006 were answered on #95 and #126. |
+| RSK-06 Committed scope grows without control | Closed | The final product stays inside the M1 scope, every deferred and out-of-scope item stayed outside it (s38.5), and the Final's additions close recorded gaps and add no new feature. |
+| RSK-09 The status model proves ambiguous after data exists | Mitigated | The status model did not change through M3 or the Final, and TC-05 and TC-24 check the coded table and every status pair, but a future change could still make it ambiguous. |
+| RSK-12 A dependency introduces a vulnerability | Mitigated | The Prisma advisories are handled by the overrides and npm audit shows 0, and the one new dependency is pinned to an older release. CI (#156) does not run npm audit yet, so that check is manual. |
+| RSK-16 The coded transition table and the Status Model register drift apart | Mitigated | TC-05 runs in npm test on every pull request through CI (#156), now a required check on main. export_register_fixtures.py --check is not run by CI. |
+| RSK-20 A backup exists but cannot restore | Mitigated | A backup was restored into an empty database on 17 October and matched row for row, but backups are manual and kept on the same machine. |
+| RSK-25 An unpinned Prisma install mixes versions | Mitigated | Prisma is pinned exactly and the runbook uses npx --no-install, but a failed install nearly caused this in the deployment rehearsal. |
+| RSK-26 node-cron runs in more than one instance | Accepted | node-cron is a dependency but no code uses it, the deployment runs one instance, and the sign-in limits held in one process's memory (TD-005) would need sharing before a second instance is run. |
+| RSK-30 The campus environment differs from Node 24 and PostgreSQL 16 | Open | No campus check was recorded on #64 and none was run. The product has run on Jean Smit's machine, simulated production and Tristan Roets's walkthrough on Node 24.20 and PostgreSQL 16.15 (#155), but none of these is the campus environment. |
 
 ## 39.4 Technical debt
 
