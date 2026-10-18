@@ -1280,6 +1280,16 @@ Before staging exists the scripts were run against the local stand-in of the API
 
 The Defect Register records the main defects found during Milestone 3 and links each one to the requirement or evidence it affected, its impact, its fix and any regression evidence.
 
+Five defects were recorded in the Defect Register in M3, all of High severity, and each is fixed with a regression test:
+
+| **ID** | **Severity** | **Requirement affected** | **Defect / impact** | **Fix** | **Regression test / evidence** |
+|----|----|----|----|----|----|
+| DEF-001 | High | FR-001 / NFR-004 | ADR-007 User model originally omitted passwordHash, leaving the controlled design incomplete for authentication and credential storage. | User model corrected through the database/schema work (#109/#140) and carried into the integrated PostgreSQL implementation in #155. | TC-32: tests/api-postgres.test.js; integrated authentication/database flow against PostgreSQL. |
+| DEF-002 | High | FR-002 / NFR-005 | Access Matrix incorrectly granted Manager the Assign function, creating an authorisation mismatch. | CR-002 corrected the controlled Access Matrix and aligned it with the authorisation policy (#136/#92). | TC-01: tests/authorisation-policy.test.js; TC-22: tests/api-decision-table.test.js. |
+| DEF-003 | High | FR-002 / NFR-005 | Access Matrix incorrectly granted Coordinator the Accept-unassigned function. | CR-002 corrected the controlled Access Matrix and aligned the permission with the policy (#136/#92). | TC-01: tests/authorisation-policy.test.js; TC-22: tests/api-decision-table.test.js. |
+| DEF-004 | High | FR-002 / NFR-005 | Access Matrix incorrectly granted Manager the Reject function. | CR-002 corrected the controlled Access Matrix and aligned the permission with the policy (#136/#92). | TC-01: tests/authorisation-policy.test.js; TC-22: tests/api-decision-table.test.js. |
+| DEF-005 | High | FR-002 / NFR-005 | Access Matrix incorrectly granted Manager the Set priority function. | CR-002 corrected the controlled Access Matrix and aligned the permission with the policy (#136/#92). | TC-01: tests/authorisation-policy.test.js; TC-22: tests/api-decision-table.test.js. |
+
 Several defects were found in the controlled project artefacts rather than only in the running software. These included an incomplete User model in ADR-007 and incorrect permissions in the Access Matrix. The permission defects affected actions such as assigning requests, accepting unassigned requests, rejecting requests and setting priority. These findings were corrected through the controlled change process and are recorded in the Defect Register under #125.
 
 The project also records technical debt separately from defects. Current technical debt includes the controlled fixture re-export, the deferred production database, temporary Prisma advisory overrides and the Manager-assisted password-reset limitations. These items are not treated as completed defects because they are known limitations or work that has deliberately been deferred.
