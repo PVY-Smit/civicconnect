@@ -1529,16 +1529,16 @@ Every change to the baseline went through change control (s29) except one. FR-00
 
 ## 39.1 Defects
 
-The Defect Register (#125) holds each defect with how it was found, its fix and its regression test. [To be completed under #128: the Defect Register's final rows from Tristan Roets, with DEF-001 to DEF-005 from M3 and the defects found in the Final]
+The Defect Register (#125) holds each defect with how it was found, its fix and its regression test. DEF-001 to DEF-008, found in M3, are in s35, all fixed with regression tests. [To be completed under #128: the Defect Register's final rows from Tristan Roets for DEF-009 to DEF-012]
 
 The Final's defects were found by running the product as a whole, which the stand-in of M3 could not do:
 
-| **Defect** | **Found by** | **Fix** | **Regression test** |
-|----|----|----|----|
-| A rejection's reason never reached the requester (FR-020) | TC-34 against the real server | #155 | TC-15, TC-32 |
-| The staff detail carried no moves, so the staff screen offered no actions | TC-34 against the real server | #155 | TC-15 |
-| The account-event check constraint refused the administration events | TC-32 | #155, a migration | TC-32 |
-| The queue's date fields showed no focus ring on their calendar button (NFR-010) | TC-45 | #155 | TC-45 |
+| **ID** | **Defect** | **Found by** | **Fix** | **Regression test** |
+|----|----|----|----|----|
+| DEF-009 | A rejection's reason never reached the requester (FR-020) | TC-34 against the real server | #155 | TC-15, TC-32 |
+| DEF-010 | The staff detail carried no moves, so the staff screen offered no actions | TC-34 against the real server | #155 | TC-15 |
+| DEF-011 | The account-event check constraint refused the administration events | TC-32 | #155, a migration | TC-32 |
+| DEF-012 | The queue's date fields showed no focus ring on their calendar button (NFR-010) | TC-45 | #155 | TC-45 |
 
 ## 39.2 The M3 blockers and failed checks
 
