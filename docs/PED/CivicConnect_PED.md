@@ -1468,7 +1468,7 @@ This is the final RTM's status (the RTM sheet, columns O to S, CR-006), summaris
 | NFR-001 Queue performance | Must | IMPLEMENTED | 1 of 1 | TC-35 |  |
 | NFR-002 Submission performance | Must | IMPLEMENTED | 1 of 1 | TC-35 |  |
 | NFR-003 Availability | Should | NOT IMPLEMENTED | 0 of 1 | TC-44 | 98% availability, assessed monthly: Not met, the probe target exists (TC-44), but no month of hosted service exists to measure |
-| NFR-004 Password storage | Must | IMPLEMENTED | 1 of 1 | TC-36, TC-38 |  |
+| NFR-004 Password storage | Must | IMPLEMENTED | 1 of 1 | TC-36 and the RSK-01 test (tests/rsk01.test.js; its catalogue record is in #151) |  |
 | NFR-005 Negative access matrix | Must | IMPLEMENTED | 1 of 1 | TC-01, TC-22, TC-32 |  |
 | NFR-006 HTTPS | Must | IMPLEMENTED | 1 of 1 | TC-44, smoke check |  |
 | NFR-007 Secret scanning | Must | IMPLEMENTED | 1 of 1 | s30.3 |  |
