@@ -1358,7 +1358,7 @@ The Final Project concludes the same project: sections 1 to 36 are kept as writt
 | GitHub repository | https://github.com/PVY-Smit/civicconnect |
 | Final commit and tag | [To be completed under #128: the tag v1.0.0, its commit on main, and the date it was made] |
 | PED version | v4.0 Final |
-| Final RTM | s38.2 of this document, the final status of every M1 acceptance criterion with its evidence, and `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM [To be completed under #128: whether the RTM sheet carries CR-006's columns, which depend on Darius Mushi's answer on #126] |
+| Final RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM: columns O to S (CR-006, approved 18 October 2026) give each requirement's test cases, expected result, execution evidence, defects, and the status of each of its acceptance criteria. s38.2 summarises it |
 | Product access | The product runs in the simulated production environment described in s41 and `docs/deployment/simulated-production.md`, at https://localhost:8443 on the presenting member's machine. It is demonstrated live from that environment at the release tag. Seeded accounts for each role are configured there and are not published |
 | Date submitted | [To be completed under #128] |
 
@@ -1412,67 +1412,87 @@ The M1 scope baseline (s6, the Scope Baseline sheet) committed thirteen in-scope
 | SC-I-07 Controlled status transitions | FR-016, FR-018 to FR-020 | IMPLEMENTED | Delivered as committed |
 | SC-I-08 Internal and requester-visible entries | FR-017 | IMPLEMENTED | Delivered as committed |
 | SC-I-09 Coordinator-owned prioritisation | FR-021 | IMPLEMENTED | Delivered as committed |
-| SC-I-10 Management counts by category and status | FR-022 to FR-024 | IMPLEMENTED | The overdue target is configuration whose value the organisation sets (FEC-02) |
+| SC-I-10 Management counts by category and status | FR-022 to FR-024 | IMPLEMENTED, with one FR-022 criterion Partially met | The counts are verified; the overdue target is configuration, not defined in the status model, and the organisation sets its value (FEC-02) |
 | SC-I-11 Append-only audit trail | FR-025, FR-026 | IMPLEMENTED | Enforced in the application and by the database's privileges |
 | SC-I-12 Category maintenance and user deactivation | FR-027, FR-028 | IMPLEMENTED | Delivered as committed |
 | SC-I-13 In-application notification | FR-009, FR-029 | IMPLEMENTED | Delivered as committed |
 
 ## 38.2 Final status of every M1 acceptance criterion
 
-This is the final RTM's status column: each of the 42 baselined requirements, 29 functional and 13 non-functional, with its acceptance criterion's final status, the evidence and the reason for any variance. Met counts 1.0, Partially met 0.5 and Not met 0.0 (Final brief, Scope Completion Calculation). Every criterion is still in the baseline: no change request removed or changed one, so the denominator is 42.
+This is the final RTM's status (the RTM sheet, columns O to S, CR-006), summarised by requirement. CR-006 was approved on the condition that completion is counted per acceptance criterion, since some requirements hold several criteria in one row (#126). Each requirement's criterion is therefore split into its GIVEN clauses or sentences, giving 69 criteria from the 42 requirements: 56 functional and 13 non-functional. Each criterion's own status, with its evidence, is in the RTM's column S. Met counts 1.0, Partially met 0.5 and Not met 0.0 (Final brief, Scope Completion Calculation). No change request removed or changed a criterion, so every one is in the denominator.
 
-| **Requirement** | **M1 priority** | **Final status** | **Criterion** | **Evidence** | **Conclusion or reason for variance** |
+| **Requirement** | **M1 priority** | **Final status** | **Criteria** | **Evidence** | **Conclusion or reason for variance** |
 |----|----|----|----|----|----|
-| FR-001 Authentication | Must | IMPLEMENTED | Met | TC-08 to TC-11, TC-23, TC-32, TC-33 | Generic failure, 401 with no data, and the client sends the visitor to sign in |
-| FR-002 Role-based access | Must | IMPLEMENTED | Met | TC-01, TC-11, TC-22, TC-32 | Every cell of the Access Matrix decided by the policy and checked on the server |
-| FR-003 Account creation | Must | IMPLEMENTED | Met | TC-43, TC-32 | The new account authenticates with only its role's permissions; a non-Manager is refused |
-| FR-004 Credential reset | Should | PARTIALLY IMPLEMENTED | Partially met | TC-36, TC-32 | The code is single-use, expires, and every failure gets one answer, as the criterion asks of a link. The reset is Manager-assisted, not self-service, because the email channel is deferred (SC-D-01). Recorded as TD-004 and in s28.2, but not changed through a change request |
-| FR-005 Submission | Must | IMPLEMENTED | Met | TC-14, TC-32, TC-33 | |
-| FR-006 Controlled category | Must | IMPLEMENTED | Met | TC-13, TC-43, TC-32 | A deactivated category is refused, also when deactivated during the submission |
-| FR-007 Validation | Must | IMPLEMENTED | Met | TC-13, TC-25, TC-26, TC-37, TC-32 | |
-| FR-008 Unique reference | Must | IMPLEMENTED | Met | TC-12, TC-32 | From the sequence through the keyed permutation, under the unique constraint |
-| FR-009 Acknowledgement | Must | IMPLEMENTED | Met | TC-14, TC-33 | |
-| FR-010 Requester's list | Must | IMPLEMENTED | Met | TC-15, TC-33 | |
-| FR-011 Detail and history | Must | IMPLEMENTED | Met | TC-03, TC-15, TC-34 | |
-| FR-012 Record isolation | Must | IMPLEMENTED | Met | TC-02, TC-15, TC-23, TC-32 | Another's reference and a missing one get the same 404, in the database too |
-| FR-013 Work queue | Must | IMPLEMENTED | Met | TC-40, TC-32, TC-34 | |
-| FR-014 Search, filter, sort | Must | IMPLEMENTED | Met | TC-29, TC-40, TC-32 | |
-| FR-015 Assignment and acceptance | Must | IMPLEMENTED | Met | TC-16, TC-32, TC-34 | |
-| FR-016 Permitted transitions | Must | IMPLEMENTED | Met | TC-05 to TC-07, TC-24, TC-32 | |
-| FR-017 Action entries | Must | IMPLEMENTED | Met | TC-20, TC-32, TC-34 | |
-| FR-018 Resolution summary | Must | IMPLEMENTED | Met | TC-17, TC-32, TC-34 | |
-| FR-019 Closing | Should | IMPLEMENTED | Met | TC-17, TC-32, TC-34 | |
-| FR-020 Rejection with reason | Should | IMPLEMENTED | Met | TC-15, TC-17, TC-32 | The reason reaches the requester since the Final fix (DEF-006) |
-| FR-021 Urgency and priority | Must | IMPLEMENTED | Met | TC-19, TC-32, TC-34 | |
-| FR-022 Management counts | Must | IMPLEMENTED | Met | TC-30, TC-42, TC-32 | The counts' meaning is stated in `reports/service.js`; the target is configuration (FEC-02) |
-| FR-023 Breakdown | Should | IMPLEMENTED | Met | TC-30, TC-42, TC-32 | |
-| FR-024 Overdue list | Should | IMPLEMENTED | Met | TC-42, TC-32 | |
-| FR-025 Audit entries | Must | IMPLEMENTED | Met | TC-04, TC-18, TC-32 | Checked row by row in the database |
-| FR-026 No audit edit or delete | Must | IMPLEMENTED | Met | TC-04, TC-32, s41.2 | No route exists, and the application's database role is refused UPDATE and DELETE |
-| FR-027 Category maintenance | Should | IMPLEMENTED | Met | TC-43, TC-31, TC-32 | Deactivated, never deleted |
-| FR-028 User deactivation | Could | IMPLEMENTED | Met | TC-43, TC-32 | A deactivated account's session stops at once; what it authored stays attributed |
-| FR-029 Notification | Must | IMPLEMENTED | Met | TC-41, TC-32 | |
-| NFR-001 Queue performance | Must | IMPLEMENTED | Met | TC-35, s41.2 | p95 7.4 ms against 2.0 s with 5,000 requests, on the simulated production build; no network in the path |
-| NFR-002 Submission performance | Must | IMPLEMENTED | Met | TC-35 | p95 7.9 ms against 3.0 s, under the same condition |
-| NFR-003 Availability | Should | NOT IMPLEMENTED | Not met | /health (TC-44) | The probe target exists, but 98% across a month of service hours cannot be measured without a hosted service running for a month (s41) |
-| NFR-004 Password storage | Must | IMPLEMENTED | Met | TC-36, the RSK-01 test | argon2id with a per-user salt; no other storage |
-| NFR-005 Negative access matrix | Must | IMPLEMENTED | Partially met | TC-01, TC-22, TC-32 | All 60 cells are decided by the policy; through the endpoints, 48 cells are called and 12 are checked at the permission check their routes use (#147). [To be completed under #128: whether the remaining 12 are called through the endpoints that #155 adds] |
-| NFR-006 HTTPS | Must | IMPLEMENTED | Met | Smoke check, s41.2 | Every request over HTTPS, plain HTTP redirected, HSTS, and a content security policy allowing only the same origin, in simulated production |
-| NFR-007 Secret scanning | Must | IMPLEMENTED | Met | s30.3 | [To be completed under #128: the full-history Gitleaks run at the tag] |
-| NFR-008 Personal data | Must | [To be completed under #128: from the Personal Data Inventory (#144)] | | | |
-| NFR-009 First-time usability | Should | [To be completed under #128: Met only if the five-participant task test is run] | | | |
-| NFR-010 Accessibility | Should | IMPLEMENTED | Met | TC-45 | No WCAG 2.1 A or AA violation on any screen, keyboard reachable with a visible focus indicator; it found and fixed one defect (DEF-009) |
-| NFR-011 Audit completeness | Must | IMPLEMENTED | Met | TC-18, TC-32 | |
-| NFR-012 Tests gate every merge | Must | [To be completed under #128: Met only once the CI workflow (#110) is a required check on main] | | | |
-| NFR-013 Zero running cost | Must | IMPLEMENTED | Partially met | s24, s41 | Simulated production costs nothing. The free-tier limits are documented (s24); [To be completed under #128: the projected cost beyond the educational context] |
+| FR-001 Authentication | Must | IMPLEMENTED | 3 of 3 | TC-08, TC-09, TC-10, TC-11, TC-23, TC-27, TC-32, TC-33 |  |
+| FR-002 Role-based access | Must | IMPLEMENTED | 1 of 1 | TC-01, TC-11, TC-22, TC-32 |  |
+| FR-003 Account creation | Must | IMPLEMENTED | 2 of 2 | TC-43, TC-32, TC-31 |  |
+| FR-004 Credential reset | Should | PARTIALLY IMPLEMENTED | 1 of 2 | TC-36, TC-32, TC-44 | same message whether or not the account exists: Partially met, every failed reset gets one answer and a dummy check (TC-36), but there is no self-service reset request, because the reset is Manager-assisted; a reset link is single-use and expires: Partially met, the Manager-issued code that replaces the link is single-use, expires after 24 hours and is withdrawn after five wrong tries (TC-36, TC-32); there is no link. Not changed through a change request (PED s29 item 6) |
+| FR-005 Submission | Must | IMPLEMENTED | 2 of 2 | TC-14, TC-15, TC-32, TC-33 |  |
+| FR-006 Controlled category | Must | IMPLEMENTED | 2 of 2 | TC-13, TC-26, TC-43, TC-32 |  |
+| FR-007 Validation | Must | IMPLEMENTED | 1 of 1 | TC-13, TC-25, TC-26, TC-37, TC-32, TC-33 |  |
+| FR-008 Unique reference | Must | IMPLEMENTED | 4 of 4 | TC-12, TC-32, TC-33 |  |
+| FR-009 Acknowledgement | Must | IMPLEMENTED | 1 of 1 | TC-14, TC-33 |  |
+| FR-010 Requester's list | Must | IMPLEMENTED | 1 of 1 | TC-15, TC-33, TC-32 |  |
+| FR-011 Detail and history | Must | IMPLEMENTED | 2 of 2 | TC-03, TC-15, TC-32, TC-34 |  |
+| FR-012 Record isolation | Must | IMPLEMENTED | 1 of 1 | TC-02, TC-15, TC-22, TC-23, TC-32 |  |
+| FR-013 Work queue | Must | IMPLEMENTED | 2 of 2 | TC-40, TC-22, TC-32, TC-34 |  |
+| FR-014 Search, filter, sort | Must | IMPLEMENTED | 1 of 1 | TC-40, TC-29, TC-32 |  |
+| FR-015 Assignment and acceptance | Must | IMPLEMENTED | 3 of 3 | TC-16, TC-22, TC-37, TC-32, TC-34 |  |
+| FR-016 Permitted transitions | Must | IMPLEMENTED | 2 of 2 | TC-05, TC-06, TC-07, TC-24, TC-32 |  |
+| FR-017 Action entries | Must | IMPLEMENTED | 2 of 2 | TC-20, TC-32, TC-34 |  |
+| FR-018 Resolution summary | Must | IMPLEMENTED | 2 of 2 | TC-17, TC-32, TC-34 |  |
+| FR-019 Closing | Should | IMPLEMENTED | 3 of 3 | TC-17, TC-22, TC-32, TC-34 |  |
+| FR-020 Rejection with reason | Should | IMPLEMENTED | 2 of 2 | TC-17, TC-15, TC-32 |  |
+| FR-021 Urgency and priority | Must | IMPLEMENTED | 4 of 4 | TC-19, TC-22, TC-32, TC-34 |  |
+| FR-022 Management counts | Must | PARTIALLY IMPLEMENTED | 1.5 of 2 | TC-42, TC-30, TC-32 | overdue uses the single organisation-wide target defined in the status model: Partially met, one organisation-wide target is used, but it is configuration (OVERDUE_TARGET_DAYS), because the Status Model register defines none (FEC-02) |
+| FR-023 Breakdown | Should | IMPLEMENTED | 1 of 1 | TC-42, TC-30, TC-32 |  |
+| FR-024 Overdue list | Should | IMPLEMENTED | 1 of 1 | TC-42, TC-32 |  |
+| FR-025 Audit entries | Must | IMPLEMENTED | 1 of 1 | TC-04, TC-18, TC-24, TC-32 |  |
+| FR-026 No audit edit or delete | Must | IMPLEMENTED | 3 of 3 | TC-04, TC-22, TC-32 |  |
+| FR-027 Category maintenance | Should | IMPLEMENTED | 2 of 2 | TC-43, TC-31, TC-32 |  |
+| FR-028 User deactivation | Could | IMPLEMENTED | 2 of 2 | TC-43, TC-09, TC-32 |  |
+| FR-029 Notification | Must | IMPLEMENTED | 1 of 1 | TC-41, TC-32 |  |
+| NFR-001 Queue performance | Must | IMPLEMENTED | 1 of 1 | TC-35 |  |
+| NFR-002 Submission performance | Must | IMPLEMENTED | 1 of 1 | TC-35 |  |
+| NFR-003 Availability | Should | NOT IMPLEMENTED | 0 of 1 | TC-44 | 98% availability, assessed monthly: Not met, the probe target exists (TC-44), but no month of hosted service exists to measure |
+| NFR-004 Password storage | Must | IMPLEMENTED | 1 of 1 | TC-36, TC-38 |  |
+| NFR-005 Negative access matrix | Must | IMPLEMENTED | 1 of 1 | TC-01, TC-22, TC-32 |  |
+| NFR-006 HTTPS | Must | IMPLEMENTED | 1 of 1 | TC-44, smoke check |  |
+| NFR-007 Secret scanning | Must | IMPLEMENTED | 1 of 1 | s30.3 |  |
+| NFR-008 Personal data | Must | PARTIALLY IMPLEMENTED | 0.5 of 1 | s38 | only the three kinds of personal information, each justified, access governed: Partially met, access is governed and tested (TC-01, TC-22); the inventory justifying each field is in #144, not merged |
+| NFR-009 First-time usability | Should | NOT IMPLEMENTED | 0 of 1 | none | 4 of 5 first-time users within 3 minutes: Not met, the moderated task test was not run |
+| NFR-010 Accessibility | Should | IMPLEMENTED | 1 of 1 | TC-45 |  |
+| NFR-011 Audit completeness | Must | IMPLEMENTED | 1 of 1 | TC-18, TC-32 |  |
+| NFR-012 Tests gate every merge | Must | PARTIALLY IMPLEMENTED | 0.5 of 1 | s31 | tests gate every merge: Partially met, the workflow runs every suite (#156); it gates a merge only once it is a required check on main |
+| NFR-013 Zero running cost | Must | PARTIALLY IMPLEMENTED | 0.5 of 1 | s41 | zero running cost, limits documented, cost beyond projected: Partially met, zero cost and the free-tier limits documented (s24); the cost beyond the educational context is not projected |
 
 ## 38.3 Scope Completion Percentage
 
-[To be completed under #128: the sum, the percentage and its band, once the five open rows above are final. With them as they stand on 17 October 2026, before NFR-008, NFR-009 and NFR-012 are decided, the 29 functional criteria give 28.5 and the 13 non-functional criteria give at least 8.5 (seven Met, three Partially met), so at least 37 of 42, 88.1 percent]
+| **Criteria** | **Count** | **Sum of final values** |
+|----|----|----|
+| Functional (FR-001 to FR-029) | 56 | 54.5 |
+| Non-functional (NFR-001 to NFR-013) | 13 | 9.5 |
+| All approved M1 criteria | 69 | 64 |
 
-## 38.4 Must-have criteria not fully met
+Scope Completion Percentage = 64 / 69 x 100 = **92.8 percent**, in the brief's 90 to 100 percent band. [To be completed under #128: recalculated at the tag, after #147, #157 and #156 merge and NFR-008, NFR-012 and NFR-013 are final]
 
-[To be completed under #128: each Must criterion still Partially met or Not met at the tag, with the reason from the evidence and its consequence for stakeholders]
+Every functional criterion is met except three, which are half met: FR-004's two and FR-022's second. Five non-functional criteria are not fully met. Each is set out in s38.4.
+
+## 38.4 Criteria not fully met
+
+**Must-have criteria.**
+
+**FR-022, the target's source.** The counts use one organisation-wide response target, as the criterion asks, but the target is configuration (`OVERDUE_TARGET_DAYS`, 10 days in simulated production), because the Status Model register defines none. The organisation's real value is FEC-02's open question. *Consequence:* overdue counts are only as right as the configured value; the counts themselves are verified (TC-42).
+
+[To be completed under #128: NFR-008, NFR-012 and NFR-013, each with its final status and reason at the tag]
+
+**Should-have criteria.**
+
+**FR-004, the reset.** A Manager issues a one-time code instead of the user requesting a link, because the email channel is deferred (SC-D-01). The code keeps what the criterion protects: it works once, expires, and every failure gets one answer. There is no self-service request and no link, and no change request changed the criterion (s29, item 6), so both criteria count as Partially met. *Consequence:* a user who forgets their password needs a Manager; two seeded Managers mean a Manager can always be reset.
+
+**NFR-003, availability.** The target is 98 percent of service hours, assessed monthly. With no hosted service running for a month (s41), it cannot be measured, so it is Not met. The health check it would probe answers 503 when the database is unreachable (TC-44).
+
+**NFR-009, first-time usability.** The moderated test with five first-time users was not run, so it is Not met. *Consequence:* whether residents can submit unaided is unknown, which s41 names as a reason not to go live.
 
 ## 38.5 Deferred and out-of-scope items
 
