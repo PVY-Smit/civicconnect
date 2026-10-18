@@ -142,7 +142,13 @@ milestone = re.search(r"\|\s*\*\*Milestone\*\*\s*\|\s*Milestone (\d+)", md).grou
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--out", type=Path, default=PED / f"CivicConnect_PED_v{version}.docx")
+ap.add_argument("--submission", action="store_true", help="refuse to build while any [To be completed ...] placeholder remains")
 args = ap.parse_args()
+if args.submission:
+    left = [n for n, line in enumerate(md.splitlines(), 1) if "[To be completed" in line]
+    if left:
+        raise SystemExit(f"{len(left)} placeholder(s) still to be completed, at lines {', '.join(map(str, left))}; "
+                         "the submitted copy is built only when none remains")
 if args.out.resolve() == TEMPLATE.resolve():
     raise SystemExit("refusing to overwrite the v1.0 artefact; pass --out to write elsewhere")
 
