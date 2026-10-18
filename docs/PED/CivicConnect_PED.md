@@ -1651,7 +1651,7 @@ M1 described an organisation whose service requests arrived through email, telep
 
 ## 42.2 Scope
 
-The approved M1 scope was delivered: all thirteen in-scope items are in the product (s38.1), and the Scope Completion Percentage is 94.2 percent, 65 of 69 acceptance criteria (s38.3). Every functional criterion is met except three that are half met, FR-004's two and FR-022's second, and each of those is a recorded decision, not a missing feature. What the percentage leaves out is everything that only a real deployment can show: availability over a month and real first-time users (NFR-003, NFR-009). Nothing in the baseline was dropped or changed without a record; the one change that should have been a change request, FR-004's reset, is counted against its unchanged criterion (s38.6).
+The approved M1 scope was delivered: all thirteen in-scope items are in the product (s38.1), and the Scope Completion Percentage is 94.2 percent, 65 of 69 acceptance criteria (s38.3). Every functional criterion is met except three that are half met, FR-004's two and FR-022's second, and each of those follows a recorded decision. What the percentage leaves out is everything that only a real deployment can show: availability over a month and real first-time users (NFR-003, NFR-009). Nothing in the baseline was dropped or changed without a record; the one change that should have been a change request, FR-004's reset, is counted against its unchanged criterion (s38.6).
 
 ## 42.3 Quality
 
@@ -1677,7 +1677,7 @@ If the project continued: host it on a paid service with a managed database and 
 
 ## 42.7 Conclusion
 
-CivicConnect set out to give an organisation one controlled record of every service request in place of email, phone calls, WhatsApp and paper. The final product does that: one integrated application on PostgreSQL in which every request has an unguessable reference, every change is authorised by one policy and recorded in an audit trail the database itself protects, and every requester can follow their own request. It meets 65 of the 69 acceptance criteria M1 approved, is verified end to end against the real database and in a browser, runs on a second member's machine, and gates every merge with its tests. What remains is the step from a verified product to a public service: a paid host and a managed database at a projected USD 13.30 a month at the least, a month of availability measured, and five first-time users. The team decided not to take that step without them (s41), and that decision is as much a result of the project as the software.
+CivicConnect set out to give an organisation one controlled record of every service request in place of email, phone calls, WhatsApp and paper. The final product does that: one integrated application on PostgreSQL in which every request has an unguessable reference, every change is authorised by one policy and recorded in an audit trail the database itself protects, and every requester can follow their own request. It meets 65 of the 69 acceptance criteria M1 approved, is verified end to end against the real database and in a browser, runs on a second member's machine, and gates every merge with its tests. What remains is the step from a verified product to a public service: a paid host and a managed database at a projected USD 13.30 a month at the least, a month of availability measured, and five first-time users. The team decided not to take that step without them, on the evidence in s41.
 
 ## 42.8 References for sections 37 to 42
 
