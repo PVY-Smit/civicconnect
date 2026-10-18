@@ -50,7 +50,7 @@ Status values: **Pass**, **Fail**, **Blocked** (cannot run yet, with the reason)
 | #132 (#113), stacked on #131 | `tests/workflow-service.test.js` | c84b7c1 |
 | #133 to #135 (#118 to #120) | `client/test/*.test.js` | 7948369 (the top of the stack) |
 | #136 (#92) | the CR-002 test in `tests/authorisation-policy.test.js` | 2c1b1f5 |
-| #121, not yet opened | `tests/api-*.test.js`, `tests/support/api.js` | c7535f4 (local), rebuilt on main with #131 and #132 merged in |
+| #147 (#121) | `tests/api-decision-table.test.js`, `tests/api-state-transitions.test.js`, `tests/api-submission-boundaries.test.js`, `tests/api-input-partitions.test.js`, `tests/support/api.js` | fde5954, with main at 789f737 (#155) merged in |
 | #138 (#123) | `e2e/journeys/*.spec.js` | 29f0005 |
 | #139 (#124) | `perf/test/lib.test.js`, and the scripts in `perf/` | 3ccee48 |
 | #146 (#111) | `tests/password-reset.test.js` | 6fa5e85 |
@@ -572,21 +572,25 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 
 | Field | Value |
 |---|---|
-| Test basis | NFR-005, FR-002, FR-011, FR-012; the Access Matrix register; CR-002 |
+| Test basis | NFR-005, FR-002, FR-011, FR-012, FR-013, FR-015; ASR-01; RSK-05; the Access Matrix register; CR-002 |
 | Why selected | TC-01 shows the policy is right; this shows each endpoint asks it. A route that forgets the check passes TC-01 |
-| Technique and level | Decision table, 15 functions by 4 roles, 60 cells, each cell one automated check that calls an endpoint; black-box at the API |
-| Input or precondition | One signed-in user per role, each with a request in scope; expectations read from the register fixture, with CR-002's four cells refused |
+| Technique and level | Decision table, 15 functions by 4 roles, 60 cells, each cell one automated check; 56 cells call the function's own endpoint, and the 4 cells of editAuditEntry, which FR-026 forbids having an endpoint, are checked at the permission check. Category scope is varied in separate cases; black-box at the API |
+| Input or precondition | One signed-in user per role, each with a request in scope (category 10); expectations read from the register fixture. For scope: Staff covering another category (11), a Staff member's own request in a category they do not cover, and a Manager covering category 10 only |
 | Expected result | Each cell succeeds where the register permits and is refused where it does not. A refusal is a 403, or a 404 for a request out of scope (FR-012), or the internal entry left out (FR-011), and writes nothing. For "change status", every move in the table succeeds exactly for the roles the model names. The management, category and user functions are checked at the permission check their routes will use |
-| Actual result | As expected for all 60 cells, and the table covers every function in the register (61 checks pass). Three functions, management counts, the category list and user accounts, have no endpoint of their own yet, so their 12 cells are checked at the permission check their routes will use. One todo per function (3) stands for the later call through its own endpoint; the todos are not cells |
-| Status | Pass, with three functions' own endpoints Not yet built (#115, #117) |
-| Evidence | Local run, 15 October 2026, #147 at 9fea651, rebased on main at d1af49a: 64 tests, 61 pass (60 cells and the coverage check) and 3 todo (one per function without its own endpoint) |
-| Traceability | NFR-005, FR-002, FR-011, FR-012, CR-002, #121 |
-| Interpretation | Every built endpoint enforces its cells, called directly rather than through the interface, as NFR-005's verification method asks. The three todos become endpoint calls when #115 and #117 add the routes |
+| Actual result | As expected for all 60 cells, the table covers every function in the register, and no conflict between the register and the requirements remains. Out of scope: Staff outside a request's category get the same 404 as for a missing request on the detail, an accept, a move and an action entry, and nothing is written; Staff may not accept their own request in a category they do not cover (FR-015); a Manager's detail and reports cover only the Manager's categories |
+| Status | Pass |
+| Evidence | Local run, 15 October 2026, #147 at 9fea651: 61 pass and 3 todo, then 44 cells through real handlers and 16 at the permission check, as Darius Mushi's review of #147 counted. Local run, 18 October 2026, Node 24.14.0 on Windows 11, #147 at fde5954 with main at 789f737 merged in: 65 of 65, no todo. Allowing the category list to a Coordinator, giving Staff every category, and accepting by request scope instead of category scope each failed it |
+| Traceability | NFR-005, FR-002, FR-011, FR-012, FR-013, FR-015, CR-002, #121, #147 |
+| Interpretation | Every endpoint enforces its cells, called directly rather than through the interface, as NFR-005's verification method asks, and the category scope reaches individual records (ASR-01) |
 
 **Automated by**
 
 - `tests/api-decision-table.test.js`: the decision table covers every function in the register, each with a probe
 - `tests/api-decision-table.test.js`: NFR-005 decision table: *
+- `tests/api-decision-table.test.js`: no conflict between the register and the requirements remains, so the fixture alone decides [#147]
+- `tests/api-decision-table.test.js`: NFR-005 scope: Staff outside a request's category cannot see, accept, move or annotate it [#147]
+- `tests/api-decision-table.test.js`: NFR-005 scope: Staff accept an unassigned request in their category, and not one outside it [#147]
+- `tests/api-decision-table.test.js`: NFR-005 scope: a Manager's view and reports cover only the Manager's categories [#147]
 
 ### TC-23 Calls without a session
 
@@ -674,6 +678,8 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/api-submission-boundaries.test.js`: FR-007 description partitions*
 - `tests/api-submission-boundaries.test.js`: FR-007 location partitions*
 - `tests/api-submission-boundaries.test.js`: FR-006 category partitions*
+- `tests/api-submission-boundaries.test.js`: FR-007 description boundary in characters too: 4000 emoji or accented letters accepted, 4001 emoji refused [#147]
+- `tests/api-submission-boundaries.test.js`: FR-007 location boundary in characters too: 300 emoji or accented letters accepted, 301 emoji refused [#147]
 - `tests/api-submission-boundaries.test.js`: FR-021 urgency partitions*
 - `tests/api-submission-boundaries.test.js`: FR-007: an empty body reports all five fields at once and saves nothing
 - `tests/api-submission-boundaries.test.js`: FR-007: several invalid fields are all reported in one answer, each by name
@@ -700,6 +706,7 @@ cookies, over an in-memory store that evaluates the policy's query conditions an
 - `tests/api-input-partitions.test.js`: FR-007: a control character in any text field is refused with that field's error, and nothing is saved
 - `tests/api-input-partitions.test.js`: FR-007: the description keeps line breaks and tabs; the title and location are one line
 - `tests/api-input-partitions.test.js`: FR-015: the assignee id is accepted as one number or string, saved as the store's id, and refused in any other form
+- `tests/api-input-partitions.test.js`: FR-015: an assignee that is missing, empty, not a user, or not an active Staff member of the category is refused, and nothing is written [#147]
 - `tests/api-input-partitions.test.js`: FR-018, FR-020: a reason or resolution summary is at most 4,000 characters, with no control characters
 - `tests/api-input-partitions.test.js`: FR-017: an action entry is at most 4,000 characters, with no control characters, and line breaks are kept
 - `tests/api-input-partitions.test.js`: FR-012: a malformed reference gets the same 404 as a missing one from every endpoint, and nothing is written
