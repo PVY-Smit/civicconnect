@@ -77,12 +77,21 @@ export function detailControls(request) {
   };
 }
 
+// The assignee chosen in the list, as the id the list gave for that person. A select's value is always
+// text, so the id is looked up rather than converted: the client assumes nothing about the id's form (the
+// server accepts a number or a string and saves its own id). Nothing chosen, or a value not in the list,
+// gives "".
+export function chosenAssignee(options, value) {
+  const option = (options ?? []).find((s) => String(s.id) === value);
+  return option ? option.id : "";
+}
+
 // The body for POST /status: the target status plus only the inputs this move asked for.
 export function moveBody(move, values) {
   const body = { to: move.to };
   for (const field of move.requires) {
     if (field === "confirmed") body.confirmed = values.confirmed === true;
-    else if (field === "assigneeId") body.assigneeId = values.assigneeId === "" || values.assigneeId == null ? null : Number(values.assigneeId);
+    else if (field === "assigneeId") body.assigneeId = values.assigneeId === "" || values.assigneeId == null ? null : values.assigneeId;
     else body[field] = values[field] ?? "";
   }
   return body;

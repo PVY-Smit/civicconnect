@@ -14,7 +14,8 @@
 //
 // Two further rules from the review of #146:
 // - a code is withdrawn after RESET_MAX_ATTEMPTS wrong tries on its account, so it cannot be guessed at
-//   whatever rate the server allows. Rate limiting by address is not here; it is recorded as debt (#125);
+//   whatever rate the server allows. Rate limiting by address is not here; it is to be recorded as debt
+//   (#125), with the denial of service the limit allows (README.md);
 // - a reset ends every session the account has, because a reset is what a user does when they suspect
 //   someone else has their password. The store adds one to the account's session version in the same
 //   write, and a session made before it is refused (session.js, http.js).
@@ -31,9 +32,12 @@
 //   account still holds that code hash, adds one to the failure count, and clears the code when the count
 //   reaches maxAttempts. The count is added in the database (count = count + 1), so two wrong tries at once
 //   both count.
-// - users.completeReset(id, { expectResetCodeHash, passwordHash }, { event }): only while the account still
-//   holds that code hash, sets the password hash, clears the code and the failure count, and adds one to
-//   the session version. Returns the number of rows written, which must be exactly 1 for success.
+// - users.completeReset(id, { expectResetCodeHash, maxAttempts, passwordHash }, { event }): only while the
+//   account still holds that code hash and its failure count is below maxAttempts, sets the password hash,
+//   clears the code and the failure count, and adds one to the session version. Returns the number of rows
+//   written, which must be exactly 1 for success. The count is in the same condition as the hash, so a
+//   right code checked while wrong tries are still being counted cannot succeed once they reach the limit,
+//   even if withdrawing the code were ever a separate step.
 // expectResetCodeHash is the hash string as read from the row. argon2 salts each hash, so hashing the code
 // again would give a different string: the adapter compares the stored value with the one read, and never
 // recomputes it.
@@ -59,7 +63,7 @@ const CODE_LENGTH = 8;
 
 // The new password's length (NFR-004 sets how it is stored, not its length). At least 8 characters with
 // no composition rules, and at most 128 so a very long input cannot be used to make hashing slow. There is
-// no check against a list of common passwords; that is recorded as debt (#125).
+// no check against a list of common passwords; that is to be recorded as debt (#125).
 export const PASSWORD_MIN = 8;
 export const PASSWORD_MAX = 128;
 
@@ -93,11 +97,13 @@ export async function issueResetCode(
   { actor, userId, lifetimeHours = CODE_LIFETIME_HOURS },
   { users, hashSecret, now = () => Date.now(), random },
 ) {
+  // Who is asking is checked first, so a caller who may not issue codes gets the same answer whatever
+  // lifetime they pass, if a route ever takes it from the request.
+  if (!actor) return { ok: false, code: "not-signed-in" };
+  if (!permits(actor, "manageUsers")) return { ok: false, code: "not-authorised" };
   if (!(Number.isFinite(lifetimeHours) && lifetimeHours > 0 && lifetimeHours <= MAX_LIFETIME_HOURS)) {
     throw new Error(`A code's lifetime must be more than 0 and at most ${MAX_LIFETIME_HOURS} hours.`);
   }
-  if (!actor) return { ok: false, code: "not-signed-in" };
-  if (!permits(actor, "manageUsers")) return { ok: false, code: "not-authorised" };
   const user = await users.findById(userId);
   if (!user) return { ok: false, code: "not-found" };
   if (!user.active) return { ok: false, code: "inactive", message: "A deactivated account cannot be given a reset code." };
@@ -147,7 +153,7 @@ export async function resetPassword({ email, code, newPassword }, { users, hashS
 
   const written = await users.completeReset(
     user.id,
-    { expectResetCodeHash: user.resetCodeHash, passwordHash: await hashSecret(newPassword) },
+    { expectResetCodeHash: user.resetCodeHash, maxAttempts: RESET_MAX_ATTEMPTS, passwordHash: await hashSecret(newPassword) },
     { event: { type: "password-reset", actorId: user.id, userId: user.id, at: new Date(now()) } },
   );
   return written === 1 ? { ok: true } : FAILED;

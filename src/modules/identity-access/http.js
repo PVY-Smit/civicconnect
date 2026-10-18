@@ -7,6 +7,7 @@
 // module (ADR-001 rule 2): requirePermission only asks it.
 
 import { FUNCTIONS, permits } from "../authorisation-policy/policy.js";
+import { limitConcurrency, MAX_CONCURRENT_HASHES } from "./concurrency.js";
 import { issueResetCode, resetPassword } from "./reset.js";
 import { signIn } from "./sign-in.js";
 import { clearedCookie, issueToken, readSession, sessionCookie, tokenFromCookieHeader } from "./session.js";
@@ -28,7 +29,22 @@ const profile = (user) => ({
 });
 
 // hashPassword and verifyPassword wrap argon2 (ADR-002, NFR-004); the reset codes are hashed the same way.
-export function createIdentityAccess({ users, verifyPassword, hashPassword, dummyHash, secret, secure, now = () => Date.now(), random }) {
+// Every call to either goes through one limiter (concurrency.js), so at most maxConcurrentHashes argon2
+// checks hold memory at once, however many sign-ins and resets arrive together.
+export function createIdentityAccess({
+  users,
+  verifyPassword: verifyArgon2,
+  hashPassword: hashArgon2,
+  dummyHash,
+  secret,
+  secure,
+  now = () => Date.now(),
+  random,
+  maxConcurrentHashes = MAX_CONCURRENT_HASHES,
+}) {
+  const limited = limitConcurrency(maxConcurrentHashes);
+  const verifyPassword = (hash, value) => limited(() => verifyArgon2(hash, value));
+  const hashPassword = (value) => limited(() => hashArgon2(value));
   const resetDeps = { users, hashSecret: hashPassword, verifySecret: verifyPassword, dummyHash, now, random };
 
   async function signInHandler(req, res) {

@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { TRANSITIONS } from "../../src/modules/workflow-status/transition-table.js";
-import { detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../src/workflow-ui.js";
+import { chosenAssignee, detailControls, inputsFor, moveBody, moveFieldId, moveLabel, readyToSend } from "../src/workflow-ui.js";
 import { matchRoute, navFor, routeAllowed } from "../src/router.js";
 import { FUNCTIONS, permits } from "../../src/modules/authorisation-policy/policy.js";
 import { DEFAULT_SORT, FILTER_KEYS, filtersFromSearch, rangeProblem, searchFromFilters, SORTS } from "../src/queue-filters.js";
@@ -44,8 +44,9 @@ test("FR-020: of the reason inputs, only the rejection reason's hint says the re
   }
 });
 
-test("a move sends its target and only the inputs it asked for, typed for the server", () => {
-  assert.deepEqual(moveBody({ to: "Assigned", requires: ["assigneeId"] }, { assigneeId: "5", reason: "ignored" }), { to: "Assigned", assigneeId: 5 });
+test("a move sends its target and only the inputs it asked for, with the assignee id as the list gave it", () => {
+  assert.deepEqual(moveBody({ to: "Assigned", requires: ["assigneeId"] }, { assigneeId: 5, reason: "ignored" }), { to: "Assigned", assigneeId: 5 });
+  assert.deepEqual(moveBody({ to: "Assigned", requires: ["assigneeId"] }, { assigneeId: "c7f2a9" }), { to: "Assigned", assigneeId: "c7f2a9" });
   assert.deepEqual(moveBody({ to: "Assigned", requires: ["assigneeId"] }, { assigneeId: "" }), { to: "Assigned", assigneeId: null });
   assert.deepEqual(moveBody({ to: "Closed", requires: ["confirmed"] }, {}), { to: "Closed", confirmed: false });
   assert.deepEqual(moveBody({ to: "Closed", requires: ["confirmed"] }, { confirmed: true }), { to: "Closed", confirmed: true });
@@ -118,6 +119,16 @@ test("Assign cannot be sent until a staff member is chosen, nor Close until it i
   assert.equal(readyToSend(close, { confirmed: true }), true);
   assert.equal(readyToSend({ to: "Rejected", requires: ["reason"] }, {}), true, "text is checked by the server, which names what is missing");
   assert.equal(readyToSend({ to: "In Progress", requires: [] }, {}), true);
+});
+
+test("the assignee chosen in the list is kept as the id the list gave, whatever its form", () => {
+  const numbers = [{ id: 5, name: "Sam" }, { id: 12, name: "Ana" }];
+  assert.equal(chosenAssignee(numbers, "12"), 12);
+  const strings = [{ id: "c7f2a9", name: "Sam" }, { id: "012", name: "Ana" }];
+  assert.equal(chosenAssignee(strings, "012"), "012", "a string id is not turned into a number");
+  assert.equal(chosenAssignee(numbers, ""), "", "nothing chosen");
+  assert.equal(chosenAssignee(numbers, "7"), "", "a value not in the list");
+  assert.equal(chosenAssignee(null, "5"), "", "the list has not loaded");
 });
 
 test("FR-021: the priority form and the entry form appear only when the server's capabilities allow them", () => {

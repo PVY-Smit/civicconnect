@@ -19,15 +19,28 @@ export function Queue({ api, navigate, search }) {
   const query = searchFromFilters(applied);
 
   useEffect(() => {
-    api.categories().then((d) => setCategories(d.categories), () => {});
-    api.staff().then((d) => setStaff(d.staff), () => {});
+    let ignore = false;
+    api.categories().then((d) => !ignore && setCategories(d.categories), () => {});
+    api.staff().then((d) => !ignore && setStaff(d.staff), () => {});
+    return () => {
+      ignore = true;
+    };
   }, [api]);
 
+  // A response is used only while its query is still the one on the screen: after the filters or the page
+  // change, an earlier search that answers late is dropped.
   useEffect(() => {
+    let ignore = false;
     setForm(filtersFromSearch(search));
     setResult(null);
     setError(null);
-    api.queue(query).then(setResult, (e) => setError(e.errors ? Object.values(e.errors).join(" ") : e.message));
+    api.queue(query).then(
+      (r) => !ignore && setResult(r),
+      (e) => !ignore && setError(e.errors ? Object.values(e.errors).join(" ") : e.message),
+    );
+    return () => {
+      ignore = true;
+    };
   }, [api, query, search]);
 
   const set = (key) => (event) => setForm((f) => ({ ...f, [key]: event.target.value }));

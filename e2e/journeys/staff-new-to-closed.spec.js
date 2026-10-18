@@ -1,22 +1,20 @@
 // TC-34: staff take a request from New to Closed (FR-011, FR-013 to FR-021, FR-025).
 //
 // Three people act on one request, each in their own browser context, so each has their own session as they
-// would on their own machines. The requester submits; the Coordinator finds it in the queue, sets the
+// would on their own machines, starting from the state the setup saved (journeys/sign-in.setup.js). The requester submits; the Coordinator finds it in the queue, sets the
 // priority and assigns it; the Staff member starts work, records an internal note and a visible update, and
 // resolves it; the Coordinator closes it; the requester then sees the outcome, and not the internal note.
 
 import { expect, test } from "@playwright/test";
 import { accounts, category } from "../support/accounts.js";
-import { move, moveWithInputs, openFromQueue, REFERENCE, signIn, statusOf, summaryValue } from "../support/app.js";
+import { JOURNEY_PREFIX, move, moveWithInputs, openFromQueue, REFERENCE, startAs, statusOf, summaryValue } from "../support/app.js";
 
 test("TC-34: a request goes from New to Closed through the Coordinator and Staff, and the requester sees the outcome", async ({ browser }) => {
-  const { requester, coordinator, staff } = accounts();
+  const { staff } = accounts();
   const contexts = [];
-  const asUser = async (account) => {
-    const context = await browser.newContext();
+  const asUser = async (role) => {
+    const { context, page } = await startAs(browser, role);
     contexts.push(context);
-    const page = await context.newPage();
-    await signIn(page, account);
     return page;
   };
   try {
@@ -26,20 +24,20 @@ test("TC-34: a request goes from New to Closed through the Coordinator and Staff
     const summary = `Replaced the lamp and the corroded fitting (${stamp}).`;
 
     // The requester submits the request.
-    const req = await asUser(requester);
+    const req = await asUser("Requester");
     await req.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Submit a request" }).click();
-    await req.getByLabel("Title", { exact: true }).fill(`Streetlight flickering, journey ${stamp}`);
+    await req.getByLabel("Title", { exact: true }).fill(`${JOURNEY_PREFIX} streetlight flickering (${stamp})`);
     await req.getByLabel("Description", { exact: true }).fill("The light flickers on and off all night.");
     await req.getByLabel("Category", { exact: true }).selectOption({ label: category() });
     await req.getByLabel("Location", { exact: true }).fill("22 Elm Road");
-    await req.getByRole("radio", { name: "Low" }).check(); // FR-021: the requester's own view of urgency
+    await req.getByRole("radio", { name: "Low", exact: true }).check(); // FR-021: the requester's own view of urgency
     await req.getByRole("button", { name: "Submit request" }).click();
     await expect(req.getByRole("heading", { level: 1, name: "Request submitted" })).toBeVisible();
     const reference = (await req.locator(".reference").innerText()).trim();
     expect(reference).toMatch(REFERENCE);
 
-    // FR-013, FR-014: the Coordinator lands on the queue and finds the request by its reference.
-    const coord = await asUser(coordinator);
+    // FR-013, FR-014: the Coordinator starts on the queue and finds the request by its reference.
+    const coord = await asUser("Coordinator");
     await expect(coord.getByRole("heading", { level: 1, name: "Queue" })).toBeVisible();
     await openFromQueue(coord, reference);
     await expect(statusOf(coord)).toHaveText("New");
@@ -64,7 +62,7 @@ test("TC-34: a request goes from New to Closed through the Coordinator and Staff
     await expect(coord.locator(".summary-list")).toContainText(staff.name);
 
     // FR-016: the assignee starts work.
-    const stf = await asUser(staff);
+    const stf = await asUser("Staff");
     await openFromQueue(stf, reference);
     await move(stf, "Start work"); // no inputs: the button sends it
     await expect(statusOf(stf)).toHaveText("In Progress");
@@ -75,7 +73,7 @@ test("TC-34: a request goes from New to Closed through the Coordinator and Staff
       [visibleUpdate, "Requester can see it"],
     ]) {
       await stf.getByLabel("Entry", { exact: true }).fill(text);
-      await stf.getByRole("radio", { name: visibility }).check();
+      await stf.getByRole("radio", { name: visibility, exact: true }).check();
       await stf.getByRole("button", { name: "Add entry" }).click();
       await expect(stf.locator(".entries")).toContainText(text);
     }
