@@ -1572,7 +1572,11 @@ The Risk Register holds each risk's final status, set by its owner.
 | **Debt** | **Final status** |
 |----|----|
 | No rate limit by address on sign-in and the reset (s28.2, s36) | Repaid in #155 (TC-44) |
-| [To be completed under #128: TD-001 to TD-004 and the debt found in the Final, from the Technical Debt Register] | |
+| TD-001 Fixture re-export is partly manual | Kept. The re-export and its `--check` exist, but CI does not run the check. The cost is continued risk of the fixtures drifting from the controlled workbook, needing manual reconciliation before later changes |
+| TD-002 Production database and durable hosting deferred | Kept. PostgreSQL and simulated production are demonstrated, but there is no durable production hosting. The cost is the deployment, operations, backup and hosting work before real use (s41.5) |
+| TD-003 Prisma advisory overrides | Kept. They are needed while no supported upstream version resolves the advisories. The cost is ongoing dependency monitoring, and removing and retesting the overrides when a fix is released |
+| TD-004 Manager-assisted password reset | Kept. The cost is operational dependence on a Manager, the identity checks that falls on, and the social-engineering risk of an administrative reset |
+| [To be completed under #128: TD-005 to TD-009, the debt found in the Final, from Tristan Roets] | |
 
 # 40. Final Acceptance Evidence
 
@@ -1663,9 +1667,9 @@ The strongest evidence is the integrated product verified end to end: TC-32 thro
 
 **ADR-006, authorisation as a policy with query scopes.** One module decides every permission and every scope, so the queue, the reports and the notifications, added late, inherited correct scoping by calling `scopedWhere`. The one gap, reports ignoring a Manager's scope, was found in review and closed by the same call. It also kept CR-002's correction to four cells a change to data rather than code.
 
-**ADR-007, data and persistence.** [To be completed under #128: Tristan Roets's paragraph]
+**ADR-007, data and persistence** (Tristan Roets, who made the decision). ADR-007 decided that PostgreSQL would be CivicConnect's transactional system of record, with Prisma as the authoritative application schema. We also decided that request references needed database-level atomic generation and uniqueness, and that state changes and their audit evidence had to commit together. When it was built, this design worked well in the integrated application: #155 ran the services against PostgreSQL, the integration tests exercised the sequence, transactions and audit trail, and the restricted application role prevented modification of protected history. The implementation did expose details that the original design had missed, including the incomplete User model, which was corrected. I would make the same core decision again. I would, however, validate the complete authentication/user schema and database privileges earlier so those gaps were found before integration.
 
-**ADR-008, notifications.** [To be completed under #128: Tristan Roets's paragraph]
+**ADR-008, notifications** (Tristan Roets, who made the decision). ADR-008 decided to keep notifications inside the modular monolith and derive requester notifications from persisted status history and requester-visible action entries instead of adding a separate Notification table, broker or external service. When implemented, that approach remained simple and fitted the actual requirement well. The integrated notification service could derive accepted, updated, rejected and completed indications from evidence already stored by the request workflow, while internal entries remained hidden from Requesters. The notification tests and integrated PostgreSQL evidence exercised those mappings, and the final role walkthrough also confirmed the requester-facing behaviour. I would make the same decision again for CivicConnect's current scope. I would only move to an outbox or separately persisted notification model if later requirements introduce external delivery, retries, durable read/unread state or asynchronous processing.
 
 ## 42.5 Team and project execution
 
