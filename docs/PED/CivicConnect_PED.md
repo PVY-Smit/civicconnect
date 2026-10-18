@@ -1476,7 +1476,7 @@ This is the final RTM's status (the RTM sheet, columns O to S, CR-006), summaris
 | NFR-009 First-time usability | Should | NOT IMPLEMENTED | 0 of 1 | none | 4 of 5 first-time users within 3 minutes: Not met, the moderated task test was not run |
 | NFR-010 Accessibility | Should | IMPLEMENTED | 1 of 1 | TC-45 |  |
 | NFR-011 Audit completeness | Must | IMPLEMENTED | 1 of 1 | TC-18, TC-32 |  |
-| NFR-012 Tests gate every merge | Must | PARTIALLY IMPLEMENTED | 0.5 of 1 | s31 | tests gate every merge: Partially met, the workflow runs every suite (#156); it gates a merge only once it is a required check on main |
+| NFR-012 Tests gate every merge | Must | IMPLEMENTED | 1 of 1 | s31 |  |
 | NFR-013 Zero running cost | Must | IMPLEMENTED | 1 of 1 | s41 |  |
 
 ## 38.3 Scope Completion Percentage
@@ -1484,12 +1484,12 @@ This is the final RTM's status (the RTM sheet, columns O to S, CR-006), summaris
 | **Criteria** | **Count** | **Sum of final values** |
 |----|----|----|
 | Functional (FR-001 to FR-029) | 56 | 54.5 |
-| Non-functional (NFR-001 to NFR-013) | 13 | 10 |
-| All approved M1 criteria | 69 | 64.5 |
+| Non-functional (NFR-001 to NFR-013) | 13 | 10.5 |
+| All approved M1 criteria | 69 | 65 |
 
-Scope Completion Percentage = 64.5 / 69 x 100 = **93.5 percent**, in the brief's 90 to 100 percent band. [To be completed under #128: recalculated at the tag, after #147, #157 and #156 merge and NFR-008 and NFR-012 are final]
+Scope Completion Percentage = 65 / 69 x 100 = **94.2 percent**, in the brief's 90 to 100 percent band. [To be completed under #128: recalculated at the tag, once it is known which of #145, #147, #151 and #157 merge before the tag, and NFR-008 is final]
 
-Every functional criterion is met except three, which are half met: FR-004's two and FR-022's second. Four non-functional criteria are not fully met. Each is set out in s38.4.
+Every functional criterion is met except three, which are half met: FR-004's two and FR-022's second. Three non-functional criteria are not fully met. Each is set out in s38.4.
 
 ## 38.4 Criteria not fully met
 
@@ -1497,7 +1497,7 @@ Every functional criterion is met except three, which are half met: FR-004's two
 
 **FR-022, the target's source.** The counts use one organisation-wide response target, as the criterion asks, but the target is configuration (`OVERDUE_TARGET_DAYS`, 10 days in simulated production), because the Status Model register defines none. The organisation's real value is FEC-02's open question. *Consequence:* overdue counts are only as right as the configured value; the counts themselves are verified (TC-42).
 
-[To be completed under #128: NFR-008 and NFR-012, each with its final status and reason at the tag]
+[To be completed under #128: NFR-008, with its final status and reason at the tag]
 
 **Should-have criteria.**
 
@@ -1547,13 +1547,25 @@ s36.2 classified the M3 candidate NOT READY on four blockers. Their final status
 | **M3 blocker** | **Final status** | **Evidence** |
 |----|----|----|
 | No integrated build | Resolved | Every module served through one entry point over PostgreSQL (s37.2), TC-32 |
-| No CI test gate | [To be completed under #128: resolved if #110 is a required check on main at the tag] | |
+| No CI test gate | Resolved | The CI workflow (#156) runs every suite on every pull request and push to main, and `test` and `gitleaks` are required checks in the ruleset, with no bypass. A deliberately failing test blocked #158's merge (#110) |
 | No deployed candidate on which a critical journey has completed | Resolved in simulated production | TC-33 and TC-34 pass against it over HTTPS (s41) |
 | No verification against PostgreSQL | Resolved | TC-32, and the journeys against the database |
 
 ## 39.3 Residual risks
 
-The Risk Register holds each risk's final status. [To be completed under #128: the final status of each risk from its owner, with Tristan Roets's fifteen from Tristan Roets's closure and the others from Jean Smit and Darius Mushi]
+The Risk Register holds each risk's final status, set by its owner.
+
+| **Risk (owner Jean Smit)** | **Final status** | **Evidence** |
+|----|----|----|
+| RSK-04 Controlled change stalls under the two-approval rule | Materialised; accepted | It stalled merges again in the Final, when every remaining pull request waited on one reviewer. The rule is kept on purpose: its cost is the price of the review evidence (DEC-012, s42.5) |
+| RSK-07 A member becomes unavailable | Materialised; mitigated | The schema (#140) and three drafts (#141 to #143) stalled; another member finished them in #155, with their author's commits kept and the result reviewed by the author |
+| RSK-08 The repository history does not show authentic progressive engineering | Mitigated | Every change since 4 September 2026 entered through a reviewed pull request (s12.2, s30.1), and the accounts are mapped to members (s30.1) |
+| RSK-11 A credential is committed | Mitigated | The secret scan is a required check on every pull request; secrets for each environment are held outside the repository (s30.3, s41.2) |
+| RSK-14 AI output is accepted without adequate verification | Mitigated | Every AI-assisted contribution has its row in the AI Usage Register with its verification; each new test was shown to fail with its fault put back (s32.2), and review found and recorded the AI output's defects (rows 31 to 33) |
+| RSK-15 A controlled artefact cannot be reproduced from its source | Open | Figure 2's source is still not held (#27) |
+| RSK-24 Module boundaries erode | Mitigated | The services ran unchanged over the persistence adapter, and the modules added in the Final go through the policy and the named operations (s37.2, s42.4) |
+
+[To be completed under #128: the final status of Tristan Roets's fifteen risks and Darius Mushi's nine, from their owners]
 
 ## 39.4 Technical debt
 
@@ -1594,6 +1606,7 @@ The final trace, from the stakeholder's need to the final outcome (Final brief, 
 | Controlled secrets | Generated for this environment, held outside every working tree, never used elsewhere | Runbook, step 2 |
 | Deployment verification | A backup before each deployment; the smoke check (seven checks) and the journeys after it | 17 October 2026: smoke check 7 of 7, TC-33, TC-34 and TC-45 pass, as the restricted role, over HTTPS |
 | Recovery | A backup restored into an empty database matched the original row for row, and served the journeys | `tools/backup.mjs`, 17 October 2026 |
+| Runs on another machine | Tristan Roets stood the release candidate up from the repository on a separate machine (Windows, Node 24.20.0, PostgreSQL 16.15, #155 at 0ff72d6) and walked through it as every role | The walkthrough on #155, 18 October 2026: every step as expected |
 
 The rehearsals found two deployment faults, both now handled in the runbook. Under `NODE_ENV=production`, `npm ci` skips the build tools. A running server holds its native modules open, so the install must follow stopping it.
 
@@ -1606,7 +1619,6 @@ The team does not release to a hosted production service. The product is integra
 | The free-tier host DEC-010 chose sleeps after 15 minutes idle and takes about a minute to wake (s24) | NFR-002, NFR-003, RSK-02 | The first requester after a quiet period waits about a minute to submit, twenty times NFR-002's limit, and may submit twice (STK-01) | A host that does not sleep within service hours, which has a cost (NFR-013) |
 | No production database was decided. Render's free PostgreSQL, the one evaluated, expires 30 days after creation, is deleted 14 days later, and has no automated backups (s24, DEC-010) | ADR-007, RSK-20, NFR-008 | Every request, with the personal information in it, is lost when the database expires or fails | A managed database with backups and a tested restore, and its cost agreed |
 | The cost beyond the educational context is not agreed with the sponsor. It is now projected (s41.5), at about USD 13.30 a month at the least | NFR-013, CON-03 | A service the organisation has not agreed to fund is withdrawn after go-live | The sponsor accepts the projected cost |
-| [To be completed under #128: CI as a merge gate (NFR-012), if it is not a required check at the tag] | NFR-012 | | |
 | First-time usability is unmeasured | NFR-009 | Residents who cannot complete a submission return to the phone and WhatsApp channels the platform exists to replace | The five-participant task test |
 
 Releasing on the free tier would meet the deadline at the cost of the stakeholders the platform serves: requesters who wait or give up, and an organisation whose records can be lost. The product is ready to deploy. What is missing is a production environment that meets NFR-002, NFR-003 and NFR-013.
