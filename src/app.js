@@ -1,11 +1,152 @@
+// The server's one entry point (ADR-001 rule 1). Every call reaches a module through the routes here, and
+// every protected route runs the identity and access module's authenticate first (FR-001), then the
+// permission check where the route has one (FR-002, NFR-005). The modules take their store as a
+// dependency, so this file only connects them; it makes no decision of its own.
+//
+// createApp() with no dependencies serves only the health check, which is what the health test and
+// NFR-003's probe need. src/server.js builds the dependencies from the configuration (src/wiring.js).
+
 import express from "express";
+import { createAdministrationHandlers } from "./modules/administration/http.js";
+import { createIdentityAccess } from "./modules/identity-access/http.js";
+import { createFailureLimiter, SIGN_IN_LIMITS } from "./modules/identity-access/rate-limit.js";
+import { createNotificationsHandler } from "./modules/notifications/http.js";
+import { InactiveCategoryError } from "./modules/persistence/store.js";
+import { createQueueHandlers } from "./modules/queue/http.js";
+import { createReportHandlers } from "./modules/reports/http.js";
+import { createRequestAccessHandlers } from "./modules/request-access/http.js";
+import { createSubmissionHandler } from "./modules/request-capture/http.js";
+import { createWorkflowHandlers } from "./modules/workflow-status/http.js";
 
-const app = express();
-app.use(express.json());
+// Headers on every answer. The client is built with no inline script or style, so the content security
+// policy allows only this origin; no page may frame it; types are not guessed; no referrer leaves the
+// site. HSTS is sent only when the server itself runs over HTTPS (NFR-006), since a browser that saw it over
+// plain HTTP on localhost would refuse the address afterwards.
+function securityHeaders({ https }) {
+  return (req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    if (https) res.setHeader("Strict-Transport-Security", "max-age=31536000");
+    next();
+  };
+}
 
-// NFR-003's availability measurement needs a health endpoint to probe.
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
+export function createApp(deps) {
+  const app = express();
+  app.disable("x-powered-by");
+  app.use(securityHeaders({ https: Boolean(deps?.https) }));
+  app.use(express.json({ limit: "64kb" }));
 
-export default app;
+  // NFR-003's availability measurement needs a health endpoint to probe. release names the build that is
+  // running, so a measurement can say which release it measured (#150). With a database the check
+  // includes it, so a server that is up but cannot reach its data answers 503, not ok.
+  app.get("/health", async (req, res) => {
+    const release = deps?.release ? { release: deps.release } : {};
+    if (deps?.checkDatabase) {
+      try {
+        await deps.checkDatabase();
+      } catch {
+        return res.status(503).json({ status: "unavailable", ...release });
+      }
+    }
+    return res.status(200).json({ status: "ok", ...release });
+  });
+
+  if (deps) mountApi(app, deps);
+
+  return app;
+}
+
+function mountApi(app, deps) {
+  const { users, categories, requests, notificationSources, reports, store } = deps.store;
+  const identity = createIdentityAccess({
+    users,
+    verifyPassword: deps.verifyPassword,
+    hashPassword: deps.hashPassword,
+    dummyHash: deps.dummyHash,
+    secret: deps.sessionSecret,
+    secure: deps.secureCookies,
+  });
+  const access = createRequestAccessHandlers({ requests });
+  const submit = createSubmissionHandler({ categories, requests, formatReference: deps.formatReference });
+  const workflow = createWorkflowHandlers({ requests, users, store });
+  const queue = createQueueHandlers({ requests, users });
+  const admin = createAdministrationHandlers({ users, categories, hashSecret: deps.hashPassword });
+  const report = createReportHandlers({ reports, overdueTargetDays: deps.overdueTargetDays });
+  const { authenticate, requirePermission } = identity;
+
+  const api = express.Router();
+
+  // Identity and access (FR-001, FR-002, FR-004)
+  api.post("/auth/sign-in", createFailureLimiter(deps.rateLimits ?? SIGN_IN_LIMITS), identity.signIn);
+  api.post("/auth/sign-out", identity.signOut);
+  api.get("/auth/me", authenticate, identity.currentUser);
+  api.post("/auth/reset", createFailureLimiter(deps.rateLimits ?? SIGN_IN_LIMITS), identity.resetPassword);
+  api.post("/users/:id/reset-code", authenticate, requirePermission("manageUsers"), identity.issueResetCode);
+
+  // FR-006: the active categories a Requester chooses from; with ?all=true, the whole list for a Manager
+  // maintaining it (FR-027).
+  api.get("/categories", authenticate, async (req, res) => {
+    if (req.query.all !== undefined) return admin.listAllCategories(req, res);
+    return res.status(200).json({ categories: await categories.listActive() });
+  });
+  api.post("/categories", authenticate, admin.addCategory);
+  api.patch("/categories/:id", authenticate, admin.renameCategory);
+  api.post("/categories/:id/deactivate", authenticate, admin.deactivateCategory);
+
+  // User administration (FR-003, FR-028)
+  api.get("/users", authenticate, admin.listUsers);
+  api.post("/users", authenticate, admin.createUser);
+  api.post("/users/:id/deactivate", authenticate, admin.deactivateUser);
+
+  // Submission and the requester's views (FR-005 to FR-012)
+  api.post("/requests", authenticate, submit);
+  api.get("/requests/mine", authenticate, access.listMine);
+  api.get("/requests/:reference", authenticate, access.detail);
+
+  // The staff queue (FR-013, FR-014)
+  api.get("/queue", authenticate, queue.queue);
+  api.get("/staff", authenticate, queue.staff);
+
+  // The requester's notifications (FR-029, ADR-008)
+  api.get("/notifications", authenticate, createNotificationsHandler({ notificationSources }));
+
+  // Management reporting (FR-022 to FR-024)
+  api.get("/reports/summary", authenticate, report.summary);
+  api.get("/reports/overdue", authenticate, report.overdue);
+
+  // The workflow (FR-015 to FR-021, FR-025)
+  api.get("/requests/:reference/assignable-staff", authenticate, workflow.assignableStaff);
+  api.post("/requests/:reference/status", authenticate, workflow.status);
+  api.post("/requests/:reference/priority", authenticate, workflow.priority);
+  api.post("/requests/:reference/actions", authenticate, workflow.actionEntry);
+
+  // Anything else under /api is not a route of this release.
+  api.use((req, res) => res.status(404).json({ error: "Not found." }));
+
+  app.use("/api", api);
+
+  // The built client, served from the same origin so the session cookie needs no cross-site rules.
+  if (deps.clientDir) {
+    app.use(express.static(deps.clientDir, { index: false }));
+    app.get(/^(?!\/api\/).*/, (req, res) => res.sendFile("index.html", { root: deps.clientDir }));
+  }
+
+  // One answer for a failure the routes did not expect, with no detail of the error (NFR-007). A body
+  // that is not JSON is the caller's fault, and a category deactivated between the submission's check
+  // and its transaction is a field error, as the check itself would have given (FR-027).
+  // eslint-disable-next-line no-unused-vars
+  app.use((error, req, res, next) => {
+    if (error?.type === "entity.parse.failed") return res.status(400).json({ error: "The request body is not valid JSON." });
+    if (error?.type === "entity.too.large") return res.status(413).json({ error: "The request body is too large." });
+    if (error instanceof InactiveCategoryError) {
+      return res.status(400).json({ errors: { categoryId: "Category must be one of the categories in the list." } });
+    }
+    (deps.log ?? console.error)(error);
+    return res.status(500).json({ error: "Something went wrong. Try again." });
+  });
+}
+
+export default createApp();

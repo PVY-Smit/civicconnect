@@ -342,6 +342,39 @@ test("staff in the request's category see internal entries, the priority and the
   assert.ok("assigneeId" in request);
 });
 
+test("staff get the moves and capabilities the server allows them, and a Requester gets neither", async () => {
+  const { store, a } = await seeded();
+  const coordinator = { id: 3, role: "Coordinator", categoryIds: [] };
+  const forStaff = (await getRequestDetail(staff, a, store)).request;
+  const forCoordinator = (await getRequestDetail(coordinator, a, store)).request;
+  // The seeded request is New: Staff in its category may accept it; a Coordinator may assign or reject it.
+  assert.deepEqual(forStaff.moves.map((m) => m.to), ["In Progress"]);
+  assert.deepEqual(forStaff.capabilities, { setPriority: false, recordActionEntry: true });
+  assert.deepEqual(forCoordinator.moves.map((m) => m.to).sort(), ["Assigned", "Rejected"]);
+  assert.deepEqual(forCoordinator.moves.find((m) => m.to === "Rejected").requires, ["reason"]);
+  assert.equal(forCoordinator.capabilities.setPriority, true);
+  const forRequester = (await getRequestDetail(requester(1), a, store)).request;
+  assert.equal("moves" in forRequester, false);
+  assert.equal("capabilities" in forRequester, false);
+});
+
+test("FR-020: the Requester sees a rejection's reason but not a hold's; staff see every reason and who acted", async () => {
+  const { store, a } = await seeded();
+  const r = store.rows[0];
+  r.statusHistory.push(
+    { fromStatus: "Assigned", toStatus: "On Hold", reason: "Waiting for a part.", actor: { name: "Sam Staff" }, createdAt: new Date(Date.UTC(2026, 9, 7)) },
+    { fromStatus: "On Hold", toStatus: "Rejected", reason: "Private property.", actor: { name: "Cara Coordinator" }, createdAt: new Date(Date.UTC(2026, 9, 8)) },
+  );
+  r.actionEntries[0].author = { name: "Sam Staff" };
+  const mine = (await getRequestDetail(requester(1), a, store)).request;
+  assert.deepEqual(mine.statusHistory.slice(-2).map((h) => h.reason), [undefined, "Private property."]);
+  assert.equal(mine.statusHistory.some((h) => "by" in h), false, "the Requester is not shown staff names");
+  assert.equal(mine.actionEntries.some((e) => "author" in e), false);
+  const theirs = (await getRequestDetail(staff, a, store)).request;
+  assert.deepEqual(theirs.statusHistory.slice(-2).map((h) => [h.reason, h.by]), [["Waiting for a part.", "Sam Staff"], ["Private property.", "Cara Coordinator"]]);
+  assert.ok(theirs.actionEntries.some((e) => e.author === "Sam Staff"));
+});
+
 test("FR-012: another requester's reference and a reference that does not exist get the same answer", async () => {
   const { store, b } = await seeded();
   const theirs = await getRequestDetail(requester(1), b, store);

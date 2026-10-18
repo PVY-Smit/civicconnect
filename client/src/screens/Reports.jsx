@@ -18,17 +18,35 @@ export function Reports({ api, navigate, search }) {
   const [overdue, setOverdue] = useState(null);
   const [error, setError] = useState(null);
   const problem = periodProblem(form);
+  // A period from the address that fails the check is never sent, so there are no counts to wait for.
+  const periodBad = Boolean(periodProblem(period));
 
+  // A response is used only while its period is still the one on the screen: a summary for an earlier
+  // period that answers late is dropped.
   useEffect(() => {
+    let ignore = false;
     setForm(period);
     setSummary(null);
     setError(null);
     if (periodProblem(period)) return;
-    api.reportSummary(period.from, period.to).then(setSummary, (e) => setError(e.errors ? Object.values(e.errors).join(" ") : e.message));
+    api.reportSummary(period.from, period.to).then(
+      (s) => !ignore && setSummary(s),
+      (e) => !ignore && setError(e.errors ? Object.values(e.errors).join(" ") : e.message),
+    );
+    return () => {
+      ignore = true;
+    };
   }, [api, period.from, period.to]);
 
   useEffect(() => {
-    api.overdue().then(setOverdue, (e) => setError(e.message));
+    let ignore = false;
+    api.overdue().then(
+      (o) => !ignore && setOverdue(o),
+      (e) => !ignore && setError(e.message),
+    );
+    return () => {
+      ignore = true;
+    };
   }, [api]);
 
   const apply = (event) => {
@@ -63,7 +81,7 @@ export function Reports({ api, navigate, search }) {
           {error}
         </p>
       )}
-      {!summary && !error && <p className="loading">Loading the counts…</p>}
+      {!summary && !error && !periodBad && <p className="loading">Loading the counts…</p>}
       {summary && (
         <>
           <h2>Requests from {summary.from} to {summary.to}</h2>
