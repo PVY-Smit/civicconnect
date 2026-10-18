@@ -45,7 +45,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
 | 3.0 | 16 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | Darius Mushi and Tristan Roets, through Pull Request #145 | Submitted for M3 on 16 October 2026 |
-| 4.0 | [To be completed under #128: the date of the tag] | Jean Smit, Darius Mushi, Tristan Roets | Final Project. Sections 37 to 42 added: the final product and release, the M1 scope against the final delivery with the Scope Completion Percentage, the closure of M3's issues, the final acceptance evidence, the go-live decision and the project reflection (#128). The cover names v4.0 and Milestone 4 (CR-005, item 1). Sections 1 to 36 are unchanged. | [To be completed under #128: the pull request and its reviewers] | Final |
+| 4.0 | 18 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Final Project. Sections 37 to 42 added: the final product and release, the M1 scope against the final delivery with the Scope Completion Percentage, the closure of M3's issues, the final acceptance evidence, the go-live decision and the project reflection (#128). The cover names v4.0 and Milestone 4 (CR-005, item 1). Sections 1 to 36 are unchanged. | Darius Mushi and Tristan Roets, through Pull Request #159 | Final |
 
 # 2. Purpose and How to Read This Document
 
@@ -1369,11 +1369,11 @@ The Final Project concludes the same project: sections 1 to 36 are kept as writt
 |----|----|
 | Team | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
 | GitHub repository | https://github.com/PVY-Smit/civicconnect |
-| Final commit and tag | [To be completed under #128: the tag v1.0.0, its commit on main, and the date it was made] |
+| Final commit and tag | Tag `v1.0.0`, commit 90cf950e46663560c8768aa9c7c6cd895d499376 on main, 18 October 2026, published as the GitHub release v1.0.0 (https://github.com/PVY-Smit/civicconnect/releases/tag/v1.0.0). This document and the final registers describe that commit, and merge after it through #159, a change to documentation only |
 | PED version | v4.0 Final |
 | Final RTM | `docs/requirements/CivicConnect_M1_Registers.xlsx`, sheet RTM: columns O to S (CR-006, approved 18 October 2026) give each requirement's test cases, expected result, execution evidence, defects, and the status of each of its acceptance criteria. s38.2 summarises it |
 | Product access | The product runs in the simulated production environment described in s41 and `docs/deployment/simulated-production.md`, at https://localhost:8443 on the presenting member's machine. It is demonstrated live from that environment at the release tag. Seeded accounts for each role are configured there and are not published |
-| Date submitted | [To be completed under #128] |
+| Date submitted | 18 October 2026 |
 
 ## 37.2 The final product
 
@@ -1406,7 +1406,12 @@ Every row is verified end to end as well as by module. TC-32 runs the API agains
 | Limits on failed sign-ins and resets, security headers, and a health check that probes the database | #155 | Closes the missing rate limit s28.2 and s36 record |
 | Simulated production: HTTPS, a least-privilege database role, a runbook, a smoke check, and a tested backup and restore | #155 | The deployment state in s41 |
 | The M3 review follow-ups to the client, the performance scripts, the journeys and the reset | #149, #150, #152, #153 | Merged 17 October 2026 |
-| [To be completed under #128: the API suites (#147), the catalogue follow-ups (#151), PED v3.0 (#145), CI (#110) and the registers (#144), each with its merge or its status at the tag] | | |
+| The API suites of #121 at the handler boundary, with the Access Matrix decision table through the endpoints and category scope | #147 | Merged 18 October 2026 |
+| The CI workflow, and `test` and `gitleaks` as required checks on main | #156 | Merged 18 October 2026; a failing test blocked #158's merge (#110) |
+| FR-007's retained values, FR-027's delete refusal and FR-028's attribution, each tested | #157 | Merged 18 October 2026; the last commit of the release |
+| PED v3.0's review fixes and PED v4.0 with the final registers | #145, #159 | Documentation describing the tag; #159 carries #145's commits |
+| The catalogue tooling and the records TC-38 and TC-39 for the health and RSK-01 tests | #151 | Approved by both reviewers but in conflict with main at the tag, so not merged. The two tests run in CI and pass; they have no catalogue record |
+| The Defect and Technical Debt registers and the Personal Data Inventory as sheets | #144 | Not merged: a second copy of the workbook. Its defects, debt and risk statuses are in s39, from Tristan Roets |
 
 # 38. M1 Scope to Final Delivery
 
@@ -1487,7 +1492,7 @@ This is the final RTM's status (the RTM sheet, columns O to S, CR-006), summaris
 | Non-functional (NFR-001 to NFR-013) | 13 | 10.5 |
 | All approved M1 criteria | 69 | 65 |
 
-Scope Completion Percentage = 65 / 69 x 100 = **94.2 percent**, in the brief's 90 to 100 percent band. [To be completed under #128: recalculated at the tag, once it is known which of #145, #147, #151 and #157 merge before the tag, and NFR-008 is final]
+Scope Completion Percentage = 65 / 69 x 100 = **94.2 percent**, in the brief's 90 to 100 percent band. Recalculated at the tag: #147 and #157, whose tests several criteria rest on, merged before it.
 
 Every functional criterion is met except three, which are half met: FR-004's two and FR-022's second. Three non-functional criteria are not fully met. Each is set out in s38.4.
 
@@ -1614,7 +1619,21 @@ The final trace, from the stakeholder's need to the final outcome (Final brief, 
 
 ## 40.2 Re-verification at the final version
 
-[To be completed under #128: the runs at the tag. The server, client and performance-script tests; the catalogue's strict check; TC-32 against PostgreSQL; the smoke check, TC-33, TC-34 and TC-45 against simulated production at the tag; npm audit; and the full-history Gitleaks scan]
+Every check was run again at the tag, 18 October 2026.
+
+| **Check** | **Result at v1.0.0 (90cf950)** |
+|----|----|
+| CI, `test`: the server suites with TC-32 against a PostgreSQL 16 service, the client and the performance scripts | Pass, on the push of 90cf950 to main (a required check) |
+| CI, `gitleaks` | Pass, on the same push (a required check) |
+| Simulated production, redeployed from a clean checkout of the tag after a backup | Smoke check 7 of 7 over HTTPS, the release reported as v1.0.0, HSTS and the HTTP redirect |
+| TC-33, TC-34 and TC-45 against simulated production over HTTPS, as the least-privilege role | 10 of 10, with the four saved sign-ins |
+| `civicconnect_app` on the protected tables | UPDATE and DELETE on `audit_entries`, and DELETE on `requests`: permission denied |
+| `npm audit` | 0 vulnerabilities |
+| NFR-001 and NFR-002 (TC-35) | Measured on 17 October 2026 at rc-f47d054 with 5,000 requests (p95 7.4 ms and 7.9 ms). Between that build and the tag only `src/app.js` changed, adding the security headers, the database probe and the failure limits; the queue, submission and persistence code they time is identical, so the measurements stand for the tag |
+| The test catalogue's strict check | Every test is catalogued except the health and RSK-01 tests, whose records are in #151 (s37.3) |
+| Secret scanning of the history | The full-history scan of 16 October 2026 (267 commits, no leaks, s30.3), and every commit since scanned on its pull request and on main |
+
+One finding from the run: the journeys' start-up check of the host (#152) uses Node's own client, which rejects the self-signed certificate, so the journeys against simulated production run with `NODE_EXTRA_CA_CERTS` set to the certificate, as the smoke check does.
 
 # 41. Final Deployment and Go-Live Decision
 
