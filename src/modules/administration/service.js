@@ -139,6 +139,16 @@ export async function renameCategory({ actor, id, name }, deps) {
   return category ? { ok: true, category } : { ok: false, code: "not-found" };
 }
 
+// FR-027: a category is never deleted, because requests keep the category they were submitted under. An
+// attempt is refused with the reason and what to do instead, for a Manager; anyone else is not authorised.
+export const NOT_DELETED = "A category is never deleted, because existing requests keep it. Deactivate it instead, so it is no longer offered for new requests.";
+
+export async function deleteCategory({ actor }) {
+  const refused = refuse(actor, "maintainCategories");
+  if (refused) return refused;
+  return { ok: false, code: "conflict", message: NOT_DELETED };
+}
+
 export async function deactivateCategory({ actor, id }, { categories }) {
   const refused = refuse(actor, "maintainCategories");
   if (refused) return refused;

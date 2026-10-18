@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import {
   addCategory,
   createUser,
+  deleteCategory,
+  NOT_DELETED,
   deactivateCategory,
   deactivateUser,
   listUsers,
@@ -153,6 +155,15 @@ test("FR-027: categories are added, renamed and deactivated, with names unique i
   assert.equal((await deactivateCategory({ actor: MANAGER, id: "10" }, store)).category.active, false);
   assert.deepEqual(await store.categories.activeIds(), ["100"], "FR-006: no longer offered");
   assert.equal((await renameCategory({ actor: MANAGER, id: "999", name: "Other" }, store)).code, "not-found");
+});
+
+test("FR-027: deleting a category is refused with the reason and what to do instead, and nothing changes", async () => {
+  const store = fakeStore();
+  const before = JSON.stringify(await store.categories.listAll());
+  assert.deepEqual(await deleteCategory({ actor: MANAGER, id: "10" }, store), { ok: false, code: "conflict", message: NOT_DELETED });
+  assert.equal((await deleteCategory({ actor: COORDINATOR, id: "10" }, store)).code, "not-authorised");
+  assert.equal((await deleteCategory({ actor: null, id: "10" }, store)).code, "not-signed-in");
+  assert.equal(JSON.stringify(await store.categories.listAll()), before);
 });
 
 function response() {

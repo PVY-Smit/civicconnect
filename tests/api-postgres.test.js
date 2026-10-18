@@ -264,6 +264,11 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   assert.equal(all.body.categories.find((c) => c.id === String(category.id)).requestCount, 4);
   assert.equal((await coord("GET", "/categories?all=true")).status, 403);
   assert.equal((await mgrAdmin("POST", `/categories/${added.body.id}/deactivate`)).body.active, false);
+  const del = await mgrAdmin("DELETE", `/categories/${category.id}`);
+  assert.equal(del.status, 409, "FR-027: a referenced category is never deleted");
+  assert.match(del.body.error, /never deleted/);
+  assert.equal((await coord("DELETE", `/categories/${category.id}`)).status, 403);
+  assert.equal((await prisma.category.count({ where: { id: category.id } })), 1);
   assert.equal((await req("GET", "/categories")).body.categories.some((c) => c.id === added.body.id), false);
 
   // FR-003: a Manager creates a Staff account; its user sets a password with the setup code and signs in.
@@ -288,6 +293,23 @@ test("TC-32: the API against PostgreSQL", async (t) => {
   assert.equal((await mgrAdmin("POST", `/users/${made.body.user.id}/deactivate`)).status, 200);
   assert.equal((await newcomer("GET", "/auth/me")).status, 401, "the deactivated account's session stops at once");
   assert.equal((await mgrAdmin("POST", `/users/${manager.id}/deactivate`)).status, 409, "not one's own account");
+
+  // FR-028: what a deactivated account did stays visible and attributed to it. The newcomer adds an entry
+  // and is then deactivated; the entry, its author's name and the audit entries for its assignment remain.
+  const author = client(base);
+  const second = await mgrAdmin("POST", "/users", { name: `TC-32 Author ${run}`, email: `tc32-author-${run}@civicconnect.test`, role: "Staff", categoryIds: [String(category.id)] });
+  const authorPassword = `author-${randomBytes(8).toString("hex")}`;
+  assert.equal((await anon("POST", "/auth/reset", { email: `tc32-author-${run}@civicconnect.test`, code: second.body.setupCode.code, newPassword: authorPassword })).status, 204);
+  assert.equal((await author("POST", "/auth/sign-in", { email: `tc32-author-${run}@civicconnect.test`, password: authorPassword })).status, 200);
+  assert.equal((await author("POST", `/requests/${low}/actions`, { body: "Inspected on site.", visibility: "requester-visible" })).status, 201);
+  assert.equal((await mgrAdmin("POST", `/users/${second.body.user.id}/deactivate`)).status, 200);
+  assert.equal((await author("GET", "/auth/me")).status, 401, "a deactivated account cannot act");
+  const attributed = (await coord("GET", `/requests/${low}`)).body.request.actionEntries.find((e) => e.body === "Inspected on site.");
+  assert.equal(attributed.author, `TC-32 Author ${run}`, "the entry keeps its author's name");
+  assert.equal((await req("GET", `/requests/${low}`)).body.request.actionEntries.some((e) => e.body === "Inspected on site."), true);
+  const deactivated = await prisma.user.findUnique({ where: { id: BigInt(second.body.user.id) } });
+  assert.equal(deactivated.active, false);
+  assert.equal(await prisma.actionEntry.count({ where: { authorId: deactivated.id } }), 1);
 
   // FR-004: a Manager issues a code; the reset sets the password and ends the earlier session.
   const mgr = await as(manager);

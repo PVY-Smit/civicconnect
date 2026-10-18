@@ -95,6 +95,7 @@ function mountApi(app, deps) {
   api.post("/categories", authenticate, admin.addCategory);
   api.patch("/categories/:id", authenticate, admin.renameCategory);
   api.post("/categories/:id/deactivate", authenticate, admin.deactivateCategory);
+  api.delete("/categories/:id", authenticate, admin.deleteCategory);
 
   // User administration (FR-003, FR-028)
   api.get("/users", authenticate, admin.listUsers);
