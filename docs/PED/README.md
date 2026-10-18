@@ -105,7 +105,8 @@ reviewer from the list the script prints.
 What to expect: on v2.0 it lists 55 differing lines, each one the 2.0 row lists. On v3.0 it lists 69:
 the same 55, with the cover lines now reading v3.0 and the s8.3 reading note rewritten; the six cells
 of the 3.0 row in s1; and eight lines for the four s8.3 cells CR-002 corrects, each cell's Yes removed
-and its No added. A count
+and its No added. On v4.0 it lists 77: the same 69, with the cover lines now reading v4.0; the two
+lines of the Milestone 4 boundary box; and the six cells of the 4.0 row in s1. A count
 other than that, or a line outside the cover and the version rows, is a change to M1 content that
 needs its own entry.
 

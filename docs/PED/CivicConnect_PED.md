@@ -1464,19 +1464,19 @@ This is the final RTM's status (the RTM sheet, columns O to S, CR-006), summaris
 | NFR-010 Accessibility | Should | IMPLEMENTED | 1 of 1 | TC-45 |  |
 | NFR-011 Audit completeness | Must | IMPLEMENTED | 1 of 1 | TC-18, TC-32 |  |
 | NFR-012 Tests gate every merge | Must | PARTIALLY IMPLEMENTED | 0.5 of 1 | s31 | tests gate every merge: Partially met, the workflow runs every suite (#156); it gates a merge only once it is a required check on main |
-| NFR-013 Zero running cost | Must | PARTIALLY IMPLEMENTED | 0.5 of 1 | s41 | zero running cost, limits documented, cost beyond projected: Partially met, zero cost and the free-tier limits documented (s24); the cost beyond the educational context is not projected |
+| NFR-013 Zero running cost | Must | IMPLEMENTED | 1 of 1 | s41 |  |
 
 ## 38.3 Scope Completion Percentage
 
 | **Criteria** | **Count** | **Sum of final values** |
 |----|----|----|
 | Functional (FR-001 to FR-029) | 56 | 54.5 |
-| Non-functional (NFR-001 to NFR-013) | 13 | 9.5 |
-| All approved M1 criteria | 69 | 64 |
+| Non-functional (NFR-001 to NFR-013) | 13 | 10 |
+| All approved M1 criteria | 69 | 64.5 |
 
-Scope Completion Percentage = 64 / 69 x 100 = **92.8 percent**, in the brief's 90 to 100 percent band. [To be completed under #128: recalculated at the tag, after #147, #157 and #156 merge and NFR-008, NFR-012 and NFR-013 are final]
+Scope Completion Percentage = 64.5 / 69 x 100 = **93.5 percent**, in the brief's 90 to 100 percent band. [To be completed under #128: recalculated at the tag, after #147, #157 and #156 merge and NFR-008 and NFR-012 are final]
 
-Every functional criterion is met except three, which are half met: FR-004's two and FR-022's second. Five non-functional criteria are not fully met. Each is set out in s38.4.
+Every functional criterion is met except three, which are half met: FR-004's two and FR-022's second. Four non-functional criteria are not fully met. Each is set out in s38.4.
 
 ## 38.4 Criteria not fully met
 
@@ -1484,7 +1484,7 @@ Every functional criterion is met except three, which are half met: FR-004's two
 
 **FR-022, the target's source.** The counts use one organisation-wide response target, as the criterion asks, but the target is configuration (`OVERDUE_TARGET_DAYS`, 10 days in simulated production), because the Status Model register defines none. The organisation's real value is FEC-02's open question. *Consequence:* overdue counts are only as right as the configured value; the counts themselves are verified (TC-42).
 
-[To be completed under #128: NFR-008, NFR-012 and NFR-013, each with its final status and reason at the tag]
+[To be completed under #128: NFR-008 and NFR-012, each with its final status and reason at the tag]
 
 **Should-have criteria.**
 
@@ -1592,7 +1592,7 @@ The team does not release to a hosted production service. The product is integra
 |----|----|----|----|
 | The free-tier host DEC-010 chose sleeps after 15 minutes idle and takes about a minute to wake (s24) | NFR-002, NFR-003, RSK-02 | The first requester after a quiet period waits about a minute to submit, twenty times NFR-002's limit, and may submit twice (STK-01) | A host that does not sleep within service hours, which has a cost (NFR-013) |
 | No production database was decided. Render's free PostgreSQL, the one evaluated, expires 30 days after creation, is deleted 14 days later, and has no automated backups (s24, DEC-010) | ADR-007, RSK-20, NFR-008 | Every request, with the personal information in it, is lost when the database expires or fails | A managed database with backups and a tested restore, and its cost agreed |
-| The cost beyond the educational context is not agreed with the sponsor | NFR-013, CON-03 | A service the municipality cannot fund is withdrawn after go-live | The projected cost recorded and accepted |
+| The cost beyond the educational context is not agreed with the sponsor. It is now projected (s41.5), at about USD 13.30 a month at the least | NFR-013, CON-03 | A service the organisation has not agreed to fund is withdrawn after go-live | The sponsor accepts the projected cost |
 | [To be completed under #128: CI as a merge gate (NFR-012), if it is not a required check at the tag] | NFR-012 | | |
 | First-time usability is unmeasured | NFR-009 | Residents who cannot complete a submission return to the phone and WhatsApp channels the platform exists to replace | The five-participant task test |
 
@@ -1600,7 +1600,23 @@ Releasing on the free tier would meet the deadline at the cost of the stakeholde
 
 ## 41.4 What would change the decision
 
-A paid host that stays awake in service hours, a managed PostgreSQL 16 database with automated backups, the projected cost accepted by the sponsor, and the usability test passed. With those, the release at the tag would deploy by the same runbook, with a certificate from the host in place of the self-signed one.
+A paid host that stays awake in service hours and a managed PostgreSQL 16 database with backups, at the cost projected in s41.5 and accepted by the sponsor, and the usability test passed. With those, the release at the tag would deploy by the same runbook, with a certificate from the host in place of the self-signed one.
+
+
+## 41.5 Projected running cost
+
+NFR-013 asks for zero running cost within free-tier limits for the assessed period, with the limits documented and the cost beyond the educational context projected. The assessed period costs nothing: simulated production runs on a member's machine. The free tier's limits are in s24. The projection below takes the platform DEC-010 chose, at Render's published prices on 18 October 2026 (Render, 2026), billed in US dollars.
+
+| **Item** | **Smallest that removes the no-go concerns** | **With headroom** |
+|----|----|----|
+| Workspace | Hobby, USD 0 a month: up to 25 services, 5 GB of bandwidth, 3 days of point-in-time recovery | Pro, USD 25 a month: 25 GB of bandwidth, 7 days of point-in-time recovery |
+| Web service | Starter, USD 7 a month: 0.5 CPU, 512 MB, always on, so no cold start (NFR-002) | Starter, USD 7 a month |
+| PostgreSQL | Basic 256 MB, USD 6 a month, with logical backups and point-in-time recovery for paid instances | Basic 1 GB, USD 19 a month: 0.5 CPU, 1 GB |
+| Storage | 1 GB at USD 0.30 per GB a month: USD 0.30 | 5 GB: USD 1.50 |
+| **Monthly** | **USD 13.30** | **USD 52.50** |
+| **A year** | **USD 159.60** | **USD 630.00** |
+
+5,000 requests, NFR-001's volume, take 12 MB with every table and index (the performance database, 18 October 2026), so 1 GB holds many years of requests. Bandwidth beyond the included amount costs USD 0.15 per GB. A certificate and a custom domain are included. The price does not include an uptime commitment: contractual availability is on Render's Enterprise plan only, so NFR-003 would still be measured, not bought. The organisation's acceptance of this cost is CON-03's decision, and it is one of the conditions in s41.4.
 
 # 42. Project Reflection and Conclusion
 
@@ -1637,3 +1653,9 @@ If the project continued: host it on a paid service with a managed database and 
 ## 42.7 Conclusion
 
 [To be completed under #128: one evidence-based paragraph on what the project achieved and what remains, written once the percentage and the final runs are in]
+
+## 42.8 References for sections 37 to 42
+
+The reference list in s17 belongs to the M1 sections and changes only under change control (CR-005), so the sources first cited in sections 37 to 42 are listed here, in the same Harvard style.
+
+Render (2026) *Pricing*. Available at: https://render.com/pricing (Accessed: 18 October 2026).
