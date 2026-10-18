@@ -1575,7 +1575,7 @@ The Risk Register holds each risk's final status, set by its owner.
 | TD-001 Fixture re-export is partly manual | Kept. The re-export and its `--check` exist, but CI does not run the check. The cost is continued risk of the fixtures drifting from the controlled workbook, needing manual reconciliation before later changes |
 | TD-002 Production database and durable hosting deferred | Kept. PostgreSQL and simulated production are demonstrated, but there is no durable production hosting. The cost is the deployment, operations, backup and hosting work before real use (s41.5) |
 | TD-003 Prisma advisory overrides | Kept. They are needed while no supported upstream version resolves the advisories. The cost is ongoing dependency monitoring, and removing and retesting the overrides when a fix is released |
-| TD-004 Manager-assisted password reset | Kept. The cost is operational dependence on a Manager, the identity checks that falls on, and the social-engineering risk of an administrative reset |
+| TD-004 Manager-assisted password reset | Kept. The cost is operational dependence on a Manager, the identity checks that fall to the Manager, and the social-engineering risk of an administrative reset |
 | [To be completed under #128: TD-005 to TD-009, the debt found in the Final, from Tristan Roets] | |
 
 # 40. Final Acceptance Evidence
