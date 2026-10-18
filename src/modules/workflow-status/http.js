@@ -5,7 +5,9 @@
 // or the request changed underneath; 422 when the move needs input it did not get (a guard); 400 when a
 // field is invalid.
 
+import { permits, scopedWhere } from "../authorisation-policy/policy.js";
 import { NOT_FOUND } from "../request-access/http.js";
+import { isReference } from "../request-capture/reference.js";
 import { changeStatus, recordActionEntry, setPriority } from "./service.js";
 
 const STATUS_FOR = { "not-signed-in": 401, "not-found": 404, "not-authorised": 403, "not-in-model": 409, conflict: 409, "guard-failed": 422, invalid: 400, "unknown-status": 400 };
@@ -36,5 +38,17 @@ export function createWorkflowHandlers(deps) {
     return result.ok ? res.status(201).json(result.entry) : fail(res, result);
   }
 
-  return { status, priority, actionEntry };
+  // FR-015: the Staff a Coordinator may assign this request to: active, and authorised for its category.
+  // The request is loaded in the actor's scope first, so a request they may not see answers 404 (FR-012).
+  // changeStatus checks the chosen assignee again, so this list only offers choices and grants nothing.
+  async function assignableStaff(req, res) {
+    if (!req.actor) return res.status(401).json({ error: "Sign in to continue." });
+    const reference = req.params?.reference;
+    const request = isReference(reference) ? await deps.requests.findOne({ where: scopedWhere(req.actor, { reference }) }) : null;
+    if (!request) return res.status(404).json({ error: NOT_FOUND });
+    if (!permits(req.actor, "assignRequest")) return res.status(403).json({ error: "You are not authorised to do this." });
+    return res.status(200).json({ staff: await deps.users.assignableStaff(request.categoryId) });
+  }
+
+  return { status, priority, actionEntry, assignableStaff };
 }

@@ -324,3 +324,17 @@ The exact hosting platform, backup schedule and recovery procedure belong to the
 - ADR-008 must choose a notification-persistence approach consistent with this model before the notification path is implemented.
 - DEC-010 supplies the concrete persistent database hosting, backup and restore direction.
 - If FEC-06 supplies materially different volume or retention evidence, or the NFR-001 measurement crosses the ADR-001 trigger, the reporting read path is reconsidered without replacing the transactional model.
+
+## Amendment — 14 October 2026
+
+The implemented M3 schema extends `User` with credential and reset fields required by the identity work:
+
+- `passwordHash` — required credential hash; plaintext passwords are never stored.
+- `resetCodeHash` — nullable hash for an active password-reset code.
+- `resetCodeExpiresAt` — nullable expiry timestamp for that reset code.
+
+These fields are part of the authoritative Prisma model and physical PostgreSQL schema.
+
+This amendment does not change the relational ownership or transaction decisions above. Credential and reset values remain persistence concerns behind the persistence module, and reset-code values are stored only as hashes.
+
+The existing `users` table migration from #108 remains the first migration. The #109 migration extends the remaining ADR-007 model without recreating the `users` table or duplicating `password_hash`.

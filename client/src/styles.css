@@ -35,7 +35,11 @@ a:visited { color: var(--link-visited); }
 /* One focus style for everything that can be focused: a yellow ring with a dark outline, which shows on
    both light and dark backgrounds. */
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
-[tabindex="-1"]:focus-visible:not(h1):not(main) {
+[tabindex="-1"]:focus-visible:not(h1):not(main),
+/* A date field takes focus in its day, month and year segments and then its calendar button, all
+   inside the field. On the button the field itself is no longer :focus, so the ring is drawn whenever
+   focus is anywhere within it. */
+input[type="date"]:focus-within {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
   box-shadow: 0 0 0 6px var(--focus-ring);
