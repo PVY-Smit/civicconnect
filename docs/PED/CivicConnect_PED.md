@@ -45,7 +45,7 @@ This document is a controlled artefact. Baselined content is not silently overwr
 | 1.0 | 9 September 2026 | Jean Smit, Darius Mushi | Submitted to the M1 engineering gate. The gate has not yet been held: the outcome, the readiness fields and the three approvals are recorded in s16 and are still incomplete. | Reviewed through Pull Request by Darius Mushi and Tristan Roets. Gate review pending. | Proposed baseline, not yet accepted |
 | 2.0 | Signed off by the team 30 September 2026; revised after review 5 to 7 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 2. Source moved from Word to markdown, with the Word document generated from it (CR-001, #55). Sections 18 to 26 added for the architecture, technology and initial design baseline, after the reference list so that no M1 section number changes. Changes to M1 sections, each under change control (s12.4): the reading note in s8.3 on the four Access Matrix cells (CR-002, #92); the reading note in s9 on the RTM's M2 columns (CR-003); and, under CR-005 (proposed on #95 and recorded in the Change Requests sheet once the team agrees), the cover updated for v2.0, the Milestone 2 boundary note under the M1 one, the paragraph in s2 on how the M1 and M2 sections relate, the reading notes in s10, s13 and s14.2 that point to the live registers, four references added to s17 for s20, s24 and s26.2, the removal of the M1 template instruction under this table, and the team's M1 sign-off recorded in s16 as its recommendation (#69). The assessor's M1 gate decision is still pending, so the v1.0 row above stands. No other M1 content is changed: `tools/ped_fidelity.py --m1-only` lists every difference from v1.0 in sections 1 to 17. | Through the Pull Requests listed in s25 and s26 | Proposed for baseline: signed off by the team on #69, baselined when #95 merges (s26.3) |
 | 3.0 | 16 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Milestone 3. Sections 27 to 36 added for construction, verification and release readiness, with the M3 submission information in s27 (#127). The cover names v3.0 and Milestone 3 (CR-005, item 1, as widened on #95). In sections 1 to 26, the four s8.3 cells CR-002 corrects now read No, with the reading note updated, and s22.2 and s26.2 gain dated notes that CR-002 is implemented (#136); they are otherwise unchanged. | Darius Mushi and Tristan Roets, through Pull Request #145 | Submitted for M3 on 16 October 2026 |
-| 4.0 | 18 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Final Project. Sections 37 to 42 added: the final product and release, the M1 scope against the final delivery with the Scope Completion Percentage, the closure of M3's issues, the final acceptance evidence, the go-live decision and the project reflection (#128). The cover names v4.0 and Milestone 4 (CR-005, item 1). Sections 1 to 36 are unchanged. | Darius Mushi and Tristan Roets, through Pull Request #159 | Final |
+| 4.0 | 18 October 2026 | Jean Smit, Darius Mushi, Tristan Roets | Final Project. Sections 37 to 42 added: the final product and release, the M1 scope against the final delivery with the Scope Completion Percentage, the closure of M3's issues, the final acceptance evidence, the go-live decision and the project reflection (#128). The cover names v4.0 and Milestone 4 (CR-005, item 1), and the s14.2 reading note says the M1 rows are now real entries (CR-005, item 4). Sections 1 to 36 are otherwise unchanged. | Darius Mushi and Tristan Roets, through Pull Request #159 | Final |
 
 # 2. Purpose and How to Read This Document
 
@@ -516,7 +516,7 @@ AI is used as an engineering assistant. It is not authoritative evidence and doe
 
 ## 14.2 AI Usage Register
 
-*Reading note from v2.0: this register holds the M1 entries. The live AI Usage Register in the registers workbook adds the A2, A3 and M2 entries for all three members (#101, #104).*
+*Reading note from v2.0, updated for v4.0: this register holds the M1 entries, as at M1. The callout below described them as placeholders before each member recorded their own; every row is now a real entry by the member named. The live AI Usage Register in the registers workbook holds every entry to the Final Project, in rows 3 to 34, for all three members (#101, #104, #145, #159).*
 
 > **This register is incomplete by design**
 >
@@ -1367,7 +1367,8 @@ The Final Project concludes the same project: sections 1 to 36 are kept as writt
 
 | **Item** | **Value** |
 |----|----|
-| Team | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
+| Team name | Group G |
+| Team members | Jean Smit - 600368 \| Tristan Roets - 601764 \| Darius Mushi - 577982 |
 | GitHub repository | https://github.com/PVY-Smit/civicconnect |
 | Final commit and tag | Tag `v1.0.0`, commit 90cf950e46663560c8768aa9c7c6cd895d499376 on main, 18 October 2026, published as the GitHub release v1.0.0 (https://github.com/PVY-Smit/civicconnect/releases/tag/v1.0.0). This document and the final registers describe that commit, and merge after it through #159, a change to documentation only |
 | PED version | v4.0 Final |
