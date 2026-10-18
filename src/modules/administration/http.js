@@ -2,7 +2,7 @@
 // permission checks are in the service, through the policy.
 
 import { NOT_PERMITTED } from "../identity-access/http.js";
-import { addCategory, createUser, deactivateCategory, deactivateUser, listAllCategories, listUsers, renameCategory } from "./service.js";
+import { addCategory, createUser, deactivateCategory, deactivateUser, deleteCategory, listAllCategories, listUsers, renameCategory } from "./service.js";
 
 const STATUS = { "not-signed-in": 401, "not-authorised": 403, "not-found": 404, invalid: 400, conflict: 409 };
 
@@ -27,6 +27,7 @@ export function createAdministrationHandlers(deps) {
     addCategory: async (req, res) => answer(res, await addCategory({ actor: req.actor, name: req.body?.name }, deps), 201, (r) => r.category),
     renameCategory: async (req, res) =>
       answer(res, await renameCategory({ actor: req.actor, id: req.params?.id, name: req.body?.name }, deps), 200, (r) => r.category),
+    deleteCategory: async (req, res) => answer(res, await deleteCategory({ actor: req.actor }), 200, () => ({})),
     deactivateCategory: async (req, res) =>
       answer(res, await deactivateCategory({ actor: req.actor, id: req.params?.id }, deps), 200, (r) => r.category),
   };

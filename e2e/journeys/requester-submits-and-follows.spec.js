@@ -27,11 +27,20 @@ test("TC-33: a requester submits a request, gets its reference, and finds it in 
   await expect(problems).toBeVisible();
   await expect(problems.getByRole("listitem")).toHaveCount(5);
 
-  // FR-005, FR-006, FR-021: a complete submission, with the category chosen from the active list.
+  // FR-007: a form refused for two fields names only those two, and what was typed stays in the form.
   await page.getByLabel("Title", { exact: true }).fill(title);
   await page.getByLabel("Description", { exact: true }).fill(description);
-  await page.getByLabel("Category", { exact: true }).selectOption({ label: category() });
   await page.getByLabel("Location", { exact: true }).fill(location);
+  await page.getByRole("button", { name: "Submit request" }).click();
+  const two = page.getByRole("alert").filter({ hasText: "There are 2 problems" });
+  await expect(two).toBeVisible();
+  await expect(two.getByRole("listitem")).toHaveCount(2);
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue(title);
+  await expect(page.getByLabel("Description", { exact: true })).toHaveValue(description);
+  await expect(page.getByLabel("Location", { exact: true })).toHaveValue(location);
+
+  // FR-005, FR-006, FR-021: a complete submission, with the category chosen from the active list.
+  await page.getByLabel("Category", { exact: true }).selectOption({ label: category() });
   await page.getByRole("radio", { name: "Medium", exact: true }).check();
   await page.getByRole("button", { name: "Submit request" }).click();
 
