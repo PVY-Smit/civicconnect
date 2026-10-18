@@ -1497,7 +1497,7 @@ Every functional criterion is met except three, which are half met: FR-004's two
 
 **FR-022, the target's source.** The counts use one organisation-wide response target, as the criterion asks, but the target is configuration (`OVERDUE_TARGET_DAYS`, 10 days in simulated production), because the Status Model register defines none. The organisation's real value is FEC-02's open question. *Consequence:* overdue counts are only as right as the configured value; the counts themselves are verified (TC-42).
 
-[To be completed under #128: NFR-008, with its final status and reason at the tag]
+**NFR-008, personal data.** Partially met. Access to personal information is governed by the Access Matrix and tested (TC-01, TC-22, TC-32), and the data model holds only names, contact details and request content (ADR-007). The criterion also asks for every field to be justified in a data inventory. Tristan Roets wrote that inventory, which both reviewers found substantive, but it is in the draft #144, whose workbook was a second copy of the registers; it was not merged into the controlled workbook by the tag. *Consequence:* each field's justification under POPIA s19 is written but not yet a controlled record.
 
 **Should-have criteria.**
 
@@ -1529,7 +1529,7 @@ Every change to the baseline went through change control (s29) except one. FR-00
 
 ## 39.1 Defects
 
-The Defect Register (#125) holds each defect with how it was found, its fix and its regression test. DEF-001 to DEF-008, found in M3, are in s35, all fixed with regression tests. [To be completed under #128: the Defect Register's final rows from Tristan Roets for DEF-009 to DEF-012]
+The Defect Register (#125) holds each defect with how it was found, its fix and its regression test. DEF-001 to DEF-008, found in M3, are in s35. Tristan Roets, who keeps the register, closed every defect on 18 October 2026: DEF-001 with TC-10 and TC-32, DEF-002 to DEF-005 with TC-01, DEF-006 to DEF-008 with TC-25, TC-37 and TC-16, and the five found in the Final below, each with its regression test. No defect is open.
 
 The Final's defects were found by running the product as a whole, which the stand-in of M3 could not do:
 
@@ -1539,6 +1539,7 @@ The Final's defects were found by running the product as a whole, which the stan
 | DEF-010 | The staff detail carried no moves, so the staff screen offered no actions | TC-34 against the real server | #155 | TC-15 |
 | DEF-011 | The account-event check constraint refused the administration events | TC-32 | #155, a migration | TC-32 |
 | DEF-012 | The queue's date fields showed no focus ring on their calendar button (NFR-010) | TC-45 | #155 | TC-45 |
+| DEF-013 | The README lost its closing lines on the #140 branch | Review of the merge | #155, 7a0a44f | None automated; documentation review |
 
 ## 39.2 The M3 blockers and failed checks
 
@@ -1565,18 +1566,39 @@ The Risk Register holds each risk's final status, set by its owner.
 | RSK-15 A controlled artefact cannot be reproduced from its source | Open | Figure 2's source is still not held (#27) |
 | RSK-24 Module boundaries erode | Mitigated | The services ran unchanged over the persistence adapter, and the modules added in the Final go through the policy and the named operations (s37.2, s42.4) |
 
-[To be completed under #128: the final status of Tristan Roets's fifteen risks and Darius Mushi's nine, from their owners]
+| **Risk (owner Tristan Roets)** | **Final status** | **Reason** |
+|----|----|----|
+| RSK-01 The team does not reach working competence in the stack | Mitigated | The integrated application, 250 server tests, end-to-end journeys and the dedicated RSK-01 test show the stack is now being used successfully, although competence still has to be maintained through the final defence. |
+| RSK-02 The free tier cannot meet availability or background-processing needs | Accepted | The free-tier wake-up delay remains and would not meet the availability target, so this limitation is knowingly accepted and simulated production is used instead of claiming a live deployment. |
+| RSK-05 Personal information is disclosed to a user who should not see it | Mitigated | Authorisation scope is enforced on request queries and the listed tests, including TC-32 against PostgreSQL, verify that unauthorised and missing requests are indistinguishable. |
+| RSK-10 Real personal information is copied into a development, test or staging environment | Mitigated | Development, test and performance environments use synthetic data and test accounts only; the control is in place, although the risk would return if real personal information were copied later. |
+| RSK-13 The system works in development but fails in staging or production | Mitigated | The simulated-production rehearsal exposed two deployment problems, both were fixed and documented, and smoke checks plus the end-to-end journeys now pass there. |
+| RSK-17 A new request query bypasses the authorisation scope | Mitigated | The queue and reports use scopedWhere, including the Manager reporting gap found in review, with TC-40, TC-42 and TC-32 covering the scoped queries. |
+| RSK-18 Reporting load slows the operational queries | Accepted | Reports still count matching rows in memory and reporting was not load-tested. The queue result does not remove the reporting-load risk, so the remaining limitation is accepted for this release. |
+| RSK-19 Audit evidence becomes inconsistent with the request's state | Mitigated | State changes, history and audit entries are transactional; TC-32 checks them row by row; and the application database role cannot update or delete audit rows. |
+| RSK-21 The Prisma schema and the migrations drift apart | Mitigated | Migrations apply cleanly to fresh PostgreSQL 16 databases. TC-32 exposed a real constraint drift and it was corrected through a migration. |
+| RSK-22 Reported urgency is treated as staff-controlled | Mitigated | Reported urgency and staff priority are separate, priority is Coordinator-controlled, and TC-19, TC-34 and TC-32 verify that urgency does not change. |
+| RSK-23 An internal action entry is disclosed to a requester | Mitigated | Internal entries are filtered at query and view level, notifications use only requester-visible entries, and TC-03, TC-15, TC-34, TC-32 and TC-41 cover the control. |
+| RSK-27 The notification mapping falls out of step with the workflow | Mitigated | TC-41 tests the notification mapping directly and TC-32 checks all four notification kinds through PostgreSQL. |
+| RSK-28 Derived notification queries get slow as history grows | Accepted | Notification performance has not been measured and the implementation reads each requester's requests with their history; the known limitation is accepted at the current scale. |
+| RSK-29 External notification delivery is added without retry or idempotency | Closed | No external notification channel is included in the delivered scope and SC-D-01 remains deferred, so this failure mode is not present in the delivered system. |
+
+[To be completed under #128: the final status of Darius Mushi's nine risks, from their owner]
 
 ## 39.4 Technical debt
 
 | **Debt** | **Final status** |
 |----|----|
 | No rate limit by address on sign-in and the reset (s28.2, s36) | Repaid in #155 (TC-44) |
-| TD-001 Fixture re-export is partly manual | Kept. The re-export and its `--check` exist, but CI does not run the check. The cost is continued risk of the fixtures drifting from the controlled workbook, needing manual reconciliation before later changes |
-| TD-002 Production database and durable hosting deferred | Kept. PostgreSQL and simulated production are demonstrated, but there is no durable production hosting. The cost is the deployment, operations, backup and hosting work before real use (s41.5) |
-| TD-003 Prisma advisory overrides | Kept. They are needed while no supported upstream version resolves the advisories. The cost is ongoing dependency monitoring, and removing and retesting the overrides when a fix is released |
-| TD-004 Manager-assisted password reset | Kept. The cost is operational dependence on a Manager, the identity checks that fall to the Manager, and the social-engineering risk of an administrative reset |
-| [To be completed under #128: TD-005 to TD-009, the debt found in the Final, from Tristan Roets] | |
+| TD-001 Fixture re-export is partly manual | Kept. Fixture re-export still relies partly on a manual export/check until CI runs it automatically. The cost: Recurring release effort and fixture-drift risk if the check is skipped. |
+| TD-002 Production database and durable hosting deferred | Kept. Real production hosting remains deferred despite the tested simulated-production database backup/restore. The cost: No real-host availability or operational evidence; part of the final no-go. |
+| TD-003 Prisma advisory overrides | Kept. The temporary Prisma advisory overrides remain; npm audit currently reports 0. The cost: They must be reviewed on future dependency upgrades. |
+| TD-004 Manager-assisted password reset | Kept. Reset remains Manager-assisted; two Managers reduce but do not remove the dependency. The cost: A Manager must be available to assist a reset. |
+| TD-005 Failure limits held in one process's memory | Kept. Failure limits are stored in one process's memory. The cost: A multi-instance deployment needs a shared rate-limit store. |
+| TD-006 Priority sort ordered in memory | Kept. Priority sorting orders matching queue ids in memory. The cost: Fine at 5,000 requests, but not suitable for municipal scale without redesign. |
+| TD-007 Reports counted in application memory | Kept. Reports count matching rows in application memory. The cost: Higher report volume can increase memory/query cost; this is the debt behind RSK-18. |
+| TD-008 Self-signed certificate and same-machine backups | Kept. Simulated production uses a self-signed certificate and manual same-machine backups. The cost: Real deployment needs trusted TLS and independent/automated backups. |
+| TD-009 No common-password check | Kept. There is no common-password check. The cost: Weak but technically valid passwords can still be selected. |
 
 # 40. Final Acceptance Evidence
 
@@ -1667,9 +1689,9 @@ The strongest evidence is the integrated product verified end to end: TC-32 thro
 
 **ADR-006, authorisation as a policy with query scopes.** One module decides every permission and every scope, so the queue, the reports and the notifications, added late, inherited correct scoping by calling `scopedWhere`. The one gap, reports ignoring a Manager's scope, was found in review and closed by the same call. It also kept CR-002's correction to four cells a change to data rather than code.
 
-**ADR-007, data and persistence** (Tristan Roets, who made the decision). ADR-007 decided that PostgreSQL would be CivicConnect's transactional system of record, with Prisma as the authoritative application schema. We also decided that request references needed database-level atomic generation and uniqueness, and that state changes and their audit evidence had to commit together. When it was built, this design worked well in the integrated application: #155 ran the services against PostgreSQL, the integration tests exercised the sequence, transactions and audit trail, and the restricted application role prevented modification of protected history. The implementation did expose details that the original design had missed, including the incomplete User model, which was corrected. I would make the same core decision again. I would, however, validate the complete authentication/user schema and database privileges earlier so those gaps were found before integration.
+**ADR-007, data and persistence** (Tristan Roets, who made the decision). ADR-007 chose one PostgreSQL persistence model for the seven core entities, with Prisma providing the application adapter and DEC-017 generating references from a database sequence through the keyed permutation. Building the integrated application confirmed the main benefits of that decision, but also exposed implementation details that the design had to absorb. Prisma returns database ids as bigint, which JSON cannot carry, so the adapter converts ids to text at its boundary. TC-32 also exposed a check-constraint mismatch when the new administration events were added, and that was corrected through a migration. The transaction boundary proved important: each state change, history record and audit entry is committed together. The least-privilege application role also enforces audit immutability in PostgreSQL. I would choose ADR-007 again because the single persistence boundary made those controls testable end to end.
 
-**ADR-008, notifications** (Tristan Roets, who made the decision). ADR-008 decided to keep notifications inside the modular monolith and derive requester notifications from persisted status history and requester-visible action entries instead of adding a separate Notification table, broker or external service. When implemented, that approach remained simple and fitted the actual requirement well. The integrated notification service could derive accepted, updated, rejected and completed indications from evidence already stored by the request workflow, while internal entries remained hidden from Requesters. The notification tests and integrated PostgreSQL evidence exercised those mappings, and the final role walkthrough also confirmed the requester-facing behaviour. I would make the same decision again for CivicConnect's current scope. I would only move to an outbox or separately persisted notification model if later requirements introduce external delivery, retries, durable read/unread state or asynchronous processing.
+**ADR-008, notifications** (Tristan Roets, who made the decision). ADR-008 decided that requester notifications would be derived from saved request history instead of being stored in a separate notification table. That worked well because there is no second set of notification records that can drift away from the workflow. The mapping is a pure transformation, so TC-41 can exercise the notification rules without a database, while TC-32 checks all four notification kinds through the integrated PostgreSQL application. Review still found two useful edge cases: ids could be compared using different types, and notifications with equal timestamps needed deterministic ordering. Both were fixed and covered by tests. I would make the same decision again for the current scope because it keeps notification consistency simple. The trade-off is RSK-28: deriving notifications requires reading the requester's requests and history, so larger-scale use would need performance work.
 
 ## 42.5 Team and project execution
 
