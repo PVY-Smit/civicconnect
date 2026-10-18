@@ -92,6 +92,16 @@ test("FR-007 title boundary in characters, as the schema counts them: an emoji o
   assert.match(res.body.errors.title, /it is 201\./, "the message counts characters too");
 });
 
+for (const field of ["description", "location"]) {
+  const { max } = PINNED[field];
+  test(`FR-007 ${field} boundary in characters too: ${max} emoji or accented letters accepted, ${max + 1} emoji refused`, async () => {
+    assert.equal([...(await accepted({ [field]: "a".repeat(max - 1) + "\u{1F600}" }, `${max - 1} letters and an emoji`))[field]].length, max);
+    await accepted({ [field]: "\u{1F600}".repeat(max) }, `${max} emoji`);
+    await accepted({ [field]: "é".repeat(max) }, `${max} accented letters`);
+    await refused(field, { [field]: "\u{1F600}".repeat(max + 1) }, `${max + 1} emoji`);
+  });
+}
+
 test("FR-006 category partitions: an active category is accepted by number or by string, and saved as the store's id", async () => {
   assert.strictEqual((await accepted({ categoryId: 10 }, "number 10")).categoryId, 10);
   assert.strictEqual((await accepted({ categoryId: "11" }, "string 11")).categoryId, 11);

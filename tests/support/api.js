@@ -1,17 +1,19 @@
-// A harness for the API suites (#121): the real route handlers of #111 to #113 behind the real
+// A harness for the API suites (#121): the real route handlers of #111 to #117 behind the real
 // authentication middleware, over an in-memory store.
 //
 // Each call carries a real signed session cookie, or none, and goes through authenticate before its
 // handler, in the order the server will wire them. The store evaluates the query conditions the
 // authorisation policy produces and its transactions really roll back, so what these suites check is the
-// behaviour at the HTTP boundary: status codes, bodies, and what was or was not written. The same suites
-// run against PostgreSQL once the persistence adapter (#108, #109) is wired; only this file changes.
+// behaviour at the HTTP boundary: status codes, bodies, and what was or was not written. The same
+// operations run against PostgreSQL through the persistence adapter in TC-32 (tests/api-postgres.test.js).
 
+import { createAdministrationHandlers } from "../../src/modules/administration/http.js";
 import { createIdentityAccess } from "../../src/modules/identity-access/http.js";
 import { COOKIE_NAME, issueToken } from "../../src/modules/identity-access/session.js";
 import { createSubmissionHandler } from "../../src/modules/request-capture/http.js";
 import { createReferenceFormatter } from "../../src/modules/request-capture/reference.js";
 import { createRequestAccessHandlers } from "../../src/modules/request-access/http.js";
+import { createReportHandlers } from "../../src/modules/reports/http.js";
 import { createWorkflowHandlers } from "../../src/modules/workflow-status/http.js";
 
 const SECRET = "api-suite-session-secret-of-at-least-32-chars";
@@ -30,6 +32,7 @@ export const USERS = Object.freeze({
   staff: { id: 5, name: "Sam Staff", role: "Staff", active: true, categoryIds: [10] },
   staffElsewhere: { id: 6, name: "Tess Technician", role: "Staff", active: true, categoryIds: [11] },
   staffSecond: { id: 8, name: "Sipho Staff", role: "Staff", active: true, categoryIds: [10] },
+  staffInactive: { id: 9, name: "Ina Inactive", role: "Staff", active: false, categoryIds: [10] },
 });
 
 // One signed-in user per role, each with category 10 in scope where the role is scoped by category.
@@ -48,6 +51,10 @@ export const VALID_SUBMISSION = Object.freeze({
   reportedUrgency: "Medium",
 });
 
+// Ids are compared as text. The persistence adapter turns every id into a string on the way out, so the
+// services always compare like with like, and this store matches either form the harness uses. What it
+// cannot show is the database's own types: a string where PostgreSQL holds a bigint, or a bigint in a
+// JSON answer. TC-32 runs these operations against PostgreSQL for exactly that.
 function evaluate(where, record) {
   return Object.entries(where ?? {}).every(([field, cond]) => {
     if (field === "AND") return cond.every((w) => evaluate(w, record));
@@ -130,9 +137,60 @@ function memoryStore() {
     },
   };
 
-  const users = { findById: async (id) => Object.values(USERS).find((u) => String(u.id) === String(id)) ?? null };
-  const categories = { activeIds: async () => [...ACTIVE_CATEGORY_IDS] };
-  return { state, insert, requests, store, users, categories };
+  // Users and categories as the administration module's store states them (#115).
+  state.users = Object.values(USERS).map((u) => ({ ...u, email: `${u.name.split(" ")[0].toLowerCase()}@civicconnect.test` }));
+  state.categories = Object.entries(CATEGORIES).map(([id, name]) => ({ id: Number(id), name, active: ACTIVE_CATEGORY_IDS.includes(Number(id)) }));
+  state.events = [];
+  const userById = (id) => state.users.find((u) => String(u.id) === String(id)) ?? null;
+  const users = {
+    findById: async (id) => userById(id),
+    findByEmail: async (email) => state.users.find((u) => u.email === email) ?? null,
+    listAll: async () => state.users.map((u) => ({ ...u, categoryNames: u.categoryIds.map((c) => CATEGORIES[c]) })),
+    create: async ({ name, email, role, categoryIds }, { event }) => {
+      const user = { id: 100 + state.users.length, name, email, role, active: true, categoryIds: categoryIds.map(Number) };
+      state.users.push(user);
+      state.events.push({ ...event, userId: user.id });
+      return { id: user.id, name };
+    },
+    deactivate: async (id, { event }) => {
+      const user = userById(id);
+      if (!user?.active) return 0;
+      user.active = false;
+      state.events.push(event);
+      return 1;
+    },
+    countOpenAssigned: async (id) =>
+      state.requests.filter((r) => String(r.assigneeId) === String(id) && ["New", "Assigned", "In Progress", "On Hold"].includes(r.status)).length,
+    setResetCode: async (id, fields, { event }) => {
+      Object.assign(userById(id), fields);
+      state.events.push(event);
+    },
+  };
+  const categories = {
+    activeIds: async () => state.categories.filter((c) => c.active).map((c) => c.id),
+    listAll: async () => state.categories.map((c) => ({ ...c, requestCount: state.requests.filter((r) => r.categoryId === c.id).length })),
+    findByName: async (name) => state.categories.find((c) => c.name.toLowerCase() === name.toLowerCase()) ?? null,
+    create: async (name) => {
+      const c = { id: 20 + state.categories.length, name, active: true };
+      state.categories.push(c);
+      return c;
+    },
+    rename: async (id, name) => {
+      const c = state.categories.find((x) => String(x.id) === String(id));
+      if (c) c.name = name;
+      return c ?? null;
+    },
+    deactivate: async (id) => {
+      const c = state.categories.find((x) => String(x.id) === String(id));
+      if (c) c.active = false;
+      return c ?? null;
+    },
+  };
+  // Management reporting (#117): the requests the where clause selects, with their category and assignee.
+  const reportRows = async ({ where }) =>
+    state.requests.filter((r) => evaluate(where, r)).map((r) => ({ ...withCategory(r), assignee: r.assigneeId ? userById(r.assigneeId) : null }));
+  const reports = { forSummary: reportRows, openRequests: reportRows };
+  return { state, insert, requests, store, users, categories, reports };
 }
 
 function fakeRes() {
@@ -172,9 +230,11 @@ export function createApi() {
   const submit = createSubmissionHandler({ categories: db.categories, requests: db.requests, formatReference });
   const access = createRequestAccessHandlers({ requests: db.requests });
   const workflow = createWorkflowHandlers({ requests: db.requests, users: db.users, store: db.store });
+  const admin = createAdministrationHandlers({ users: db.users, categories: db.categories, hashSecret: async (s) => `hashed:${s}`, now: () => NOW });
+  const report = createReportHandlers({ reports: db.reports, overdueTargetDays: 10, now: () => new Date(NOW) });
 
-  const call = (user, handler, { body, reference } = {}) =>
-    run([identity.authenticate, handler], { headers: { cookie: cookieFor(user) }, body, params: { reference } });
+  const call = (user, handler, { body, reference, id, query } = {}) =>
+    run([identity.authenticate, handler], { headers: { cookie: cookieFor(user) }, body, params: { reference, id }, query: query ?? {} });
 
   const api = {
     submit: (user, body) => call(user, submit, { body }),
@@ -183,8 +243,18 @@ export function createApi() {
     move: (user, reference, to, change = {}) => call(user, workflow.status, { reference, body: { to, ...change } }),
     priority: (user, reference, priority) => call(user, workflow.priority, { reference, body: { priority } }),
     entry: (user, reference, body, visibility) => call(user, workflow.actionEntry, { reference, body: { body, visibility } }),
-    // A function whose own endpoint is not built yet (#115, #117) is reached through the permission check
-    // its route will use, in front of a handler that only answers 200.
+    // Management reporting (#117) and administration (#115).
+    reportSummary: (user) => call(user, report.summary),
+    overdue: (user) => call(user, report.overdue),
+    listUsers: (user) => call(user, admin.listUsers),
+    createUser: (user, body) => call(user, admin.createUser, { body }),
+    deactivateUser: (user, id) => call(user, admin.deactivateUser, { id }),
+    allCategories: (user) => call(user, admin.listAllCategories),
+    addCategory: (user, name) => call(user, admin.addCategory, { body: { name } }),
+    renameCategory: (user, id, name) => call(user, admin.renameCategory, { id, body: { name } }),
+    deactivateCategory: (user, id) => call(user, admin.deactivateCategory, { id }),
+    // A function with no endpoint is reached through the permission check alone, in front of a handler
+    // that only answers 200. Only editAuditEntry is: FR-026 forbids an endpoint that edits an audit entry.
     guarded: (user, fn) =>
       run([identity.authenticate, identity.requirePermission(fn), (req, res) => res.status(200).json({ reached: true })], {
         headers: { cookie: cookieFor(user) },

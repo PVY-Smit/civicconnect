@@ -65,6 +65,29 @@ test("FR-015: the assignee id is accepted as one number or string, saved as the 
   }
 });
 
+test("FR-015: an assignee that is missing, empty, not a user, or not an active Staff member of the category is refused, and nothing is written", async () => {
+  for (const [label, sent] of [
+    ["missing", undefined],
+    ["null", null],
+    ["an empty string", ""],
+    ["0", 0],
+    ["a negative number", -1],
+    ["a fraction", 1.5],
+    ["an unknown user", 999],
+    ["an inactive Staff member", USERS.staffInactive.id],
+    ["a Coordinator", USERS.coordinator.id],
+    ["Staff outside the request's category", USERS.staffElsewhere.id],
+  ]) {
+    const { api, seed, find, db } = createApi();
+    const { reference } = seed({ status: "New", categoryId: 10 });
+    const res = await api.move(USERS.coordinator, reference, "Assigned", sent === undefined ? {} : { assigneeId: sent });
+    assert.equal(res.status, 422, `${label}: ${JSON.stringify(res.body)}`);
+    assert.equal(find(reference).status, "New", label);
+    assert.equal(find(reference).assigneeId, null, label);
+    assert.equal(db.state.audit.length, 0, `${label}: nothing written`);
+  }
+});
+
 test("FR-018, FR-020: a reason or resolution summary is at most 4,000 characters, with no control characters", async () => {
   const cases = [
     ["New", USERS.coordinator, "Rejected", "reason"],
